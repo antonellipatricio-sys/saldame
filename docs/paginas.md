@@ -11,6 +11,7 @@ A continuación se encuentra el índice de todas las páginas de la aplicación.
 - [Estadísticas](./pages/estadisticas.md)
 - [Categorías](./pages/categorias.md)
 - [Etiquetas](./pages/etiquetas.md)
+- [Gastos Compartidos](./pages/gastos-compartidos.md)
 
 ## Herramientas Adicionales
 - [Calculadora](./pages/calculadora.md)

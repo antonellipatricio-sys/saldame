@@ -7,7 +7,7 @@ Los layouts determinan la estructura externa fundamental y la navegación a trav
 - **Propósito:** Actúa como el layout principal de cara al usuario para la app iterativa de gastos.
 - **Componentes Clave:**
   - **Sidebar de Escritorio (`<aside>`):** Muestra todas las opciones de navegación lateral (Dashboard, Agregar Gastos, PDF, Santander, etc.).
-  - **Bottom Navigation (Mobile):** El menú inferior que agrupa los iconos de visualización adaptado a dispositivos móviles para un acceso rápido con tab-bar.
+  - **Menú Hamburguesa (Mobile):** Se implementó un menú lateral tipo "overlay" activado por un botón hamburguesa en el header. Esto reemplaza la antigua "Bottom Navigation" inferior, que resultaba ilegible al amontonar 11 iconos. *Nota: Este diseño móvil inicial es funcional pero está planeado ser optimizado en futuros sprints.*
 - **Flujo:** Intercepta el evento `onPageChange` para modificar el estado en `App.tsx` y renderizar los distintos hijos (`children`) de páginas.
 
 ## 2. AppLayout (Layout Secundario / Herramientas)

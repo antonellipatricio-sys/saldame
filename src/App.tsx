@@ -10,8 +10,9 @@ import { CategoriesPage } from './pages/CategoriesPage';
 import { TagsPage } from './pages/TagsPage';
 import { AccountPage } from './pages/AccountPage';
 import { QueryPage } from './pages/QueryPage';
+import { SharedExpensesPage } from './pages/SharedExpensesPage';
 
-type Page = 'dashboard' | 'add-expense' | 'expenses' | 'upload-pdf' | 'upload-santander' | 'stats' | 'categories' | 'tags' | 'account' | 'query';
+type Page = 'dashboard' | 'add-expense' | 'expenses' | 'upload-pdf' | 'upload-santander' | 'stats' | 'categories' | 'tags' | 'account' | 'query' | 'shared-expenses';
 
 function App() {
   const [activePage, setActivePage] = useState<Page>('dashboard');
@@ -28,6 +29,7 @@ function App() {
       {activePage === 'tags' && <TagsPage />}
       {activePage === 'account' && <AccountPage />}
       {activePage === 'query' && <QueryPage />}
+      {activePage === 'shared-expenses' && <SharedExpensesPage />}
     </ExpenseLayout>
   );
 }

@@ -37,7 +37,7 @@ src/
 │   └── utils.ts                    # Utilidades (cn para clases)
 ├── components/
 │   ├── layout/
-│   │   ├── ExpenseLayout.tsx       # Layout principal: Sidebar (desktop) + Bottom Nav (mobile)
+│   │   ├── ExpenseLayout.tsx       # Layout principal: Sidebar (desktop) + Hamburger Menu (mobile)
 │   │   └── AppLayout.tsx           # Layout secundario: Tabs superiores (Calculadora/Ninox)
 │   ├── tags/
 │   │   └── TagSelector.tsx         # Componente picker de etiquetas (chips + dropdown)
@@ -78,6 +78,7 @@ src/
 - [Estadísticas](./pages/estadisticas.md)
 - [Categorías](./pages/categorias.md)
 - [Etiquetas](./pages/etiquetas.md)
+- [Gastos Compartidos](./pages/gastos-compartidos.md)
 - [Calculadora](./pages/calculadora.md)
 - [Carga Costos Ninox](./pages/carga-ninox.md)
 - [Variación Dólar](./pages/variacion-dolar.md)
@@ -245,6 +246,7 @@ src/
 - [x] Estilo visual diferenciado para tarjetas MP en Estado de Cuenta
 
 ### Pendientes (ideas futuras)
+- [ ] Optimizar el diseño UI/UX del nuevo Menú Hamburguesa en versión mobile
 - [ ] Presupuestos por categoría con barra de progreso
 - [ ] Cotización dólar automática + totales unificados ARS
 - [ ] Reporte mensual PDF generado automáticamente
