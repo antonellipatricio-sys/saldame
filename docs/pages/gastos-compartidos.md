@@ -29,3 +29,8 @@ La herramienta **Gastos Compartidos** permite dividir gastos grupales, mantenien
 - **Registro Temporal de Gastos**: Almacenados en `localStorage` con la key `saldame_shared_expenses`.
 
 > Nota: Este módulo funciona íntegramente del lado cliente (frontend) y no guarda los registros en Firebase, dado que busca ser una herramienta pasajera y de utilidad rápida.
+
+## Seguridad y Compartición
+
+1. **Ruta Compartible (Pública)**: El módulo de gastos compartidos está alojado en una ruta específica (actualmente configurada en `App.tsx` bajo la variable `PUBLIC_ROUTE` como `/gastos`). Cualquier persona con el link puede ingresar y usar esta herramienta y **solo** esta herramienta.
+2. **App Protegida (Privada)**: Si alguien intenta ir al inicio de la aplicación o a cualquier otra vista general, el sistema intercepta la visita y solicita un PIN de acceso (configurado en `App.tsx` en `APP_PIN`), bloqueando el menú completo y resguardando los gastos personales del usuario principal.

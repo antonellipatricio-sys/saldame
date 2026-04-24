@@ -208,7 +208,7 @@ export function SharedExpensesPage() {
                             <input
                                 type="text"
                                 placeholder="Nombre"
-                                className="flex-1 w-full rounded-lg border-slate-200 bg-slate-50 border p-2 text-sm focus:border-blue-500 focus:ring-blue-500"
+                                className="flex-1 w-full rounded-lg border-slate-200 bg-slate-50 border p-3 text-base focus:border-blue-500 focus:ring-blue-500"
                                 value={newParticipantName}
                                 onChange={(e) => setNewParticipantName(e.target.value)}
                             />
@@ -253,7 +253,7 @@ export function SharedExpensesPage() {
                                 <input
                                     type="text"
                                     placeholder="Ej: Asado, Bebidas"
-                                    className="w-full rounded-lg border-slate-200 bg-slate-50 border p-2 text-sm focus:border-blue-500 focus:ring-blue-500"
+                                    className="w-full rounded-lg border-slate-200 bg-slate-50 border p-3 text-base focus:border-blue-500 focus:ring-blue-500"
                                     value={newExpenseDesc}
                                     onChange={(e) => setNewExpenseDesc(e.target.value)}
                                     required
@@ -268,7 +268,7 @@ export function SharedExpensesPage() {
                                         min="0.01"
                                         step="any"
                                         placeholder="0.00"
-                                        className="w-full rounded-lg border-slate-200 bg-slate-50 border p-2 text-sm focus:border-blue-500 focus:ring-blue-500"
+                                        className="w-full rounded-lg border-slate-200 bg-slate-50 border p-3 text-base focus:border-blue-500 focus:ring-blue-500"
                                         value={newExpenseAmt}
                                         onChange={(e) => setNewExpenseAmt(e.target.value)}
                                         required
@@ -277,7 +277,7 @@ export function SharedExpensesPage() {
                                 <div>
                                     <label className="block text-xs font-medium text-slate-500 mb-1">Pagado por</label>
                                     <select
-                                        className="w-full rounded-lg border-slate-200 bg-slate-50 border p-2 text-sm focus:border-blue-500 focus:ring-blue-500"
+                                        className="w-full rounded-lg border-slate-200 bg-slate-50 border p-3 text-base focus:border-blue-500 focus:ring-blue-500"
                                         value={newExpensePayer}
                                         onChange={(e) => setNewExpensePayer(e.target.value)}
                                         required
