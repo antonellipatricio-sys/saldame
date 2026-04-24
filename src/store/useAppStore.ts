@@ -51,7 +51,7 @@ interface AppState {
 }
 
 // Helper to find dollar value for a specific date (YYYY-MM)
-const getDollarForDate = (date: string, history: DollarRecord[]): number => {
+export const getDollarForDate = (date: string, history: DollarRecord[]): number => {
     if (!date) return 0;
     // date is expected to be YYYY-MM-DD or similar. We need YYYY-MM
     const dateObj = new Date(date);
