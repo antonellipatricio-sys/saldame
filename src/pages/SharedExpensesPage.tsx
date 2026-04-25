@@ -230,23 +230,30 @@ export function SharedExpensesPage({ groupId }: { groupId?: string | null }) {
 
     return (
         <div className="space-y-6">
-            <div>
-                <a href="/gastos" className="text-sm text-blue-500 hover:text-blue-700 hover:underline flex items-center gap-1 mb-2">
+            <div className="mb-6">
+                <a href="/gastos" className="text-sm text-blue-500 hover:text-blue-700 hover:underline flex items-center gap-1 mb-4">
                     &larr; Volver a Mis Juntadas
                 </a>
-                <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-3">
-                    <img src="/logopato.png" alt="Saldame Logo" className="w-12 h-12 object-contain drop-shadow" />
-                    {eventName}
-                </h1>
-                <p className="text-slate-500 text-sm mt-1">Dividí los gastos con amigos fácilmente en tiempo real</p>
+                <div className="relative w-full rounded-2xl overflow-hidden shadow-sm border border-slate-200 bg-brand-primary/5">
+                    <img
+                        src="/banner-gastos.png?v=2"
+                        alt="Gastos Compartidos"
+                        className="w-full h-auto object-contain"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex items-end p-4 sm:p-6 opacity-0 hover:opacity-100 transition-opacity">
+                        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white drop-shadow-lg flex items-center gap-2">
+                            {eventName}
+                        </h1>
+                    </div>
+                </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Columna Izquierda: Personas e Ingreso */}
                 <div className="lg:col-span-1 space-y-6">
                     <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-                        <h2 className="font-bold text-slate-800 mb-4 flex items-center gap-2">
-                            <Users className="w-5 h-5 text-slate-400" />
+                        <h2 className="font-bold text-brand-primary mb-4 flex items-center gap-2">
+                            <Users className="w-5 h-5 text-brand-text" />
                             Participantes
                         </h2>
 
@@ -260,7 +267,7 @@ export function SharedExpensesPage({ groupId }: { groupId?: string | null }) {
                             />
                             <button
                                 type="submit"
-                                className="bg-slate-800 text-white p-2 rounded-lg hover:bg-slate-700 transition"
+                                className="bg-brand-primary text-white p-2 rounded-lg hover:opacity-90 transition"
                                 disabled={!newParticipantName.trim()}
                             >
                                 <Plus className="w-5 h-5" />
@@ -271,14 +278,14 @@ export function SharedExpensesPage({ groupId }: { groupId?: string | null }) {
                             {participants.map(p => (
                                 <div key={p.id} className="flex justify-between items-center bg-slate-50 p-2 rounded-lg">
                                     <div className="flex items-center gap-2 text-sm font-medium">
-                                        <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-xs">
+                                        <div className="w-6 h-6 rounded-full bg-brand-primary/10 flex items-center justify-center text-brand-primary text-xs">
                                             {getInitials(p.name)}
                                         </div>
                                         {p.name}
                                     </div>
                                     <button
                                         onClick={() => removeParticipant(p.id)}
-                                        className="text-red-500 hover:bg-red-50 p-1 rounded transition"
+                                        className="text-brand-alert hover:bg-red-50 p-1 rounded transition"
                                     >
                                         <Trash2 className="w-4 h-4" />
                                     </button>
@@ -292,7 +299,7 @@ export function SharedExpensesPage({ groupId }: { groupId?: string | null }) {
 
                     {/* Formulario de Gasto */}
                     <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-                        <h2 className="font-bold text-slate-800 mb-4">Agregar Gasto</h2>
+                        <h2 className="font-bold text-brand-primary mb-4">Agregar Gasto</h2>
                         <form onSubmit={addExpense} className="space-y-4">
                             <div>
                                 <label className="block text-xs font-medium text-slate-500 mb-1">Descripción</label>
@@ -360,7 +367,7 @@ export function SharedExpensesPage({ groupId }: { groupId?: string | null }) {
 
                             <button
                                 type="submit"
-                                className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white font-medium py-2 rounded-lg hover:shadow-md transition-all disabled:opacity-50"
+                                className="w-full bg-brand-primary text-white font-semibold py-2 rounded-lg hover:opacity-90 transition-all disabled:opacity-50"
                                 disabled={participants.length === 0}
                             >
                                 Registrar Gasto
@@ -378,9 +385,9 @@ export function SharedExpensesPage({ groupId }: { groupId?: string | null }) {
                             <div key={e.id} className="p-3 border border-slate-100 bg-slate-50 rounded-lg relative group">
                                 <div className="flex justify-between items-start mb-2">
                                     <div>
-                                        <h3 className="font-medium text-sm text-slate-800">{e.description}</h3>
+                                        <h3 className="font-semibold text-slate-900 text-sm">{e.description}</h3>
                                         <p className="text-xs text-slate-500 font-medium">
-                                            Pagó {getName(e.payerId)}: <span className="text-slate-800">${e.amount.toLocaleString('es-AR', { minimumFractionDigits: 2 })}</span>
+                                            Pagó {getName(e.payerId)}: <span className="font-bold text-slate-900">${e.amount.toLocaleString('es-AR', { minimumFractionDigits: 2 })}</span>
                                         </p>
                                     </div>
                                     <button
@@ -412,8 +419,8 @@ export function SharedExpensesPage({ groupId }: { groupId?: string | null }) {
 
                 {/* Columna Derecha: Pagos y Saldos */}
                 <div className="lg:col-span-1 bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-                    <h2 className="font-bold text-slate-800 mb-4 flex items-center gap-2">
-                        <Check className="w-5 h-5 text-green-500" />
+                    <h2 className="font-bold text-brand-primary mb-4 flex items-center gap-2">
+                        <Check className="w-5 h-5 text-brand-success" />
                         Quién le paga a quién
                     </h2>
 
@@ -422,11 +429,11 @@ export function SharedExpensesPage({ groupId }: { groupId?: string | null }) {
                             transfers.map((t, idx) => (
                                 <div key={idx} className="flex flex-col gap-1 p-3 bg-green-50/50 border border-green-100 rounded-lg">
                                     <div className="flex justify-between items-center text-sm">
-                                        <span className="font-medium text-slate-700">{getName(t.from)}</span>
+                                        <span className="font-semibold text-slate-900">{getName(t.from)}</span>
                                         <ArrowRight className="w-4 h-4 text-slate-400 mx-2" />
-                                        <span className="font-medium text.slate-700">{getName(t.to)}</span>
+                                        <span className="font-semibold text-slate-900">{getName(t.to)}</span>
                                     </div>
-                                    <div className="text-center font-bold text-green-600">
+                                    <div className="text-center font-bold text-brand-success">
                                         ${t.amount.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                     </div>
                                 </div>
@@ -444,7 +451,7 @@ export function SharedExpensesPage({ groupId }: { groupId?: string | null }) {
                                         saveToFirebase(participants, []);
                                     }
                                 }}
-                                className="w-full mt-6 py-2 border border-slate-200 text-slate-500 font-medium text-sm rounded-lg hover:bg-slate-50 transition"
+                                className="w-full mt-6 py-2 border border-slate-200 text-brand-primary font-medium text-sm rounded-lg hover:bg-brand-primary/5 transition"
                             >
                                 Reiniciar Gastos
                             </button>

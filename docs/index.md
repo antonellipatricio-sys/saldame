@@ -202,12 +202,39 @@ src/
 | IA | Gemini 2.0 Flash (API Key) |
 | Parseo PDF | pdfjs-dist |
 | Parseo Excel | xlsx (SheetJS) |
-| Estilos | TailwindCSS |
+| Estilos | TailwindCSS v4 + `@theme` (Design System custom) |
 | Íconos | Lucide React |
 | Fechas | date-fns (locale `es`) |
 | Exportación | xlsx (SheetJS) |
+| Logo | `public/logopato.png` (PNG transparente, generado con `@imgly/background-removal-node`) |
 
 ---
+
+## Design System — Pato Contador Theme
+
+La identidad visual de la app se basa en el personaje **"Pato Contador"** (morado con visera verde, billetes y calculadora).
+
+### Paleta de Colores
+
+| Token | Hex | Uso |
+|---|---|---|
+| `brand-primary` | `#7D52B5` | Morado principal: títulos, sidebar activa, iconos |
+| `brand-success` | `#2D9354` | Verde: CTAs, montos, valores positivos |
+| `brand-secondary` | `#9082C9` | Lila: botones secundarios, soporte |
+| `brand-alert` | `#E5709B` | Rosa: alertas, categorías en $0, ícono de borrar |
+| `brand-bg` | `#F2F2F2` | Fondo neutro general |
+| `brand-text` | `#B2A4D4` | Texto suave de apoyo, subtítulos |
+| `brand-light` | `#D1D5B8` | Detalles de leyenda beige |
+
+Definidos en `src/index.css` dentro del bloque `@theme {}` (Tailwind v4).
+
+### Logo y Banners
+- **Logo Principal:** `public/logopato.png` (PNG transparente). Aparece en sidebar, login y headers.
+- **Banner Gastos:** `public/banner-gastos.png`. Cabecera responsiva para el módulo de Juntadas.
+  - *Optimización:* Usa `object-contain` en móviles y cache-busting con `?v=2` para asegurar que los cambios se vean instantáneamente.
+
+---
+
 
 ## Roadmap
 
@@ -228,12 +255,16 @@ src/
 ### Fase 4: Gestión de Resúmenes ✅
 - [x] `deleteExpensesByCard(cardLast4, month?)` en store — eliminación batch de Firestore
 - [x] Botón 🗑️ en cada tarjeta de Estado de Cuenta + modal de confirmación
-- [x] Botón "Eliminar resumen" en detalle de tarjeta seleccionada
 
 ### Fase 5: Dashboard Mejorado ✅
 - [x] Gráfico de barras CSS por categoría (con colores y emojis)
 - [x] Comparativa mes a mes (delta % + flechas ↑↓ por categoría)
-- [x] Delta total ARS vs mes anterior en card de resumen
+
+### Fase 6: Gastos Compartidos (Real-time) ✅
+- [x] Nueva vista `/gastos` para gestión de eventos colaborativos.
+- [x] Persistencia en Firebase Firestore (colección `sharedGroups`).
+- [x] Algoritmo de minimización de deudas (Greedy logic).
+- [x] Banner corporativo responsivo Pato Contador.
 
 ### Fase 7: Exportación por Tarjeta ✅
 - [x] Columnas Etiquetas, Tarjeta, Titular en Excel exportado
@@ -242,10 +273,11 @@ src/
 ### Fase MercadoPago ✅
 - [x] Parser `mercadoPagoParser.ts` para resúmenes PDF de Mercado Pago
 - [x] Auto-detección de formato (Banco Nación vs Mercado Pago) en `UploadPDFPage`
-- [x] Extracción de titular y tipo tarjeta (virtual/física)
 - [x] Estilo visual diferenciado para tarjetas MP en Estado de Cuenta
 
 ### Pendientes (ideas futuras)
+- [x] ✅ Rediseño UI tema "Pato Contador" (morado/verde/rosa) con Tailwind v4
+- [x] ✅ Logo del pato con fondo transparente + Banners decorativos
 - [ ] Optimizar el diseño UI/UX del nuevo Menú Hamburguesa en versión mobile
 - [ ] Presupuestos por categoría con barra de progreso
 - [ ] Cotización dólar automática + totales unificados ARS

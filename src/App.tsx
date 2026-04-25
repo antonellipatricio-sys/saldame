@@ -12,7 +12,6 @@ import { AccountPage } from './pages/AccountPage';
 import { QueryPage } from './pages/QueryPage';
 import { SharedExpensesPage } from './pages/SharedExpensesPage';
 import { SharedExpensesDashboard } from './pages/SharedExpensesDashboard';
-import { Lock } from 'lucide-react';
 
 type Page = 'dashboard' | 'add-expense' | 'expenses' | 'upload-pdf' | 'upload-santander' | 'stats' | 'categories' | 'tags' | 'account' | 'query' | 'shared-expenses';
 
@@ -53,7 +52,7 @@ function App() {
     }
 
     return (
-      <div className="min-h-screen bg-slate-50 p-4 md:p-8">
+      <div className="min-h-screen bg-brand-bg p-4 md:p-8">
         <div className="max-w-7xl mx-auto">
           {isDashboard ? (
             <SharedExpensesDashboard />
@@ -68,13 +67,13 @@ function App() {
   // Pantalla de bloqueo para el resto de la App (PRIVADA)
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-        <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 max-w-sm w-full text-center">
-          <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Lock className="w-8 h-8" />
+      <div className="min-h-screen bg-brand-bg flex items-center justify-center p-4">
+        <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 max-w-sm w-full text-center">
+          <div className="flex justify-center mb-4">
+            <img src="/logopato.png" alt="Saldame" className="w-24 h-24 object-contain drop-shadow-md" />
           </div>
-          <h1 className="text-xl font-bold text-slate-800 mb-2">App Privada</h1>
-          <p className="text-sm text-slate-500 mb-6">Ingresa tu PIN para acceder a Saldame</p>
+          <h1 className="text-2xl font-bold text-brand-primary mb-1">Saldame</h1>
+          <p className="text-sm text-brand-text mb-6">Ingresá tu PIN para acceder</p>
 
           <form onSubmit={(e) => {
             e.preventDefault();
@@ -91,10 +90,10 @@ function App() {
               value={pinInput}
               onChange={(e) => setPinInput(e.target.value)}
               placeholder="Ej: 1234"
-              className="w-full text-center tracking-widest text-lg p-3 rounded-xl border border-slate-200 focus:border-blue-500 focus:ring-blue-500 mb-4 outline-none"
+              className="w-full text-center tracking-widest text-lg p-3 rounded-xl border border-slate-200 focus:border-brand-primary focus:ring-brand-primary mb-4 outline-none"
               autoFocus
             />
-            <button type="submit" className="w-full bg-slate-800 text-white font-medium py-3 rounded-xl hover:bg-slate-700 transition">
+            <button type="submit" className="w-full bg-brand-success text-white font-semibold py-3 rounded-xl hover:opacity-90 transition">
               Ingresar
             </button>
           </form>

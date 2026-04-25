@@ -114,8 +114,8 @@ export function DashboardPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-slate-800 capitalize">Resumen de {monthName}</h1>
-        <p className="text-slate-600 mt-1">Tu control financiero del mes</p>
+        <h1 className="text-3xl font-bold text-brand-primary capitalize">Resumen de {monthName}</h1>
+        <p className="text-brand-text mt-1">Tu control financiero del mes</p>
       </div>
 
       {/* Summary Cards */}
@@ -125,7 +125,7 @@ export function DashboardPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-slate-600 font-medium">Total en Pesos</p>
-              <p className="text-3xl font-bold text-slate-800 mt-2">
+              <p className="text-3xl font-bold text-brand-success mt-2">
                 ${summary.totalARS.toLocaleString('es-AR')}
               </p>
               {arsPct !== null && (
@@ -139,8 +139,8 @@ export function DashboardPage() {
                 </div>
               )}
             </div>
-            <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-              <DollarSign className="w-6 h-6 text-green-600" />
+            <div className="w-12 h-12 bg-brand-primary/10 rounded-full flex items-center justify-center">
+              <DollarSign className="w-6 h-6 text-brand-primary" />
             </div>
           </div>
         </div>
@@ -150,12 +150,12 @@ export function DashboardPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-slate-600 font-medium">Total en Dólares</p>
-              <p className="text-3xl font-bold text-slate-800 mt-2">
+              <p className="text-3xl font-bold text-brand-success mt-2">
                 US$ {summary.totalUSD.toLocaleString('en-US', { minimumFractionDigits: 2 })}
               </p>
             </div>
-            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-              <Wallet className="w-6 h-6 text-blue-600" />
+            <div className="w-12 h-12 bg-brand-primary/10 rounded-full flex items-center justify-center">
+              <Wallet className="w-6 h-6 text-brand-primary" />
             </div>
           </div>
         </div>
@@ -165,12 +165,12 @@ export function DashboardPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-slate-600 font-medium">Gastos del Mes</p>
-              <p className="text-3xl font-bold text-slate-800 mt-2">
+              <p className="text-3xl font-bold text-brand-success mt-2">
                 {monthExpenseCount}
               </p>
             </div>
-            <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
-              <TrendingUp className="w-6 h-6 text-purple-600" />
+            <div className="w-12 h-12 bg-brand-primary/10 rounded-full flex items-center justify-center">
+              <TrendingUp className="w-6 h-6 text-brand-primary" />
             </div>
           </div>
         </div>
@@ -179,7 +179,7 @@ export function DashboardPage() {
       {/* Gráfico de barras por categoría */}
       {sortedCategories.length > 0 && (
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-          <h2 className="text-xl font-bold text-slate-800 mb-5">Gastos por Categoría</h2>
+          <h2 className="text-xl font-bold text-brand-primary mb-5">Gastos por Categoría</h2>
           <div className="space-y-3">
             {sortedCategories.map(([cat, amount]) => {
               const pct = maxCategoryAmount > 0 ? (amount / maxCategoryAmount) * 100 : 0;
@@ -188,11 +188,11 @@ export function DashboardPage() {
               return (
                 <div key={cat} className="group">
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm font-medium text-slate-700 flex items-center gap-1.5">
+                    <span className="text-sm font-semibold text-slate-900 flex items-center gap-1.5">
                       {catObj?.icon && <span>{catObj.icon}</span>}
                       {cat}
                     </span>
-                    <span className="text-sm font-bold text-slate-800">
+                    <span className="text-sm font-bold text-slate-900">
                       ${amount.toLocaleString('es-AR')}
                     </span>
                   </div>
@@ -212,23 +212,24 @@ export function DashboardPage() {
       {/* Comparativa mes a mes */}
       {comparison.length > 0 && (
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-          <h2 className="text-xl font-bold text-slate-800 mb-1">Comparativa Mensual</h2>
-          <p className="text-sm text-slate-500 mb-5 capitalize">{monthName} vs {prevMonthName}</p>
+          <h2 className="text-xl font-bold text-brand-primary mb-1">Comparativa Mensual</h2>
+          <p className="text-sm text-brand-text mb-5 capitalize">{monthName} vs {prevMonthName}</p>
           <div className="space-y-3">
             {comparison.map(c => (
               <div key={c.name} className="flex items-center justify-between py-2 border-b border-slate-50 last:border-0">
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-slate-700 truncate">{c.name}</p>
+                  <p className="text-sm font-semibold text-slate-900 truncate">{c.name}</p>
                   <p className="text-xs text-slate-400">
                     Antes: ${c.previous.toLocaleString('es-AR')}
                   </p>
                 </div>
                 <div className="text-right ml-4">
-                  <p className="text-sm font-bold text-slate-800">
+                  <p className="text-sm font-bold text-slate-900">
                     ${c.current.toLocaleString('es-AR')}
                   </p>
                   <div className={cn('flex items-center gap-0.5 text-xs font-medium justify-end',
-                    c.diff > 0 ? 'text-red-500' : c.diff < 0 ? 'text-green-500' : 'text-slate-400'
+                    c.current === 0 ? 'text-brand-alert' :
+                      c.diff > 0 ? 'text-red-500' : c.diff < 0 ? 'text-brand-success' : 'text-slate-400'
                   )}>
                     {c.diff > 0 ? <ArrowUpRight className="w-3 h-3" /> :
                       c.diff < 0 ? <ArrowDownRight className="w-3 h-3" /> :
@@ -245,7 +246,7 @@ export function DashboardPage() {
 
       {/* Recent Expenses */}
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-        <h2 className="text-xl font-bold text-slate-800 mb-4">Últimos Gastos</h2>
+        <h2 className="text-xl font-bold text-brand-primary mb-4">Últimos Gastos</h2>
 
         {recentExpenses.length === 0 ? (
           <div className="text-center py-12">
@@ -261,7 +262,7 @@ export function DashboardPage() {
                 className="flex items-center justify-between p-4 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors"
               >
                 <div className="flex-1">
-                  <p className="font-medium text-slate-800">{expense.description}</p>
+                  <p className="font-semibold text-slate-900">{expense.description}</p>
                   <div className="flex items-center gap-2 mt-1">
                     <span className="text-xs text-slate-500">
                       {format(new Date(expense.date), 'dd/MM/yyyy', { locale: es })}
@@ -271,7 +272,7 @@ export function DashboardPage() {
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="font-bold text-slate-800">
+                  <p className="font-bold text-slate-900">
                     {expense.currency === 'ARS' ? '$' : 'US$'} {expense.amount.toLocaleString()}
                   </p>
                 </div>

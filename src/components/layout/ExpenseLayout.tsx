@@ -28,17 +28,17 @@ export function ExpenseLayout({ children, activePage, onPageChange }: ExpenseLay
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+    <div className="min-h-screen bg-brand-bg font-sans">
       {/* Desktop Layout */}
       <div className="hidden md:flex h-screen">
         {/* Sidebar Desktop */}
         <aside className="w-64 bg-white border-r border-slate-200 shadow-sm">
           <div className="p-6">
             <div className="flex items-center gap-3 mb-8">
-              <img src="/logopato.png" alt="Saldame Logo" className="w-20 h-20 object-contain drop-shadow-md" />
+              <img src="/logopato.png" alt="Saldame Logo" className="w-28 h-28 object-contain drop-shadow-md" />
               <div>
-                <h1 className="text-xl font-bold text-slate-800">Mis Gastos</h1>
-                <p className="text-xs text-slate-500">Control financiero</p>
+                <h1 className="text-xl font-bold text-brand-primary">Gastos Compartidos</h1>
+                <p className="text-xs font-medium text-slate-500">Control financiero</p>
               </div>
             </div>
 
@@ -52,12 +52,12 @@ export function ExpenseLayout({ children, activePage, onPageChange }: ExpenseLay
                     className={cn(
                       'w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200',
                       activePage === item.id
-                        ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-md'
-                        : 'text-slate-600 hover:bg-slate-100'
+                        ? 'bg-brand-primary text-white shadow-md'
+                        : 'text-slate-800 hover:bg-slate-100 hover:text-brand-primary'
                     )}
                   >
                     <Icon className="w-5 h-5" />
-                    <span className="font-medium">{item.label}</span>
+                    <span className="font-semibold">{item.label}</span>
                   </button>
                 );
               })}
@@ -79,9 +79,9 @@ export function ExpenseLayout({ children, activePage, onPageChange }: ExpenseLay
         <header className="bg-white border-b border-slate-200 px-4 py-4 shadow-sm z-20 relative">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <img src="/logopato.png" alt="Saldame Logo" className="w-16 h-16 object-contain drop-shadow-md" />
+              <img src="/logopato.png" alt="Saldame Logo" className="w-20 h-20 object-contain drop-shadow-md" />
               <div>
-                <h1 className="text-lg font-bold text-slate-800">Mis Gastos</h1>
+                <h1 className="text-lg font-bold text-brand-primary">Gastos Compartidos</h1>
                 <p className="text-xs text-slate-500">
                   {navItems.find((item) => item.id === activePage)?.label}
                 </p>
@@ -112,8 +112,8 @@ export function ExpenseLayout({ children, activePage, onPageChange }: ExpenseLay
                     className={cn(
                       'w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all',
                       activePage === item.id
-                        ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-md font-medium'
-                        : 'text-slate-600 hover:bg-slate-50'
+                        ? 'bg-brand-primary text-white shadow-md font-medium'
+                        : 'text-slate-600 hover:bg-slate-50 hover:text-brand-primary'
                     )}
                   >
                     <Icon className="w-5 h-5" />
@@ -126,7 +126,7 @@ export function ExpenseLayout({ children, activePage, onPageChange }: ExpenseLay
         )}
 
         {/* Main Content Mobile */}
-        <main className="flex-1 overflow-y-auto p-4 bg-slate-50">
+        <main className="flex-1 overflow-y-auto p-4 bg-brand-bg">
           {children}
         </main>
       </div>
