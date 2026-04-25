@@ -35,9 +35,9 @@ export function ExpenseLayout({ children, activePage, onPageChange }: ExpenseLay
         <aside className="w-64 bg-white border-r border-slate-200 shadow-sm">
           <div className="p-6">
             <div className="flex items-center gap-3 mb-8">
-              <img src="/logopato.png" alt="Saldame Logo" className="w-28 h-28 object-contain drop-shadow-md" />
+              <img src="/logopato.png" alt="Cuack Logo" className="w-28 h-28 object-contain drop-shadow-md" />
               <div>
-                <h1 className="text-xl font-bold text-brand-primary">Gastos Compartidos</h1>
+                <h1 className="text-xl font-bold text-brand-primary leading-tight">Cuack Cuentas Claras</h1>
                 <p className="text-xs font-medium text-slate-500">Control financiero</p>
               </div>
             </div>
@@ -79,9 +79,9 @@ export function ExpenseLayout({ children, activePage, onPageChange }: ExpenseLay
         <header className="bg-white border-b border-slate-200 px-4 py-4 shadow-sm z-20 relative">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <img src="/logopato.png" alt="Saldame Logo" className="w-20 h-20 object-contain drop-shadow-md" />
+              <img src="/logopato.png" alt="Cuack Logo" className="w-20 h-20 object-contain drop-shadow-md" />
               <div>
-                <h1 className="text-lg font-bold text-brand-primary">Gastos Compartidos</h1>
+                <h1 className="text-lg font-bold text-brand-primary leading-tight">Cuack Cuentas Claras</h1>
                 <p className="text-xs text-slate-500">
                   {navItems.find((item) => item.id === activePage)?.label}
                 </p>

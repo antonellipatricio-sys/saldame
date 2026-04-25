@@ -1,4 +1,4 @@
-# Saldame App — Documentación Completa
+# Cuack Cuentas Claras — Documentación Completa
 
 > **Aplicación de control financiero personal** construida con React + Vite + TypeScript + Firebase (Firestore) + Zustand.  
 > Permite registrar, clasificar, importar y analizar gastos personales desde múltiples fuentes (manual, PDFs de tarjetas, Excel de Santander).
@@ -201,6 +201,7 @@ src/
 | Storage | Firebase Storage |
 | IA | Gemini 2.0 Flash (API Key) |
 | Parseo PDF | pdfjs-dist |
+| Generación PDF | jspdf + jspdf-autotable |
 | Parseo Excel | xlsx (SheetJS) |
 | Estilos | TailwindCSS v4 + `@theme` (Design System custom) |
 | Íconos | Lucide React |
@@ -232,6 +233,10 @@ Definidos en `src/index.css` dentro del bloque `@theme {}` (Tailwind v4).
 - **Logo Principal:** `public/logopato.png` (PNG transparente). Aparece en sidebar, login y headers.
 - **Banner Gastos:** `public/banner-gastos.png`. Cabecera responsiva para el módulo de Juntadas.
   - *Optimización:* Usa `object-contain` en móviles y cache-busting con `?v=2` para asegurar que los cambios se vean instantáneamente.
+- **Principios de UX:**
+  - **Alta Legibilidad:** Uso de `font-bold` en etiquetas, contrastes altos (`slate-700` sobre `slate-50`) e inputs resaltados para campos clave.
+  - **Feedback Visual:** Micro-interacciones (hover, scale, traslación) en botones y elementos interactivos para una sensación premium.
+  - **Identidad:** Uso de píldoras y badges con los colores de la marca para destacar roles (ej: pagadores en gastos compartidos).
 
 ---
 
@@ -265,6 +270,8 @@ Definidos en `src/index.css` dentro del bloque `@theme {}` (Tailwind v4).
 - [x] Persistencia en Firebase Firestore (colección `sharedGroups`).
 - [x] Algoritmo de minimización de deudas (Greedy logic).
 - [x] Banner corporativo responsivo Pato Contador.
+- [x] Exportación a PDF y Resumen para WhatsApp.
+- [x] Registro de pagos con histórico y medio de pago.
 
 ### Fase 7: Exportación por Tarjeta ✅
 - [x] Columnas Etiquetas, Tarjeta, Titular en Excel exportado
@@ -282,6 +289,7 @@ Definidos en `src/index.css` dentro del bloque `@theme {}` (Tailwind v4).
 - [ ] Presupuestos por categoría con barra de progreso
 - [ ] Cotización dólar automática + totales unificados ARS
 - [ ] Reporte mensual PDF generado automáticamente
-- [ ] PWA offline con service worker
+- [x] ✅ PWA Manifest e iconos para "Agregar a Inicio" (iOS/Android)
+- [ ] Service Worker para soporte Offline básico
 - [ ] Dark mode
 - [ ] Gastos recurrentes (auto-proyección mensual)

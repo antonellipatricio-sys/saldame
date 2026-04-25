@@ -68,17 +68,19 @@ export function SharedExpensesDashboard() {
     const handleRemoveHistory = (e: React.MouseEvent, id: string) => {
         e.stopPropagation();
         e.preventDefault();
-        setVisitedEvents(visitedEvents.filter(ev => ev.id !== id));
+        if (confirm('¿Seguro que deseas borrar esta juntada de tu historial? No se borrará de la nube, solo de este listado.')) {
+            setVisitedEvents(visitedEvents.filter(ev => ev.id !== id));
+        }
     };
 
     return (
         <div className="max-w-3xl mx-auto space-y-8 py-4">
             {/* Banner Header */}
-            <div className="w-full mb-6 relative rounded-2xl overflow-hidden shadow-sm border border-slate-100 bg-brand-primary/5">
+            <div className="w-full mb-6 relative aspect-[21/9] sm:aspect-[16/5] rounded-2xl overflow-hidden shadow-sm border border-slate-100 bg-brand-primary/5">
                 <img
                     src="/banner-gastos.png?v=2"
                     alt="Gastos Compartidos"
-                    className="w-full h-auto object-contain"
+                    className="w-full h-full object-cover object-center sm:object-[center_30%]"
                 />
             </div>
 
@@ -138,8 +140,8 @@ export function SharedExpensesDashboard() {
                                     <div className="flex items-center gap-3">
                                         <button
                                             onClick={(e) => handleRemoveHistory(e, ev.id)}
-                                            className="text-slate-400 hover:text-brand-alert opacity-0 group-hover:opacity-100 transition-opacity p-2"
-                                            title="Olvidar evento (solo se borra de tu historial)"
+                                            className="text-slate-400/50 hover:text-brand-alert transition-all p-2"
+                                            title="Borrar juntada (solo se quita de tu historial)"
                                         >
                                             <Trash2 className="w-4 h-4" />
                                         </button>

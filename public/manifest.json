@@ -1,0 +1,17 @@
+{
+    "short_name": "Cuack",
+    "name": "Cuack Cuentas Claras",
+    "description": "App de control financiero personal y gastos compartidos",
+    "icons": [
+        {
+            "src": "logopato.png",
+            "sizes": "192x192 512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ],
+    "start_url": "/",
+    "display": "standalone",
+    "theme_color": "#7D52B5",
+    "background_color": "#F2F2F2"
+}
