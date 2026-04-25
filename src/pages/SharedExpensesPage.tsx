@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Users, Plus, Trash2, Check, ArrowRight } from 'lucide-react';
+import { db } from '../lib/firebase';
+import { doc, onSnapshot, setDoc } from 'firebase/firestore';
 
 interface Participant {
     id: string;
@@ -14,36 +16,59 @@ interface SharedExpense {
     involvedIds: string[];
 }
 
-export function SharedExpensesPage() {
-    const [participants, setParticipants] = useState<Participant[]>(() => {
-        try {
-            const saved = localStorage.getItem('saldame_shared_participants');
-            return saved ? JSON.parse(saved) : [];
-        } catch {
-            return [];
-        }
-    });
-
-    const [expenses, setExpenses] = useState<SharedExpense[]>(() => {
-        try {
-            const saved = localStorage.getItem('saldame_shared_expenses');
-            return saved ? JSON.parse(saved) : [];
-        } catch {
-            return [];
-        }
-    });
+export function SharedExpensesPage({ groupId }: { groupId?: string | null }) {
+    const [participants, setParticipants] = useState<Participant[]>([]);
+    const [expenses, setExpenses] = useState<SharedExpense[]>([]);
+    const [eventName, setEventName] = useState('Cargando...');
+    const [loading, setLoading] = useState(true);
 
     const [newParticipantName, setNewParticipantName] = useState('');
     const [newExpenseDesc, setNewExpenseDesc] = useState('');
     const [newExpenseAmt, setNewExpenseAmt] = useState('');
     const [newExpensePayer, setNewExpensePayer] = useState('');
 
-    // By default, everyone is involved. We handle this in the Add function.
     const [selectedInvolved, setSelectedInvolved] = useState<Record<string, boolean>>({});
 
     useEffect(() => {
-        localStorage.setItem('saldame_shared_participants', JSON.stringify(participants));
-        // Check if new participants should be added to selectedInvolved by default
+        if (!groupId) {
+            setLoading(false);
+            setEventName('Evento no encontrado');
+            return;
+        }
+
+        const unsubscribe = onSnapshot(doc(db, 'sharedGroups', groupId), (docSnap) => {
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                const title = data.title || 'Evento Compartido';
+                setEventName(title);
+                setParticipants(data.participants || []);
+                setExpenses(data.expenses || []);
+                setLoading(false);
+
+                // Añadir al historial local de visitas (Dashboard)
+                try {
+                    const saved = localStorage.getItem('saldame_visited_events');
+                    let visitedEvents = saved ? JSON.parse(saved) : [];
+                    visitedEvents = visitedEvents.filter((ev: any) => ev.id !== groupId);
+                    visitedEvents.unshift({
+                        id: groupId,
+                        name: title,
+                        lastVisited: Date.now()
+                    });
+                    localStorage.setItem('saldame_visited_events', JSON.stringify(visitedEvents));
+                } catch (e) {
+                    console.error("Error al guardar historial:", e);
+                }
+            } else {
+                setEventName('Evento no encontrado');
+                setLoading(false);
+            }
+        });
+
+        return () => unsubscribe();
+    }, [groupId]);
+
+    useEffect(() => {
         const newSelected = { ...selectedInvolved };
         let changed = false;
         participants.forEach(p => {
@@ -57,22 +82,24 @@ export function SharedExpensesPage() {
         }
     }, [participants]);
 
-    useEffect(() => {
-        localStorage.setItem('saldame_shared_expenses', JSON.stringify(expenses));
-    }, [expenses]);
+    const saveToFirebase = async (newParticipants: Participant[], newExpenses: SharedExpense[]) => {
+        if (!groupId) return;
+        await setDoc(doc(db, 'sharedGroups', groupId), {
+            participants: newParticipants,
+            expenses: newExpenses
+        }, { merge: true });
+    };
 
     const addParticipant = (e: React.FormEvent) => {
         e.preventDefault();
         if (!newParticipantName.trim()) return;
         const newP = { id: crypto.randomUUID(), name: newParticipantName.trim() };
-        setParticipants([...participants, newP]);
+        saveToFirebase([...participants, newP], expenses);
         setNewParticipantName('');
     };
 
     const removeParticipant = (id: string) => {
-        setParticipants(participants.filter(p => p.id !== id));
-        // Also remove from expenses if they paid something? They shouldn't be removed if they are involved.
-        // For simplicity, we just filter them out.
+        saveToFirebase(participants.filter(p => p.id !== id), expenses);
     };
 
     const addExpense = (e: React.FormEvent) => {
@@ -102,18 +129,17 @@ export function SharedExpensesPage() {
             involvedIds: involved,
         };
 
-        setExpenses([...expenses, expense]);
+        saveToFirebase(participants, [...expenses, expense]);
         setNewExpenseDesc('');
         setNewExpenseAmt('');
 
-        // Reiniciar los participantes seleccionados para el próximo gasto
         const resettedSelected: Record<string, boolean> = {};
         Object.keys(selectedInvolved).forEach(id => resettedSelected[id] = true);
         setSelectedInvolved(resettedSelected);
     };
 
     const removeExpense = (id: string) => {
-        setExpenses(expenses.filter(e => e.id !== id));
+        saveToFirebase(participants, expenses.filter(e => e.id !== id));
     };
 
     const toggleInvolved = (id: string) => {
@@ -126,7 +152,6 @@ export function SharedExpensesPage() {
         participants.forEach(p => balances[p.id] = 0);
 
         expenses.forEach(ext => {
-            // Si el pagador no existe, ignorar
             if (balances[ext.payerId] === undefined) {
                 balances[ext.payerId] = 0;
             }
@@ -185,14 +210,35 @@ export function SharedExpensesPage() {
 
     const transfers = getTransfers();
 
+    if (loading) {
+        return (
+            <div className="flex justify-center items-center h-64 text-slate-500">
+                <p>Cargando evento...</p>
+            </div>
+        );
+    }
+
+    if (!groupId) {
+        return (
+            <div className="text-center py-10">
+                <h1 className="text-2xl font-bold text-slate-800">Evento no encontrado</h1>
+                <p className="text-slate-500 mt-2">No se proveyó un ID válido.</p>
+                <a href="/gastos" className="mt-4 inline-block text-blue-600 hover:underline">Volver a mis eventos</a>
+            </div>
+        );
+    }
+
     return (
         <div className="space-y-6">
             <div>
+                <a href="/gastos" className="text-sm text-blue-500 hover:text-blue-700 hover:underline flex items-center gap-1 mb-2">
+                    &larr; Volver a Mis Juntadas
+                </a>
                 <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
                     <Users className="w-6 h-6 text-blue-600" />
-                    Gastos Compartidos
+                    {eventName}
                 </h1>
-                <p className="text-slate-500 text-sm mt-1">Dividí los gastos con amigos fácilmente</p>
+                <p className="text-slate-500 text-sm mt-1">Dividí los gastos con amigos fácilmente en tiempo real</p>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -378,7 +424,7 @@ export function SharedExpensesPage() {
                                     <div className="flex justify-between items-center text-sm">
                                         <span className="font-medium text-slate-700">{getName(t.from)}</span>
                                         <ArrowRight className="w-4 h-4 text-slate-400 mx-2" />
-                                        <span className="font-medium text-slate-700">{getName(t.to)}</span>
+                                        <span className="font-medium text.slate-700">{getName(t.to)}</span>
                                     </div>
                                     <div className="text-center font-bold text-green-600">
                                         ${t.amount.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -395,7 +441,7 @@ export function SharedExpensesPage() {
                             <button
                                 onClick={() => {
                                     if (confirm('¿Seguro que deseas borrar todos los gastos? Los participantes se mantendrán.')) {
-                                        setExpenses([]);
+                                        saveToFirebase(participants, []);
                                     }
                                 }}
                                 className="w-full mt-6 py-2 border border-slate-200 text-slate-500 font-medium text-sm rounded-lg hover:bg-slate-50 transition"

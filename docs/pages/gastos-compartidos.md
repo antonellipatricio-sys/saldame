@@ -1,36 +1,31 @@
-# Módulo: Gastos Compartidos
+# Módulo: Gastos Compartidos (Colaborativo en Tiempo Real)
 
-**Ruta del archivo base**: `src/pages/SharedExpensesPage.tsx`
+**Rutas del archivo base**: 
+- `src/pages/SharedExpensesDashboard.tsx`
+- `src/pages/SharedExpensesPage.tsx`
 
-La herramienta **Gastos Compartidos** permite dividir gastos grupales, manteniendo un registro de participantes y optimizando el cálculo de deudas cruzadas. Es equivalente a la lógica de calculadoras de división de gastos convencionales (como Splitwise).
+La herramienta **Gastos Compartidos** permite dividir gastos grupales, manteniendo un registro de múltiples juntadas separadas, e invitar participantes con solo compartir un link. Todo sincronizado en vivo mediante Firebase, equivalente a Splitwise y sin pedir inicio de sesión (Authentication=off).
+
+## Flujo por Evento
+
+1. **Dashboard (`/gastos`)**:
+   - Actúa como tu sala de control. Un módulo que lista y almacena localmente en memoria (`localStorage`) todos los eventos que visitaste antes.
+   - Si creas un nuevo evento (ej "Juntada Fin de de Año"), se hace una petición para crear un registro en Firebase.
+   
+2. **La Sala Compartida (`/gastos/[id_random]`)**:
+   - Cada URL representa un documento único en la base de datos remota (`Firestore`).
+   - Todos los usuarios que abran este link están viendo los mismos datos a través de una conexión persistente bidireccional (`onSnapshot`).
+   - Al entrar por primera vez gracias a un enlace que te pasaron, la app guarda este registro en el teléfono para que, si ingresas mañana, puedas regresar a la sala sin depender de recuperar el link perdido.
 
 ## Características Principales
 
-1. **Gestión de Participantes**: 
-   - Se pueden agregar y eliminar participantes.
-   - Estos se persisten automáticamente en el `localStorage` (`saldame_shared_participants`).
+1. **Sincronización Transparente**: 
+   - Agregar usuario, eliminar gasto, seleccionar pagador... cada acción ejecuta una macro-escritura en Firebase Fusion (`merge: true`), la cual impacta microsegundos después en las pantallas de todos los participantes conectados.
 
-2. **Registro de Gastos Individuales**:
-   - Para cada gasto, se especifica quién lo pagó y el monto.
-   - Por defecto, el sistema asume que el gasto **se divide entre todos**. El usuario puede "destildar" personas específicas en un gasto si, por ejemplo, no consumieron.
+2. **Cálculo de Deudas Cruzadas (Avaro)**:
+   - Toma el balance final positivo/negativo de absolutamente todos y genera "Transferencias ideales", un mapa dictaminando exclusivamente "Quién le paga qué, a quién", con la menor cantidad de pasos posibles.
 
-3. **Simplificación de Deudas**:
-   - En vez de listar "Santi le debe $200 a Gasti por el asado" y "Santi le debe $100 a Leo por la bebida", el algoritmo toma el balance total de gastos y pagos de todos.
-   - Emplea un algoritmo "Greedy" (Avaro) de minimización de transacciones:
-     - Ordena a "quienes deben" (debts) por mayor a menor.
-     - Ordena a "quienes reciben" (creditors) de mayor a menor.
-     - Cruza y salda ambos balances iterativamente, generando la cantidad más reducida de pagos ("Quién le paga a quién").
+## Seguridad y Privacidad en Gastos
+Esta ruta coexiste junto en la aplicación `saldame-app`, la cual se protege unánimemente detrás de un `PIN`. Las rutas de "Gastos Compatidos" en `/gastos` son la **única excepción pública/compartible** y se encuentran expuestas al mundo permitiendo el acceso en modo *Sandboxed*, donde quienes naveguen ese enlace jamás podrán visitar ni leer la interfaz general bloqueada con el PIN, asegurando estricto aislamiento de finanzas personales vs eventos mutuos.
 
-4. **Reinicio por Gasto Nuevo**:
-   - Al guardar un gasto, el formulario vuelve a marcar a *todos* los participantes para dividir el siguiente, impiniendo que errores de exclusión afecten gastos futuros accidentalmente.
-
-## Persistencia
-- **Participantes**: Almacenados en `localStorage` con la key `saldame_shared_participants`.
-- **Registro Temporal de Gastos**: Almacenados en `localStorage` con la key `saldame_shared_expenses`.
-
-> Nota: Este módulo funciona íntegramente del lado cliente (frontend) y no guarda los registros en Firebase, dado que busca ser una herramienta pasajera y de utilidad rápida.
-
-## Seguridad y Compartición
-
-1. **Ruta Compartible (Pública)**: El módulo de gastos compartidos está alojado en una ruta específica (actualmente configurada en `App.tsx` bajo la variable `PUBLIC_ROUTE` como `/gastos`). Cualquier persona con el link puede ingresar y usar esta herramienta y **solo** esta herramienta.
-2. **App Protegida (Privada)**: Si alguien intenta ir al inicio de la aplicación o a cualquier otra vista general, el sistema intercepta la visita y solicita un PIN de acceso (configurado en `App.tsx` en `APP_PIN`), bloqueando el menú completo y resguardando los gastos personales del usuario principal.
+*(Atención Técnica: Se requieren configurar reglas abiertas `read/write: true` en la colección `sharedGroups` en Firestore)*

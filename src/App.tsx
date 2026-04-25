@@ -11,6 +11,7 @@ import { TagsPage } from './pages/TagsPage';
 import { AccountPage } from './pages/AccountPage';
 import { QueryPage } from './pages/QueryPage';
 import { SharedExpensesPage } from './pages/SharedExpensesPage';
+import { SharedExpensesDashboard } from './pages/SharedExpensesDashboard';
 import { Lock } from 'lucide-react';
 
 type Page = 'dashboard' | 'add-expense' | 'expenses' | 'upload-pdf' | 'upload-santander' | 'stats' | 'categories' | 'tags' | 'account' | 'query' | 'shared-expenses';
@@ -36,10 +37,17 @@ function App() {
 
   // Ruta específica compartible, aislada y PÚBLICA
   if (isSharedRoute) {
+    const isDashboard = path === PUBLIC_ROUTE || path === `${PUBLIC_ROUTE}/`;
+    const groupId = isDashboard ? null : path.split(`${PUBLIC_ROUTE}/`)[1];
+
     return (
       <div className="min-h-screen bg-slate-50 p-4 md:p-8">
         <div className="max-w-7xl mx-auto">
-          <SharedExpensesPage />
+          {isDashboard ? (
+            <SharedExpensesDashboard />
+          ) : (
+            <SharedExpensesPage groupId={groupId} />
+          )}
         </div>
       </div>
     );
@@ -96,7 +104,7 @@ function App() {
       {activePage === 'tags' && <TagsPage />}
       {activePage === 'account' && <AccountPage />}
       {activePage === 'query' && <QueryPage />}
-      {activePage === 'shared-expenses' && <SharedExpensesPage />}
+      {activePage === 'shared-expenses' && <SharedExpensesDashboard />}
     </ExpenseLayout>
   );
 }
