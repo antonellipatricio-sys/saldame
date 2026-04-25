@@ -234,8 +234,8 @@ export function SharedExpensesPage({ groupId }: { groupId?: string | null }) {
                 <a href="/gastos" className="text-sm text-blue-500 hover:text-blue-700 hover:underline flex items-center gap-1 mb-2">
                     &larr; Volver a Mis Juntadas
                 </a>
-                <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
-                    <Users className="w-6 h-6 text-blue-600" />
+                <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-3">
+                    <img src="/logopato.png" alt="Saldame Logo" className="w-12 h-12 object-contain drop-shadow" />
                     {eventName}
                 </h1>
                 <p className="text-slate-500 text-sm mt-1">Dividí los gastos con amigos fácilmente en tiempo real</p>

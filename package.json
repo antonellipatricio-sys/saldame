@@ -12,6 +12,7 @@
   "dependencies": {
     "@google/genai": "^1.48.0",
     "@hookform/resolvers": "^5.2.2",
+    "@imgly/background-removal-node": "^1.4.5",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",

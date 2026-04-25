@@ -25,7 +25,10 @@ function App() {
   const [pinInput, setPinInput] = useState('');
 
   const path = window.location.pathname;
-  const isSharedRoute = path === PUBLIC_ROUTE || path.startsWith(`${PUBLIC_ROUTE}/`);
+  const hostname = window.location.hostname;
+
+  const isCustomDomain = hostname === 'cuack.ar' || hostname === 'www.cuack.ar';
+  const isSharedRoute = isCustomDomain || path === PUBLIC_ROUTE || path.startsWith(`${PUBLIC_ROUTE}/`);
 
   useEffect(() => {
     // Revisar si ya pusimos el PIN antes
@@ -37,8 +40,17 @@ function App() {
 
   // Ruta específica compartible, aislada y PÚBLICA
   if (isSharedRoute) {
-    const isDashboard = path === PUBLIC_ROUTE || path === `${PUBLIC_ROUTE}/`;
-    const groupId = isDashboard ? null : path.split(`${PUBLIC_ROUTE}/`)[1];
+    let isDashboard = false;
+    let groupId = null;
+
+    if (isCustomDomain && !path.startsWith(PUBLIC_ROUTE)) {
+      isDashboard = path === '/' || path === '';
+      // Si entran a cuack.ar/abc1234 -> el groupId es abc1234
+      groupId = isDashboard ? null : path.replace(/^\//, '');
+    } else {
+      isDashboard = path === PUBLIC_ROUTE || path === `${PUBLIC_ROUTE}/`;
+      groupId = isDashboard ? null : path.split(`${PUBLIC_ROUTE}/`)[1];
+    }
 
     return (
       <div className="min-h-screen bg-slate-50 p-4 md:p-8">

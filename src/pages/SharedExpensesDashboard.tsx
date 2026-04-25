@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Plus, ArrowRight, Calendar, Trash2 } from 'lucide-react';
+import { Plus, ArrowRight, Calendar, Trash2 } from 'lucide-react';
 import { db } from '../lib/firebase';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 
@@ -75,8 +75,8 @@ export function SharedExpensesDashboard() {
         <div className="max-w-3xl mx-auto space-y-6">
             <div className="text-center md:text-left md:flex justify-between items-end">
                 <div>
-                    <h1 className="text-3xl font-bold text-slate-800 flex items-center justify-center md:justify-start gap-2">
-                        <Users className="w-8 h-8 text-blue-600" />
+                    <h1 className="text-3xl font-bold text-slate-800 flex items-center justify-center md:justify-start gap-3">
+                        <img src="/logopato.png" alt="Saldame Logo" className="w-16 h-16 object-contain drop-shadow" />
                         Gastos Compartidos
                     </h1>
                     <p className="text-slate-500 mt-2">Gestiona tus eventos, asados y juntadas fácilmente</p>
