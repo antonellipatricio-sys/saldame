@@ -320,11 +320,11 @@ export function SharedExpensesPage({ groupId }: { groupId?: string | null }) {
             </div>
 
             <div className="mb-6">
-                <div className="relative w-full aspect-[21/9] sm:aspect-[16/5] rounded-2xl overflow-hidden shadow-sm border border-slate-200 bg-brand-primary/5">
+                <div className="relative w-full rounded-2xl overflow-hidden shadow-sm border border-slate-200 bg-brand-primary/5">
                     <img
                         src="/banner-gastos.png?v=2"
                         alt="Gastos Compartidos"
-                        className="w-full h-full object-cover object-center sm:object-[center_30%]"
+                        className="w-full h-auto block"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex items-end p-4 sm:p-6 opacity-0 hover:opacity-100 transition-opacity">
                         <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white drop-shadow-lg flex items-center gap-2">
