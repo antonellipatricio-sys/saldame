@@ -42,6 +42,7 @@ export function SharedExpensesPage({ groupId }: { groupId?: string | null }) {
     const [showPaymentForm, setShowPaymentForm] = useState<{ from: string, to: string, amount: number } | null>(null);
     const [paymentMethod, setPaymentMethod] = useState('');
     const [editingExpenseId, setEditingExpenseId] = useState<string | null>(null);
+    const [roundingMode, setRoundingMode] = useState<number>(0);
 
     useEffect(() => {
         if (!groupId) {
@@ -110,7 +111,19 @@ export function SharedExpensesPage({ groupId }: { groupId?: string | null }) {
         e.preventDefault();
         if (!newParticipantName.trim()) return;
         const newP = { id: crypto.randomUUID(), name: newParticipantName.trim() };
-        saveToFirebase([...participants, newP], expenses);
+
+        let newExpenses = expenses;
+        // Si ya hay gastos registrados, preguntamos si quiere sumarla a las deudas anteriores
+        if (expenses.length > 0) {
+            if (window.confirm(`¿Querés que ${newP.name} se agregue automáticamente a todos los gastos que ya estaban registrados? (Si ponés Cancelar, vas a tener que sumarla manualmente con el lápiz en cada gasto que corresponda).`)) {
+                newExpenses = expenses.map(expense => ({
+                    ...expense,
+                    involvedIds: [...expense.involvedIds, newP.id]
+                }));
+            }
+        }
+
+        saveToFirebase([...participants, newP], newExpenses);
         setNewParticipantName('');
     };
 
@@ -254,6 +267,35 @@ export function SharedExpensesPage({ groupId }: { groupId?: string | null }) {
             if (balances[p.toId] !== undefined) balances[p.toId] -= p.amount;
         });
 
+        if (roundingMode > 0) {
+            let sum = 0;
+            const roundedBalances: Record<string, number> = {};
+            for (const [id, bal] of Object.entries(balances)) {
+                let rounded = Math.round(bal / roundingMode) * roundingMode;
+                roundedBalances[id] = rounded;
+                sum += rounded;
+            }
+
+            let currentSum = Math.round(sum);
+            let loopGuard = 1000;
+            while (currentSum !== 0 && loopGuard > 0) {
+                loopGuard--;
+                const keys = Object.keys(roundedBalances).filter(k => roundedBalances[k] !== 0);
+                if (keys.length === 0) break;
+
+                if (currentSum > 0) {
+                    const maxId = keys.reduce((a, b) => roundedBalances[a] > roundedBalances[b] ? a : b);
+                    roundedBalances[maxId] -= roundingMode;
+                    currentSum -= roundingMode;
+                } else {
+                    const maxId = keys.reduce((a, b) => roundedBalances[a] > roundedBalances[b] ? a : b);
+                    roundedBalances[maxId] += roundingMode;
+                    currentSum += roundingMode;
+                }
+            }
+            return roundedBalances;
+        }
+
         return balances;
     };
 
@@ -271,10 +313,25 @@ export function SharedExpensesPage({ groupId }: { groupId?: string | null }) {
         creditors.sort((a, b) => b.amount - a.amount);
 
         const transfers: { from: string, to: string, amount: number }[] = [];
+
+        for (let i = 0; i < debts.length; i++) {
+            for (let j = 0; j < creditors.length; j++) {
+                if (debts[i].amount > 0 && Math.abs(debts[i].amount - creditors[j].amount) < 0.01) {
+                    transfers.push({ from: debts[i].id, to: creditors[j].id, amount: debts[i].amount });
+                    debts[i].amount = 0;
+                    creditors[j].amount = 0;
+                    break;
+                }
+            }
+        }
+
         let i = 0;
         let j = 0;
 
         while (i < debts.length && j < creditors.length) {
+            if (debts[i].amount < 0.01) { i++; continue; }
+            if (creditors[j].amount < 0.01) { j++; continue; }
+
             const d = debts[i];
             const c = creditors[j];
             const amount = Math.min(d.amount, c.amount);
@@ -285,9 +342,6 @@ export function SharedExpensesPage({ groupId }: { groupId?: string | null }) {
 
             d.amount -= amount;
             c.amount -= amount;
-
-            if (d.amount < 0.01) i++;
-            if (c.amount < 0.01) j++;
         }
 
         return transfers;
@@ -304,7 +358,7 @@ export function SharedExpensesPage({ groupId }: { groupId?: string | null }) {
         text += `💰 *Liquidación de Cuentas:*\n`;
         if (transfers.length > 0) {
             transfers.forEach(t => {
-                text += `• ${getName(t.from)} 👉 ${getName(t.to)}: *$${t.amount.toLocaleString('es-AR', { minimumFractionDigits: 2 })}*\n`;
+                text += `• ${getName(t.from)} 👉 ${getName(t.to)}: *$${roundingMode > 0 ? t.amount.toLocaleString('es-AR') : t.amount.toLocaleString('es-AR', { minimumFractionDigits: 2 })}*\n`;
             });
         } else {
             text += `¡No hay deudas pendientes! 🎉\n`;
@@ -568,10 +622,24 @@ export function SharedExpensesPage({ groupId }: { groupId?: string | null }) {
 
                 {/* Columna Derecha: Pagos y Saldos */}
                 <div className="lg:col-span-1 bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-                    <h2 className="font-bold text-brand-primary mb-4 flex items-center gap-2">
-                        <Check className="w-5 h-5 text-brand-success" />
-                        Quién le paga a quién
-                    </h2>
+                    <div className="flex justify-between items-center mb-4">
+                        <h2 className="font-bold text-brand-primary flex items-center gap-2">
+                            <Check className="w-5 h-5 text-brand-success" />
+                            Quién le paga a quién
+                        </h2>
+                        <select
+                            className="bg-slate-50 border border-slate-200 text-slate-600 text-xs rounded-lg px-2 py-1 outline-none font-medium"
+                            value={roundingMode}
+                            onChange={(e) => setRoundingMode(Number(e.target.value))}
+                        >
+                            <option value={0}>Exacto</option>
+                            <option value={10}>Múltiplos $10</option>
+                            <option value={50}>Múltiplos $50</option>
+                            <option value={100}>Múltiplos $100</option>
+                            <option value={500}>Múltiplos $500</option>
+                            <option value={1000}>Múltiplos $1000</option>
+                        </select>
+                    </div>
 
                     <div className="space-y-4">
                         {transfers.length > 0 ? (
@@ -583,7 +651,7 @@ export function SharedExpensesPage({ groupId }: { groupId?: string | null }) {
                                         <span className="font-semibold text-slate-900">{getName(t.to)}</span>
                                     </div>
                                     <div className="text-center font-bold text-brand-success text-lg">
-                                        ${t.amount.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                        ${roundingMode > 0 ? t.amount.toLocaleString('es-AR') : t.amount.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                     </div>
 
                                     {/* Botón Pagar */}
