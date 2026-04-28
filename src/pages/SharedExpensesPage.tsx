@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Plus, Trash2, Check, ArrowRight, Wallet, Receipt, RotateCcw, Share2, FileText, Copy } from 'lucide-react';
+import { Users, Plus, Trash2, Check, ArrowRight, Wallet, Receipt, RotateCcw, Share2, FileText, Copy, Pencil } from 'lucide-react';
 import { db } from '../lib/firebase';
 import { doc, onSnapshot, setDoc } from 'firebase/firestore';
 import { generateSharedExpensesPDF } from '../lib/pdfGenerator';
@@ -41,6 +41,7 @@ export function SharedExpensesPage({ groupId }: { groupId?: string | null }) {
     const [selectedInvolved, setSelectedInvolved] = useState<Record<string, boolean>>({});
     const [showPaymentForm, setShowPaymentForm] = useState<{ from: string, to: string, amount: number } | null>(null);
     const [paymentMethod, setPaymentMethod] = useState('');
+    const [editingExpenseId, setEditingExpenseId] = useState<string | null>(null);
 
     useEffect(() => {
         if (!groupId) {
@@ -119,7 +120,7 @@ export function SharedExpensesPage({ groupId }: { groupId?: string | null }) {
         }
     };
 
-    const addExpense = (e: React.FormEvent) => {
+    const handleSubmitExpense = (e: React.FormEvent) => {
         e.preventDefault();
         const amount = parseFloat(newExpenseAmt);
         if (!newExpensePayer) {
@@ -138,19 +139,61 @@ export function SharedExpensesPage({ groupId }: { groupId?: string | null }) {
             return;
         }
 
-        const expense: SharedExpense = {
-            id: crypto.randomUUID(),
-            description: newExpenseDesc.trim(),
-            amount,
-            payerId: newExpensePayer,
-            involvedIds: involved,
-        };
+        if (editingExpenseId) {
+            const updatedExpenses = expenses.map(ex => {
+                if (ex.id === editingExpenseId) {
+                    return {
+                        ...ex,
+                        description: newExpenseDesc.trim(),
+                        amount,
+                        payerId: newExpensePayer,
+                        involvedIds: involved,
+                    };
+                }
+                return ex;
+            });
+            saveToFirebase(participants, updatedExpenses);
+            setEditingExpenseId(null);
+        } else {
+            const expense: SharedExpense = {
+                id: crypto.randomUUID(),
+                description: newExpenseDesc.trim(),
+                amount,
+                payerId: newExpensePayer,
+                involvedIds: involved,
+            };
+            saveToFirebase(participants, [...expenses, expense]);
+        }
 
-        saveToFirebase(participants, [...expenses, expense]);
         setNewExpenseDesc('');
         setNewExpenseAmt('');
         setNewExpensePayer('');
 
+        const resettedSelected: Record<string, boolean> = {};
+        Object.keys(selectedInvolved).forEach(id => resettedSelected[id] = true);
+        setSelectedInvolved(resettedSelected);
+    };
+
+    const editExpense = (expense: SharedExpense) => {
+        setEditingExpenseId(expense.id);
+        setNewExpenseDesc(expense.description);
+        setNewExpenseAmt(expense.amount.toString());
+        setNewExpensePayer(expense.payerId);
+
+        const newSelected: Record<string, boolean> = {};
+        participants.forEach(p => {
+            newSelected[p.id] = expense.involvedIds.includes(p.id);
+        });
+        setSelectedInvolved(newSelected);
+
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    const cancelEdit = () => {
+        setEditingExpenseId(null);
+        setNewExpenseDesc('');
+        setNewExpenseAmt('');
+        setNewExpensePayer('');
         const resettedSelected: Record<string, boolean> = {};
         Object.keys(selectedInvolved).forEach(id => resettedSelected[id] = true);
         setSelectedInvolved(resettedSelected);
@@ -384,9 +427,16 @@ export function SharedExpensesPage({ groupId }: { groupId?: string | null }) {
                     </div>
 
                     {/* Formulario de Gasto */}
-                    <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-                        <h2 className="font-bold text-brand-primary mb-4">Agregar Gasto</h2>
-                        <form onSubmit={addExpense} className="space-y-4">
+                    <div className={`bg-white p-6 rounded-xl border shadow-sm transition-colors ${editingExpenseId ? 'border-brand-primary/50 ring-2 ring-brand-primary/10' : 'border-slate-200'}`}>
+                        <h2 className="font-bold text-brand-primary mb-4 flex items-center justify-between">
+                            {editingExpenseId ? 'Editar Gasto' : 'Agregar Gasto'}
+                            {editingExpenseId && (
+                                <button type="button" onClick={cancelEdit} className="text-sm text-slate-500 hover:text-slate-800 font-normal">
+                                    Cancelar
+                                </button>
+                            )}
+                        </h2>
+                        <form onSubmit={handleSubmitExpense} className="space-y-4">
                             <div>
                                 <label className="block text-sm font-bold text-slate-700 mb-1">Descripción</label>
                                 <input
@@ -459,7 +509,7 @@ export function SharedExpensesPage({ groupId }: { groupId?: string | null }) {
                                 className="w-full bg-brand-primary text-white font-bold text-lg py-4 rounded-xl hover:opacity-90 transition-all disabled:opacity-50 shadow-md active:scale-[0.98] mt-4"
                                 disabled={participants.length === 0}
                             >
-                                Registrar Gasto
+                                {editingExpenseId ? 'Guardar Cambios' : 'Registrar Gasto'}
                             </button>
                         </form>
                     </div>
@@ -479,12 +529,22 @@ export function SharedExpensesPage({ groupId }: { groupId?: string | null }) {
                                             Pagó <span className="font-bold text-brand-primary bg-brand-primary/5 px-2 py-0.5 rounded-lg">{getName(e.payerId)}</span>: <span className="font-black text-slate-900 ml-1">${e.amount.toLocaleString('es-AR', { minimumFractionDigits: 2 })}</span>
                                         </p>
                                     </div>
-                                    <button
-                                        onClick={() => removeExpense(e.id)}
-                                        className="text-brand-alert/50 hover:text-brand-alert hover:bg-brand-alert/10 p-2 rounded-xl transition-all"
-                                    >
-                                        <Trash2 className="w-5 h-5" />
-                                    </button>
+                                    <div className="flex gap-1">
+                                        <button
+                                            onClick={() => editExpense(e)}
+                                            className="text-slate-400 hover:text-brand-primary hover:bg-brand-primary/10 p-2 rounded-xl transition-all"
+                                            title="Editar gasto"
+                                        >
+                                            <Pencil className="w-5 h-5" />
+                                        </button>
+                                        <button
+                                            onClick={() => removeExpense(e.id)}
+                                            className="text-brand-alert/50 hover:text-brand-alert hover:bg-brand-alert/10 p-2 rounded-xl transition-all"
+                                            title="Eliminar gasto"
+                                        >
+                                            <Trash2 className="w-5 h-5" />
+                                        </button>
+                                    </div>
                                 </div>
 
                                 <div className="mt-3 text-[11px] text-slate-500 border-t border-slate-200/60 pt-3 flex flex-wrap gap-1.5 items-center">
