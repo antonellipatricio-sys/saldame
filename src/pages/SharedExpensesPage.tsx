@@ -42,6 +42,8 @@ export function SharedExpensesPage({ groupId }: { groupId?: string | null }) {
     const [showPaymentForm, setShowPaymentForm] = useState<{ from: string, to: string, amount: number } | null>(null);
     const [paymentMethod, setPaymentMethod] = useState('');
     const [editingExpenseId, setEditingExpenseId] = useState<string | null>(null);
+    const [editingParticipantId, setEditingParticipantId] = useState<string | null>(null);
+    const [editParticipantName, setEditParticipantName] = useState('');
 
     useEffect(() => {
         if (!groupId) {
@@ -130,6 +132,15 @@ export function SharedExpensesPage({ groupId }: { groupId?: string | null }) {
         if (confirm('¿Seguro que deseas eliminar a este participante? Sus montos se recalcularán pero sus gastos registrados se mantendrán.')) {
             saveToFirebase(participants.filter(p => p.id !== id), expenses);
         }
+    };
+
+    const saveEditedParticipant = () => {
+        if (!editingParticipantId || !editParticipantName.trim()) return;
+        const updatedParticipants = participants.map(p =>
+            p.id === editingParticipantId ? { ...p, name: editParticipantName.trim() } : p
+        );
+        saveToFirebase(updatedParticipants, expenses, payments);
+        setEditingParticipantId(null);
     };
 
     const handleSubmitExpense = (e: React.FormEvent) => {
@@ -429,19 +440,47 @@ export function SharedExpensesPage({ groupId }: { groupId?: string | null }) {
 
                         <div className="space-y-2 max-h-48 overflow-y-auto">
                             {participants.map(p => (
-                                <div key={p.id} className="flex justify-between items-center bg-slate-50 p-2 rounded-lg">
-                                    <div className="flex items-center gap-2 text-sm font-medium">
-                                        <div className="w-6 h-6 rounded-full bg-brand-primary/10 flex items-center justify-center text-brand-primary text-xs">
-                                            {getInitials(p.name)}
-                                        </div>
-                                        {p.name}
-                                    </div>
-                                    <button
-                                        onClick={() => removeParticipant(p.id)}
-                                        className="text-brand-alert hover:bg-red-50 p-1 rounded transition"
-                                    >
-                                        <Trash2 className="w-4 h-4" />
-                                    </button>
+                                <div key={p.id} className="flex justify-between items-center bg-slate-50 p-2 rounded-lg group">
+                                    {editingParticipantId === p.id ? (
+                                        <form
+                                            onSubmit={(e) => { e.preventDefault(); saveEditedParticipant(); }}
+                                            className="flex-1 flex items-center gap-2"
+                                        >
+                                            <input
+                                                type="text"
+                                                className="flex-1 rounded-lg border-slate-300 border p-1 text-sm outline-none px-2 focus:border-brand-primary"
+                                                value={editParticipantName}
+                                                onChange={(e) => setEditParticipantName(e.target.value)}
+                                                autoFocus
+                                            />
+                                            <button type="submit" className="text-brand-success hover:bg-green-50 p-1 rounded transition">
+                                                <Check className="w-4 h-4" />
+                                            </button>
+                                        </form>
+                                    ) : (
+                                        <>
+                                            <div className="flex items-center gap-2 text-sm font-medium">
+                                                <div className="w-6 h-6 rounded-full bg-brand-primary/10 flex items-center justify-center text-brand-primary text-xs">
+                                                    {getInitials(p.name)}
+                                                </div>
+                                                {p.name}
+                                            </div>
+                                            <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <button
+                                                    onClick={() => { setEditingParticipantId(p.id); setEditParticipantName(p.name); }}
+                                                    className="text-slate-400 hover:text-brand-primary hover:bg-brand-primary/10 p-1 rounded-xl transition-all"
+                                                >
+                                                    <Pencil className="w-4 h-4" />
+                                                </button>
+                                                <button
+                                                    onClick={() => removeParticipant(p.id)}
+                                                    className="text-brand-alert/50 hover:text-brand-alert hover:bg-red-50 p-1 rounded-xl transition-all"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                        </>
+                                    )}
                                 </div>
                             ))}
                             {participants.length === 0 && (
