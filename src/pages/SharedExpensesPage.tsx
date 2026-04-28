@@ -42,7 +42,6 @@ export function SharedExpensesPage({ groupId }: { groupId?: string | null }) {
     const [showPaymentForm, setShowPaymentForm] = useState<{ from: string, to: string, amount: number } | null>(null);
     const [paymentMethod, setPaymentMethod] = useState('');
     const [editingExpenseId, setEditingExpenseId] = useState<string | null>(null);
-    const [roundingMode, setRoundingMode] = useState<number>(0);
 
     useEffect(() => {
         if (!groupId) {
@@ -267,35 +266,6 @@ export function SharedExpensesPage({ groupId }: { groupId?: string | null }) {
             if (balances[p.toId] !== undefined) balances[p.toId] -= p.amount;
         });
 
-        if (roundingMode > 0) {
-            let sum = 0;
-            const roundedBalances: Record<string, number> = {};
-            for (const [id, bal] of Object.entries(balances)) {
-                let rounded = Math.round(bal / roundingMode) * roundingMode;
-                roundedBalances[id] = rounded;
-                sum += rounded;
-            }
-
-            let currentSum = Math.round(sum);
-            let loopGuard = 1000;
-            while (currentSum !== 0 && loopGuard > 0) {
-                loopGuard--;
-                const keys = Object.keys(roundedBalances).filter(k => roundedBalances[k] !== 0);
-                if (keys.length === 0) break;
-
-                if (currentSum > 0) {
-                    const maxId = keys.reduce((a, b) => roundedBalances[a] > roundedBalances[b] ? a : b);
-                    roundedBalances[maxId] -= roundingMode;
-                    currentSum -= roundingMode;
-                } else {
-                    const maxId = keys.reduce((a, b) => roundedBalances[a] > roundedBalances[b] ? a : b);
-                    roundedBalances[maxId] += roundingMode;
-                    currentSum += roundingMode;
-                }
-            }
-            return roundedBalances;
-        }
-
         return balances;
     };
 
@@ -358,7 +328,7 @@ export function SharedExpensesPage({ groupId }: { groupId?: string | null }) {
         text += `💰 *Liquidación de Cuentas:*\n`;
         if (transfers.length > 0) {
             transfers.forEach(t => {
-                text += `• ${getName(t.from)} 👉 ${getName(t.to)}: *$${roundingMode > 0 ? t.amount.toLocaleString('es-AR') : t.amount.toLocaleString('es-AR', { minimumFractionDigits: 2 })}*\n`;
+                text += `• ${getName(t.from)} 👉 ${getName(t.to)}: *$${t.amount.toLocaleString('es-AR', { minimumFractionDigits: 2 })}*\n`;
             });
         } else {
             text += `¡No hay deudas pendientes! 🎉\n`;
@@ -622,24 +592,10 @@ export function SharedExpensesPage({ groupId }: { groupId?: string | null }) {
 
                 {/* Columna Derecha: Pagos y Saldos */}
                 <div className="lg:col-span-1 bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-                    <div className="flex justify-between items-center mb-4">
-                        <h2 className="font-bold text-brand-primary flex items-center gap-2">
-                            <Check className="w-5 h-5 text-brand-success" />
-                            Quién le paga a quién
-                        </h2>
-                        <select
-                            className="bg-slate-50 border border-slate-200 text-slate-600 text-xs rounded-lg px-2 py-1 outline-none font-medium"
-                            value={roundingMode}
-                            onChange={(e) => setRoundingMode(Number(e.target.value))}
-                        >
-                            <option value={0}>Exacto</option>
-                            <option value={10}>Múltiplos $10</option>
-                            <option value={50}>Múltiplos $50</option>
-                            <option value={100}>Múltiplos $100</option>
-                            <option value={500}>Múltiplos $500</option>
-                            <option value={1000}>Múltiplos $1000</option>
-                        </select>
-                    </div>
+                    <h2 className="font-bold text-brand-primary mb-4 flex items-center gap-2">
+                        <Check className="w-5 h-5 text-brand-success" />
+                        Quién le paga a quién
+                    </h2>
 
                     <div className="space-y-4">
                         {transfers.length > 0 ? (
@@ -651,7 +607,7 @@ export function SharedExpensesPage({ groupId }: { groupId?: string | null }) {
                                         <span className="font-semibold text-slate-900">{getName(t.to)}</span>
                                     </div>
                                     <div className="text-center font-bold text-brand-success text-lg">
-                                        ${roundingMode > 0 ? t.amount.toLocaleString('es-AR') : t.amount.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                        ${t.amount.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                     </div>
 
                                     {/* Botón Pagar */}
