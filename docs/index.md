@@ -268,7 +268,7 @@ Definidos en `src/index.css` dentro del bloque `@theme {}` (Tailwind v4).
 ### Fase 6: Gastos Compartidos (Real-time) ✅
 - [x] Nueva vista `/gastos` para gestión de eventos colaborativos.
 - [x] Persistencia en Firebase Firestore (colección `sharedGroups`).
-- [x] Algoritmo de minimización de deudas (Greedy logic).
+- [x] Algoritmo de minimización de deudas (Greedy logic, deudores ordenados ascendente para distribución equitativa — máx. 2 pagos por persona).
 - [x] Banner corporativo responsivo Pato Contador.
 - [x] Exportación a PDF y Resumen para WhatsApp.
 - [x] Registro de pagos con histórico y medio de pago.

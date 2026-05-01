@@ -290,7 +290,7 @@ export function SharedExpensesPage({ groupId }: { groupId?: string | null }) {
             if (balance > 0.01) creditors.push({ id, amount: balance });
         }
 
-        debts.sort((a, b) => b.amount - a.amount);
+        debts.sort((a, b) => a.amount - b.amount);
         creditors.sort((a, b) => b.amount - a.amount);
 
         const transfers: { from: string, to: string, amount: number }[] = [];
