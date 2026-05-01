@@ -41,6 +41,7 @@ export function SharedExpensesPage({ groupId }: { groupId?: string | null }) {
     const [selectedInvolved, setSelectedInvolved] = useState<Record<string, boolean>>({});
     const [showPaymentForm, setShowPaymentForm] = useState<{ from: string, to: string, amount: number } | null>(null);
     const [paymentMethod, setPaymentMethod] = useState('');
+    const [shuffleSeed, setShuffleSeed] = useState(0);
     const [editingExpenseId, setEditingExpenseId] = useState<string | null>(null);
     const [editingParticipantId, setEditingParticipantId] = useState<string | null>(null);
     const [editParticipantName, setEditParticipantName] = useState('');
@@ -104,7 +105,7 @@ export function SharedExpensesPage({ groupId }: { groupId?: string | null }) {
         await setDoc(doc(db, 'sharedGroups', groupId), {
             participants: newParticipants,
             expenses: newExpenses,
-            payments: newPayments
+            payments: newPayments,
         }, { merge: true });
     };
 
@@ -238,7 +239,7 @@ export function SharedExpensesPage({ groupId }: { groupId?: string | null }) {
             fromId: from,
             toId: to,
             amount,
-            method: method.trim() || '', // Use empty string instead of undefined
+            method: method.trim() || '',
             date: Date.now()
         };
         saveToFirebase(participants, expenses, [...payments, payment]);
@@ -280,7 +281,18 @@ export function SharedExpensesPage({ groupId }: { groupId?: string | null }) {
         return balances;
     };
 
-    const getTransfers = () => {
+    const seededShuffle = <T,>(arr: T[], seed: number): T[] => {
+        const a = [...arr];
+        let s = seed + 1;
+        for (let i = a.length - 1; i > 0; i--) {
+            s = (s * 1664525 + 1013904223) & 0xffffffff;
+            const j = Math.abs(s) % (i + 1);
+            [a[i], a[j]] = [a[j], a[i]];
+        }
+        return a;
+    };
+
+    const getTransfers = (seed = 0) => {
         const balances = getBalances();
         const debts: { id: string, amount: number }[] = [];
         const creditors: { id: string, amount: number }[] = [];
@@ -292,6 +304,13 @@ export function SharedExpensesPage({ groupId }: { groupId?: string | null }) {
 
         debts.sort((a, b) => a.amount - b.amount);
         creditors.sort((a, b) => b.amount - a.amount);
+
+        if (seed > 0) {
+            const shuffledDebts = seededShuffle(debts, seed);
+            const shuffledCreditors = seededShuffle(creditors, seed + 999);
+            debts.length = 0; debts.push(...shuffledDebts);
+            creditors.length = 0; creditors.push(...shuffledCreditors);
+        }
 
         const transfers: { from: string, to: string, amount: number }[] = [];
 
@@ -328,13 +347,57 @@ export function SharedExpensesPage({ groupId }: { groupId?: string | null }) {
         return transfers;
     };
 
-    const getName = (id: string) => participants.find(p => p.id === id)?.name || 'Desconocido';
-    const getInitials = (name: string) => name.substring(0, 2).toUpperCase();
+    const getPerPersonSummary = () => {
+        const grandTotal = expenses.reduce((sum, e) => sum + e.amount, 0);
+        const fairShare = participants.length > 0 ? grandTotal / participants.length : 0;
 
-    const transfers = getTransfers();
+        const paid: Record<string, number> = {};
+        const owed: Record<string, number> = {};
+        participants.forEach(p => { paid[p.id] = 0; owed[p.id] = 0; });
+
+        expenses.forEach(e => {
+            if (paid[e.payerId] !== undefined) paid[e.payerId] += e.amount;
+            const validInvolved = e.involvedIds.filter(id => owed[id] !== undefined);
+            if (validInvolved.length > 0) {
+                const split = e.amount / validInvolved.length;
+                validInvolved.forEach(id => { owed[id] += split; });
+            }
+        });
+
+        payments.forEach(p => {
+            if (paid[p.fromId] !== undefined) paid[p.fromId] += p.amount;
+            if (owed[p.toId] !== undefined) owed[p.toId] += p.amount;
+        });
+
+        const rows = participants.map(p => ({
+            id: p.id,
+            name: p.name,
+            paid: paid[p.id] ?? 0,
+            owed: owed[p.id] ?? 0,
+            balance: (paid[p.id] ?? 0) - (owed[p.id] ?? 0),
+        }));
+
+        return { grandTotal, fairShare, rows };
+    };
+
+    const getName = (id: string) => participants.find(p => p.id === id)?.name || 'Desconocido';
+
+    const transfers = getTransfers(shuffleSeed);
+    const perPersonSummary = expenses.length > 0 ? getPerPersonSummary() : null;
 
     const handleCopySummary = () => {
         let text = `*Resumen de Gastos: ${eventName}*\n\n`;
+
+        if (perPersonSummary) {
+            text += `📊 *Resumen por Persona* (Total: $${perPersonSummary.grandTotal.toLocaleString('es-AR')} | Por persona: $${perPersonSummary.fairShare.toLocaleString('es-AR', { minimumFractionDigits: 2 })})\n`;
+            perPersonSummary.rows.forEach(r => {
+                const balanceStr = r.balance >= 0
+                    ? `+$${r.balance.toLocaleString('es-AR', { minimumFractionDigits: 2 })} (le deben)`
+                    : `-$${Math.abs(r.balance).toLocaleString('es-AR', { minimumFractionDigits: 2 })} (debe)`;
+                text += `• ${r.name}: pagó $${r.paid.toLocaleString('es-AR')} | balance ${balanceStr}\n`;
+            });
+            text += '\n';
+        }
 
         text += `💰 *Liquidación de Cuentas:*\n`;
         if (transfers.length > 0) {
@@ -345,7 +408,7 @@ export function SharedExpensesPage({ groupId }: { groupId?: string | null }) {
             text += `¡No hay deudas pendientes! 🎉\n`;
         }
 
-        text += `\n📊 *Detalle de Gastos:*\n`;
+        text += `\n📋 *Detalle de Gastos:*\n`;
         expenses.forEach(e => {
             text += `• ${e.description}: $${e.amount.toLocaleString('es-AR')} (Pagó: ${getName(e.payerId)})\n`;
         });
@@ -365,7 +428,7 @@ export function SharedExpensesPage({ groupId }: { groupId?: string | null }) {
     };
 
     const handleDownloadPDF = () => {
-        generateSharedExpensesPDF(eventName, participants, expenses, payments, transfers);
+        generateSharedExpensesPDF(eventName, participants, expenses, payments, transfers, perPersonSummary ?? undefined);
     };
 
     if (loading) {
@@ -388,16 +451,7 @@ export function SharedExpensesPage({ groupId }: { groupId?: string | null }) {
 
     return (
         <div className="space-y-6">
-            <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <a
-                    href="/gastos"
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-xl text-sm font-bold shadow-sm hover:bg-slate-50 hover:border-slate-300 transition-all w-fit"
-                >
-                    &larr; Volver a Mis Juntadas
-                </a>
-            </div>
-
-            <div className="mb-6">
+            <div className="mb-6 md:max-w-3xl md:mx-auto">
                 <div className="relative w-full rounded-2xl overflow-hidden shadow-sm border border-slate-200 bg-brand-primary/5">
                     <img
                         src="/banner-gastos.png?v=2"
@@ -409,6 +463,14 @@ export function SharedExpensesPage({ groupId }: { groupId?: string | null }) {
                             {eventName}
                         </h1>
                     </div>
+                </div>
+                <div className="mt-3">
+                    <a
+                        href="/gastos"
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-xl text-sm font-bold shadow-sm hover:bg-slate-50 hover:border-slate-300 transition-all w-fit"
+                    >
+                        &larr; Volver a Mis Juntadas
+                    </a>
                 </div>
             </div>
 
@@ -438,48 +500,46 @@ export function SharedExpensesPage({ groupId }: { groupId?: string | null }) {
                             </button>
                         </form>
 
-                        <div className="space-y-2 max-h-48 overflow-y-auto">
-                            {participants.map(p => (
-                                <div key={p.id} className="flex justify-between items-center bg-slate-50 p-2 rounded-lg group">
+                        <div className="flex flex-wrap gap-2">
+                            {participants.map((p, index) => (
+                                <div key={p.id} className="group relative">
                                     {editingParticipantId === p.id ? (
                                         <form
                                             onSubmit={(e) => { e.preventDefault(); saveEditedParticipant(); }}
-                                            className="flex-1 flex items-center gap-2"
+                                            className="flex items-center gap-1 bg-brand-primary/10 border border-brand-primary/30 rounded-full px-3 py-1"
                                         >
+                                            <span className="text-xs font-bold text-brand-primary mr-1">{index + 1}</span>
                                             <input
                                                 type="text"
-                                                className="flex-1 rounded-lg border-slate-300 border p-1 text-sm outline-none px-2 focus:border-brand-primary"
+                                                className="w-24 text-sm outline-none bg-transparent border-b border-brand-primary text-slate-800"
                                                 value={editParticipantName}
                                                 onChange={(e) => setEditParticipantName(e.target.value)}
                                                 autoFocus
                                             />
-                                            <button type="submit" className="text-brand-success hover:bg-green-50 p-1 rounded transition">
-                                                <Check className="w-4 h-4" />
+                                            <button type="submit" className="text-brand-success ml-1">
+                                                <Check className="w-3 h-3" />
                                             </button>
                                         </form>
                                     ) : (
-                                        <>
-                                            <div className="flex items-center gap-2 text-sm font-medium">
-                                                <div className="w-6 h-6 rounded-full bg-brand-primary/10 flex items-center justify-center text-brand-primary text-xs">
-                                                    {getInitials(p.name)}
-                                                </div>
-                                                {p.name}
-                                            </div>
-                                            <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <div className="flex items-center gap-1 bg-slate-100 hover:bg-brand-primary/10 border border-slate-200 hover:border-brand-primary/30 rounded-full px-3 py-1.5 transition-colors">
+                                            <span className="text-xs font-bold text-brand-primary">{index + 1}</span>
+                                            <span className="text-xs text-slate-400 mx-0.5">·</span>
+                                            <span className="text-sm font-medium text-slate-700">{p.name}</span>
+                                            <div className="flex gap-0.5 ml-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                                 <button
                                                     onClick={() => { setEditingParticipantId(p.id); setEditParticipantName(p.name); }}
-                                                    className="text-slate-400 hover:text-brand-primary hover:bg-brand-primary/10 p-1 rounded-xl transition-all"
+                                                    className="text-slate-400 hover:text-brand-primary p-0.5 rounded-full transition-all"
                                                 >
-                                                    <Pencil className="w-4 h-4" />
+                                                    <Pencil className="w-3 h-3" />
                                                 </button>
                                                 <button
                                                     onClick={() => removeParticipant(p.id)}
-                                                    className="text-brand-alert/50 hover:text-brand-alert hover:bg-red-50 p-1 rounded-xl transition-all"
+                                                    className="text-slate-400 hover:text-brand-alert p-0.5 rounded-full transition-all"
                                                 >
-                                                    <Trash2 className="w-4 h-4" />
+                                                    <Trash2 className="w-3 h-3" />
                                                 </button>
                                             </div>
-                                        </>
+                                        </div>
                                     )}
                                 </div>
                             ))}
@@ -636,7 +696,52 @@ export function SharedExpensesPage({ groupId }: { groupId?: string | null }) {
                         Quién le paga a quién
                     </h2>
 
+                    {/* Resumen por persona */}
+                    {perPersonSummary && perPersonSummary.rows.length > 0 && (
+                        <div className="mb-5 p-4 bg-slate-50 border border-slate-200 rounded-xl">
+                            <div className="flex items-center justify-between mb-3">
+                                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Resumen por persona</span>
+                                <span className="text-xs text-slate-400">
+                                    Total: <span className="font-black text-slate-700">${perPersonSummary.grandTotal.toLocaleString('es-AR', { minimumFractionDigits: 2 })}</span>
+                                    {participants.length > 0 && (
+                                        <span className="ml-1 text-slate-400">(~${perPersonSummary.fairShare.toLocaleString('es-AR', { minimumFractionDigits: 2 })} c/u)</span>
+                                    )}
+                                </span>
+                            </div>
+                            <div className="space-y-1.5">
+                                {perPersonSummary.rows.map(row => (
+                                    <div key={row.id} className="flex items-center justify-between text-xs">
+                                        <span className="font-semibold text-slate-700 truncate max-w-[80px]">{row.name}</span>
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-slate-400">Pagó <span className="font-bold text-slate-600">${row.paid.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span></span>
+                                            <span className={`font-black px-2 py-0.5 rounded-full text-[11px] ${row.balance > 0.01 ? 'bg-green-100 text-green-700' : row.balance < -0.01 ? 'bg-red-100 text-red-600' : 'bg-slate-100 text-slate-500'}`}>
+                                                {row.balance > 0.01 ? '+' : ''}{row.balance.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                                            </span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
                     <div className="space-y-4">
+                        {transfers.length > 0 && (
+                            <div className="flex items-center justify-between mb-1">
+                                <span className="text-xs text-slate-400 font-medium">
+                                    Opción {shuffleSeed + 1}
+                                </span>
+                                <button
+                                    onClick={() => setShuffleSeed(s => s + 1)}
+                                    className="flex items-center gap-1.5 text-xs font-bold text-brand-primary hover:bg-brand-primary/10 px-3 py-1.5 rounded-lg transition-all active:scale-95"
+                                    title="Ver otra forma de saldar las deudas"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                    </svg>
+                                    Otra combinación
+                                </button>
+                            </div>
+                        )}
                         {transfers.length > 0 ? (
                             transfers.map((t, idx) => (
                                 <div key={idx} className="flex flex-col gap-1 p-3 bg-green-50/50 border border-green-100 rounded-lg group relative">
@@ -648,8 +753,6 @@ export function SharedExpensesPage({ groupId }: { groupId?: string | null }) {
                                     <div className="text-center font-bold text-brand-success text-lg">
                                         ${t.amount.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                     </div>
-
-                                    {/* Botón Pagar */}
                                     <button
                                         onClick={() => setShowPaymentForm({ from: t.from, to: t.to, amount: t.amount })}
                                         className="mt-2 flex items-center justify-center gap-2 py-2 px-4 bg-brand-success text-white text-xs font-bold rounded-lg hover:bg-brand-success/90 transition-all shadow-sm active:scale-95"
@@ -784,17 +887,10 @@ export function SharedExpensesPage({ groupId }: { groupId?: string | null }) {
                             </div>
 
                             <div className="flex gap-3 pt-2">
-                                <button
-                                    type="button"
-                                    onClick={() => setShowPaymentForm(null)}
-                                    className="flex-1 px-4 py-3 border border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-50 transition-all"
-                                >
+                                <button type="button" onClick={() => setShowPaymentForm(null)} className="flex-1 px-4 py-3 border border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-50 transition-all">
                                     Cancelar
                                 </button>
-                                <button
-                                    type="submit"
-                                    className="flex-[2] px-4 py-3 bg-brand-success text-white font-bold rounded-xl hover:bg-brand-success/90 transition-all shadow-md active:scale-95 flex items-center justify-center gap-2"
-                                >
+                                <button type="submit" className="flex-[2] px-4 py-3 bg-brand-success text-white font-bold rounded-xl hover:bg-brand-success/90 transition-all shadow-md active:scale-95 flex items-center justify-center gap-2">
                                     <Check className="w-5 h-5" />
                                     Confirmar Pago
                                 </button>

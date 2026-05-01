@@ -23,12 +23,27 @@ interface SharedPayment {
     date: number;
 }
 
-export const generateSharedExpensesPDF = (
+interface PersonSummaryRow {
+    id: string;
+    name: string;
+    paid: number;
+    owed: number;
+    balance: number;
+}
+
+interface PerPersonSummary {
+    grandTotal: number;
+    fairShare: number;
+    rows: PersonSummaryRow[];
+}
+
+export const generateSharedExpensesPDF= (
     eventName: string,
     participants: Participant[],
     expenses: SharedExpense[],
     payments: SharedPayment[],
-    transfers: { from: string, to: string, amount: number }[]
+    transfers: { from: string, to: string, amount: number }[],
+    perPersonSummary?: PerPersonSummary
 ) => {
     const doc = new jsPDF();
     const getName = (id: string) => participants.find(p => p.id === id)?.name || 'Desconocido';
@@ -66,12 +81,42 @@ export const generateSharedExpensesPDF = (
         doc.text('No hay deudas pendientes. ¡Están todos saldados!', 14, 48);
     }
 
-    // Section 2: Detalle de Consumos
+    // Section 2: Resumen por persona
+    if (perPersonSummary) {
+        const finalY1 = (doc as any).lastAutoTable.finalY || 55;
+        doc.setFontSize(14);
+        doc.setTextColor(0);
+        doc.text('Resumen por Persona', 14, finalY1 + 15);
+
+        doc.setFontSize(9);
+        doc.setTextColor(100);
+        doc.text(`Total del evento: $${perPersonSummary.grandTotal.toLocaleString('es-AR', { minimumFractionDigits: 2 })} | Parte ideal por persona: $${perPersonSummary.fairShare.toLocaleString('es-AR', { minimumFractionDigits: 2 })}`, 14, finalY1 + 22);
+
+        const summaryData = perPersonSummary.rows.map(r => [
+            r.name,
+            `$${r.paid.toLocaleString('es-AR', { minimumFractionDigits: 2 })}`,
+            `$${r.owed.toLocaleString('es-AR', { minimumFractionDigits: 2 })}`,
+            r.balance >= 0
+                ? `+$${r.balance.toLocaleString('es-AR', { minimumFractionDigits: 2 })} (le deben)`
+                : `-$${Math.abs(r.balance).toLocaleString('es-AR', { minimumFractionDigits: 2 })} (debe)`
+        ]);
+
+        autoTable(doc, {
+            startY: finalY1 + 27,
+            head: [['Persona', 'Pagó', 'Consume', 'Balance']],
+            body: summaryData,
+            theme: 'striped',
+            headStyles: { fillColor: [99, 102, 241] }
+        });
+    }
+
+    // Section 3: Detalle de Gastos Registrados
     const finalY = (doc as any).lastAutoTable.finalY || 55;
     doc.setFontSize(14);
+    doc.setTextColor(0);
     doc.text('Detalle de Gastos Registrados', 14, finalY + 15);
 
-    const expensesData = expenses.map(e => [
+    const expensesData= expenses.map(e => [
         e.description,
         getName(e.payerId),
         `$${e.amount.toLocaleString('es-AR', { minimumFractionDigits: 2 })}`,

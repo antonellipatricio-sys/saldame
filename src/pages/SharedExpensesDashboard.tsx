@@ -76,7 +76,7 @@ export function SharedExpensesDashboard() {
     return (
         <div className="max-w-3xl mx-auto space-y-8 py-4">
             {/* Banner Header */}
-            <div className="w-full mb-6 relative rounded-2xl overflow-hidden shadow-sm border border-slate-100 bg-brand-primary/5">
+            <div className="w-full mb-6 md:max-w-xl md:mx-auto relative rounded-2xl overflow-hidden shadow-sm border border-slate-100 bg-brand-primary/5">
                 <img
                     src="/banner-gastos.png?v=2"
                     alt="Gastos Compartidos"
