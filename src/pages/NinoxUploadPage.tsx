@@ -7,7 +7,7 @@ import * as XLSX from 'xlsx';
 export function NinoxUploadPage() {
     const { setProducts, products, clearProducts, setDollar, iibb, comisionTN, setIIBB, setComisionTN } = useAppStore();
 
-    const handleDataLoaded = (data: any[]) => {
+    const handleDataLoaded = (data: Record<string, unknown>[]) => {
         console.log("Datos Productos Cargados:", data);
 
         if (data.length === 0) return;
@@ -17,9 +17,9 @@ export function NinoxUploadPage() {
         // 1. Detect Header Row
         // We look for a row that contains "codigo" AND ("descripcion" OR "articulo") values.
         let headerRowIndex = -1;
-        let headerMap: Record<string, string> = {}; // Standardized Key -> Original JSON Key
+        const headerMap: Record<string, string> = {}; // Standardized Key -> Original JSON Key
 
-        const normalize = (str: any) => String(str).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+        const normalize = (str: unknown) => String(str).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
 
         // Scan first 10 rows
         for (let i = 0; i < Math.min(data.length, 10); i++) {
@@ -59,7 +59,7 @@ export function NinoxUploadPage() {
         console.log("Header detected at row/mode:", headerRowIndex, headerMap);
 
         // Helper to get value from a row using fuzzy column name
-        const getValue = (row: any, map: Record<string, string>, searchKeys: string[]) => {
+        const getValue = (row: Record<string, unknown>, map: Record<string, string>, searchKeys: string[]) => {
             // Find the JSON key that corresponds to one of our searchKeys
             const foundHeaderVal = Object.keys(map).find(hVal => searchKeys.some(sk => hVal.includes(sk)));
             if (!foundHeaderVal) return null;
@@ -70,7 +70,7 @@ export function NinoxUploadPage() {
         // Data starts after header row
         const dataRows = headerRowIndex === -1 ? data : data.slice(headerRowIndex + 1);
 
-        const mappedProducts: Product[] = dataRows.map((row: any, index: number) => {
+        const mappedProducts: Product[] = dataRows.map((row, index: number) => {
             // Define Search Keys
             const codigoVal = getValue(row, headerMap, ['codigo', 'code', 'sku']) || `gen-${index}`;
             const descVal = getValue(row, headerMap, ['descripcion', 'articulo', 'producto', 'nombre']) || 'Sin Descripción';
@@ -98,7 +98,7 @@ export function NinoxUploadPage() {
             if (ivaKey) {
                 if (typeof ivaKey === 'number') iva = ivaKey < 1 ? ivaKey * 100 : ivaKey;
                 else {
-                    let clean = String(ivaKey).replace('%', '').replace(',', '.');
+                    const clean = String(ivaKey).replace('%', '').replace(',', '.');
                     iva = parseFloat(clean) || 0;
                 }
             }
@@ -110,8 +110,8 @@ export function NinoxUploadPage() {
                     // Start assuming > 1 is percent (e.g. 35 -> 0.35), < 1 is decimal (0.35 -> 0.35)
                     margen = margenKey > 1 ? margenKey / 100 : margenKey;
                 } else {
-                    let clean = String(margenKey).replace('%', '').replace(',', '.').trim();
-                    let parsed = parseFloat(clean);
+                    const clean = String(margenKey).replace('%', '').replace(',', '.').trim();
+                    const parsed = parseFloat(clean);
                     if (!isNaN(parsed)) {
                         margen = parsed > 1 ? parsed / 100 : parsed;
                     }
@@ -124,7 +124,7 @@ export function NinoxUploadPage() {
                 try {
                     if (typeof fechaKey === 'number') {
                         const d = XLSX.SSF.parse_date_code(fechaKey);
-                        let y = d.y < 100 ? d.y + 2000 : d.y;
+                        const y = d.y < 100 ? d.y + 2000 : d.y;
                         fechaCompra = `${y}-${String(d.m).padStart(2, '0')}-${String(d.d).padStart(2, '0')}`;
                     } else {
                         const str = String(fechaKey).trim();
@@ -132,13 +132,12 @@ export function NinoxUploadPage() {
                         if (str.includes('/')) {
                             const parts = str.split('/');
                             if (parts.length === 3) {
-                                let y = parseInt(parts[2]);
-                                if (y < 100) y += 2000;
+                                const y = parseInt(parts[2]) + (parseInt(parts[2]) < 100 ? 2000 : 0);
                                 fechaCompra = `${y}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
                             }
                         }
                     }
-                } catch (e) { }
+                } catch { /* ignore invalid date */ }
             }
 
             return {

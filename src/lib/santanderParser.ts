@@ -15,6 +15,7 @@ export interface SantanderTransaction {
   date: string;
   description: string;
   cuotas: string;
+  comprobante: string;
   amountARS: number | null;
   amountUSD: number | null;
   currency: 'ARS' | 'USD';
@@ -30,7 +31,7 @@ cardholder: string;     // nombre completo del portador de la tarjeta
 
 /** DD/MM/YYYY o DD/MM/YY → 'YYYY-MM-DD', null si no es fecha */
 function parseDate(raw: string): string | null {
-  const m = String(raw).trim().match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
+  const m = String(raw).trim().match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})$/);
   if (!m) return null;
   const d = m[1].padStart(2, '0');
   const mo = m[2].padStart(2, '0');
@@ -101,7 +102,7 @@ function shouldSkipDesc(desc: string): boolean {
 
 // ── Parser principal ───────────────────────────────────────────────────────────
 
-export function parseSantanderRows(rows: any[][]): SantanderTransaction[] {
+export function parseSantanderRows(rows: unknown[][]): SantanderTransaction[] {
   // Paso 1: construir mapa last4 → isAdditional desde la tabla "Tarjetas incluidas"
   // Esa tabla tiene filas como: ["Visa Crédito terminada en 1204", "Patricio... (Titular)", ...]
   const additionalMap: Record<string, boolean> = {};
@@ -161,8 +162,9 @@ export function parseSantanderRows(rows: any[][]): SantanderTransaction[] {
 
     // ── Montos ─────────────────────────────────────────────────────────────
     const cuotas = String(row[2] ?? '').trim();
-    const amountARS = parseAmount(row[4]);
-    const amountUSD = parseAmount(row[5]);
+    const comprobante = String(row[3] ?? '').trim();
+    const amountARS = parseAmount(row[4] as string | number | undefined);
+    const amountUSD = parseAmount(row[5] as string | number | undefined);
 
     if (amountARS === null && amountUSD === null) continue;
 
@@ -187,6 +189,7 @@ export function parseSantanderRows(rows: any[][]): SantanderTransaction[] {
       date: lastDate,
       description,
       cuotas,
+      comprobante,
       amountARS: arsVal !== 0 ? absARS : null,
       amountUSD: usdVal !== 0 ? absUSD : null,
       currency,
@@ -220,7 +223,7 @@ export async function parseSantanderExcel(file: File): Promise<SantanderTransact
 
   for (const sheetName of workbook.SheetNames) {
     const worksheet = workbook.Sheets[sheetName];
-    const rows: any[][] = XLSX.utils.sheet_to_json(worksheet, {
+    const rows = XLSX.utils.sheet_to_json<unknown[]>(worksheet, {
       header: 1,
       raw: false,
       defval: '',

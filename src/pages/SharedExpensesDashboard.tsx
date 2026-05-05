@@ -9,6 +9,8 @@ export interface VisitedEvent {
     lastVisited: number;
 }
 
+const PAGE_LOAD_TIME = Date.now();
+
 export function SharedExpensesDashboard() {
     const [visitedEvents, setVisitedEvents] = useState<VisitedEvent[]>(() => {
         try {
@@ -73,6 +75,8 @@ export function SharedExpensesDashboard() {
         }
     };
 
+    const now = PAGE_LOAD_TIME;
+
     return (
         <div className="max-w-3xl mx-auto space-y-8 py-4">
             {/* Banner Header */}
@@ -135,7 +139,7 @@ export function SharedExpensesDashboard() {
                                 >
                                     <div>
                                         <h3 className="font-semibold text-brand-primary transition capitalize">{ev.name}</h3>
-                                        <p className="text-xs text-brand-text mt-0.5">Hace {Math.round((Date.now() - ev.lastVisited) / (1000 * 60 * 60 * 24))} días</p>
+                                        <p className="text-xs text-brand-text mt-0.5">Hace {Math.round((now - ev.lastVisited) / (1000 * 60 * 60 * 24))} días</p>
                                     </div>
                                     <div className="flex items-center gap-3">
                                         <button

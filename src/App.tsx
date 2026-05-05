@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { ExpenseLayout } from './components/layout/ExpenseLayout';
 import { DashboardPage } from './pages/DashboardPage';
 import { AddExpensePage } from './pages/AddExpensePage';
@@ -20,7 +20,10 @@ const PUBLIC_ROUTE = "/gastos"; // << RUTA PUBLICA: Podes cambiar esta ruta a al
 
 function App() {
   const [activePage, setActivePage] = useState<Page>('dashboard');
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
+    const auth = localStorage.getItem('saldame_auth_pin');
+    return auth === btoa(APP_PIN);
+  });
   const [pinInput, setPinInput] = useState('');
 
   const path = window.location.pathname;
@@ -28,16 +31,6 @@ function App() {
 
   const isCustomDomain = hostname === 'cuack.ar' || hostname === 'www.cuack.ar';
   const isSharedRoute = isCustomDomain || path === PUBLIC_ROUTE || path.startsWith(`${PUBLIC_ROUTE}/`);
-
-  useEffect(() => {
-    // Revisar si ya pusimos el PIN antes
-    const auth = localStorage.getItem('saldame_auth_pin');
-    if (auth === btoa(APP_PIN)) {
-      setIsAuthenticated(true);
-    }
-  }, []);
-
-  // Ruta específica compartible, aislada y PÚBLICA
   if (isSharedRoute) {
     let isDashboard = false;
     let groupId = null;

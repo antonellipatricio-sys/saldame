@@ -33,20 +33,20 @@ export function DashboardPage() {
     fetchExpenses();
   }, [fetchExpenses]);
 
-  const currentDate = new Date();
+  const currentDate = useMemo(() => new Date(), []);
   const currentYear = currentDate.getFullYear();
   const currentMonth = currentDate.getMonth();
 
   const summary = useMemo(
     () => getMonthSummary(currentYear, currentMonth),
-    [getMonthSummary, currentYear, currentMonth, expenses]
+    [getMonthSummary, currentYear, currentMonth]
   );
 
   // Resumen del mes anterior para comparativa
-  const prevDate = subMonths(currentDate, 1);
+  const prevDate = useMemo(() => subMonths(currentDate, 1), [currentDate]);
   const prevSummary = useMemo(
     () => getMonthSummary(prevDate.getFullYear(), prevDate.getMonth()),
-    [getMonthSummary, prevDate, expenses]
+    [getMonthSummary, prevDate]
   );
 
   const monthName = format(currentDate, 'MMMM yyyy', { locale: es });

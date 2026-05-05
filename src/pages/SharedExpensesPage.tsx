@@ -30,8 +30,8 @@ export function SharedExpensesPage({ groupId }: { groupId?: string | null }) {
     const [participants, setParticipants] = useState<Participant[]>([]);
     const [expenses, setExpenses] = useState<SharedExpense[]>([]);
     const [payments, setPayments] = useState<SharedPayment[]>([]);
-    const [eventName, setEventName] = useState('Cargando...');
-    const [loading, setLoading] = useState(true);
+    const [eventName, setEventName] = useState<string>(() => groupId ? 'Cargando...' : 'Evento no encontrado');
+    const [loading, setLoading] = useState<boolean>(() => !!groupId);
 
     const [newParticipantName, setNewParticipantName] = useState('');
     const [newExpenseDesc, setNewExpenseDesc] = useState('');
@@ -48,8 +48,6 @@ export function SharedExpensesPage({ groupId }: { groupId?: string | null }) {
 
     useEffect(() => {
         if (!groupId) {
-            setLoading(false);
-            setEventName('Evento no encontrado');
             return;
         }
 
@@ -67,7 +65,7 @@ export function SharedExpensesPage({ groupId }: { groupId?: string | null }) {
                 try {
                     const saved = localStorage.getItem('saldame_visited_events');
                     let visitedEvents = saved ? JSON.parse(saved) : [];
-                    visitedEvents = visitedEvents.filter((ev: any) => ev.id !== groupId);
+                    visitedEvents = visitedEvents.filter((ev: { id: string }) => ev.id !== groupId);
                     visitedEvents.unshift({
                         id: groupId,
                         name: title,
@@ -87,17 +85,19 @@ export function SharedExpensesPage({ groupId }: { groupId?: string | null }) {
     }, [groupId]);
 
     useEffect(() => {
-        const newSelected = { ...selectedInvolved };
-        let changed = false;
-        participants.forEach(p => {
-            if (newSelected[p.id] === undefined) {
-                newSelected[p.id] = true;
-                changed = true;
-            }
+        queueMicrotask(() => {
+            setSelectedInvolved(prev => {
+                const newSelected = { ...prev };
+                let changed = false;
+                participants.forEach(p => {
+                    if (newSelected[p.id] === undefined) {
+                        newSelected[p.id] = true;
+                        changed = true;
+                    }
+                });
+                return changed ? newSelected : prev;
+            });
         });
-        if (changed) {
-            setSelectedInvolved(newSelected);
-        }
     }, [participants]);
 
     const saveToFirebase = async (newParticipants: Participant[], newExpenses: SharedExpense[], newPayments: SharedPayment[] = payments) => {

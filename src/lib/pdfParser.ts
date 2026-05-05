@@ -13,6 +13,8 @@ export interface ParsedTransaction {
   amount: number;
   currency: 'ARS' | 'USD';
   date: string; // 'YYYY-MM-DD'
+  cuotas?: string;    // "5 de 6", "1 de 3", etc.
+  operacion?: string; // nro de operación/comprobante
   rawLine: string;
 }
 
@@ -64,7 +66,7 @@ const CURRENT_YEAR = new Date().getFullYear().toString();
 /** Parsea fechas en formato "26 Marzo", "DD/MM/YY" o "DD/MM/YYYY"  */
 function parseDate(text: string): string | null {
   // Formato DD/MM/YY o DD/MM/YYYY
-  const m1 = text.match(/\b(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})\b/);
+  const m1 = text.match(/\b(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})\b/);
   if (m1) {
     const d = m1[1].padStart(2, '0'), mo = m1[2].padStart(2, '0');
     const y = m1[3].length === 2 ? `20${m1[3]}` : m1[3];
@@ -130,7 +132,7 @@ const SKIP_RE: RegExp[] = [
 function shouldSkip(line: string): boolean {
   if (SKIP_RE.some(rx => rx.test(line))) return true;
   // Líneas de solo mayúsculas/espacios sin dígitos → son cabeceras
-  if (/^[A-ZÁÉÍÓÚÑÜ\s:,.\/]+$/.test(line) && !/\d/.test(line)) return true;
+  if (/^[A-ZÁÉÍÓÚÑÜ\s:,./]+$/.test(line) && !/\d/.test(line)) return true;
   return false;
 }
 
@@ -166,11 +168,19 @@ export function parseTransactions(text: string): ParsedTransaction[] {
     const isUSD = /\bUSD\b|\bU\$S\b/i.test(line);
 
     // Construir descripción: eliminar datos estructurales del resumen
+    // Capturar cuotas antes de limpiar: "C.06/06" → "6 de 6"
+    const cuotasMatch = line.match(/\bC\.(\d{2})\/(\d{2})\b/);
+    const cuotas = cuotasMatch ? `${parseInt(cuotasMatch[1])} de ${parseInt(cuotasMatch[2])}` : undefined;
+
+    // Capturar nro de operación: 5-7 dígitos seguidos de espacio + * o K o C
+    const operacionMatch = line.match(/\b(\d{5,7})\s+[*KkCc]\s+/);
+    const operacion = operacionMatch ? operacionMatch[1] : undefined;
+
     let desc = line
       // Quitar fecha con nombre de mes
       .replace(/\b\d{1,2}\s+(?:enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)\b/gi, '')
       // Quitar fecha numérica
-      .replace(/\b\d{1,2}[\/\-]\d{1,2}(?:[\/\-]\d{2,4})?\b/g, '')
+      .replace(/\b\d{1,2}[/-]\d{1,2}(?:[/-]\d{2,4})?\b/g, '')
       // Quitar número de comprobante (5-7 dígitos seguidos de espacio + * o K o C)
       .replace(/\b\d{5,7}\s+[*KkCc]\s+/g, '')
       // Quitar indicador de cuotas C.06/06
@@ -197,6 +207,8 @@ export function parseTransactions(text: string): ParsedTransaction[] {
       amount,
       currency: isUSD ? 'USD' : 'ARS',
       date: finalDate,
+      cuotas,
+      operacion,
       rawLine: line,
     });
   }

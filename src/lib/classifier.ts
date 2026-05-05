@@ -221,7 +221,7 @@ export function learnCategory(description: string, category: string): void {
   learned[normalize(description)] = category;
   try {
     localStorage.setItem('expense-learned-categories', JSON.stringify(learned));
-  } catch (_) { /* ignore */ }
+  } catch { /* ignore */ }
 }
 
 /** Obtiene el mapa de aprendizaje de categorías */
@@ -229,7 +229,7 @@ export function getLearned(): Record<string, string> {
   try {
     const raw = localStorage.getItem('expense-learned-categories');
     return raw ? JSON.parse(raw) : {};
-  } catch (_) {
+  } catch {
     return {};
   }
 }
@@ -245,7 +245,7 @@ export function learnTags(description: string, tags: string[]): void {
   learned[normalize(description)] = tags;
   try {
     localStorage.setItem(LEARNED_TAGS_KEY, JSON.stringify(learned));
-  } catch (_) { /* ignore */ }
+  } catch { /* ignore */ }
 }
 
 /** Obtiene el mapa de aprendizaje de etiquetas */
@@ -253,7 +253,7 @@ export function getLearnedTags(): Record<string, string[]> {
   try {
     const raw = localStorage.getItem(LEARNED_TAGS_KEY);
     return raw ? JSON.parse(raw) : {};
-  } catch (_) {
+  } catch {
     return {};
   }
 }

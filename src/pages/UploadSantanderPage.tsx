@@ -3,6 +3,7 @@ import { useExpenseStore } from '@/store/useExpenseStore';
 import { parseSantanderExcel, type SantanderTransaction } from '@/lib/santanderParser';
 import { classifyLocal, learnCategory, classifyTags, learnTags } from '@/lib/classifier';
 import { TagSelector } from '@/components/tags/TagSelector';
+import { CategorySelect } from '@/components/upload/CategorySelect';
 import type { Currency } from '@/types';
 import { Upload, FileSpreadsheet, Loader2, Check, Trash2, RotateCcw, Save } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -14,7 +15,7 @@ interface ReviewRow extends SantanderTransaction {
 }
 
 export function UploadSantanderPage() {
-  const { addExpense, categories } = useExpenseStore();
+  const { addExpense } = useExpenseStore();
 
   const [file, setFile] = useState<File | null>(null);
   const [parsing, setParsing] = useState(false);
@@ -142,7 +143,7 @@ export function UploadSantanderPage() {
 
         {/* Tabla */}
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-          <div className="grid grid-cols-[32px_1fr_130px_100px_80px_90px_140px_36px] gap-2 px-4 py-2 bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase">
+          <div className="grid grid-cols-[32px_1fr_130px_120px_80px_90px_140px_36px] gap-2 px-4 py-2 bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase">
             <div />
             <div>Descripción</div>
             <div>Titular</div>
@@ -153,12 +154,12 @@ export function UploadSantanderPage() {
             <div />
           </div>
 
-          <div className="divide-y divide-slate-100 max-h-[60vh] overflow-y-auto">
+          <div className="divide-y divide-slate-100 max-h-[80vh] overflow-y-auto">
             {rows.map(row => (
               <div
                 key={row.id}
                 className={cn(
-                  'grid grid-cols-[32px_1fr_130px_100px_80px_90px_140px_36px] gap-2 px-4 py-2 items-center text-sm transition-colors',
+                  'grid grid-cols-[32px_1fr_130px_120px_80px_90px_140px_36px] gap-2 px-4 py-1.5 items-center text-sm transition-colors',
                   row.isRefund
                     ? 'bg-red-50'
                     : row.selected ? 'bg-white' : 'bg-slate-50 opacity-50'
@@ -172,16 +173,21 @@ export function UploadSantanderPage() {
                   className="w-4 h-4 rounded accent-blue-600"
                 />
 
-                {/* Descripción + Etiquetas */}
-                <div className="flex flex-col gap-1">
+                {/* Descripción + Comprobante + Etiquetas */}
+                <div className="flex flex-col gap-0.5">
                   <input
                     value={row.description ?? ''}
                     onChange={e => updateRow(row.id, { description: e.target.value })}
                     className={cn(
-                      'w-full px-2 py-1 rounded-lg border border-transparent hover:border-slate-300 focus:border-blue-400 focus:outline-none text-sm bg-transparent',
+                      'w-full px-2 py-0.5 rounded-lg border border-transparent hover:border-slate-300 focus:border-blue-400 focus:outline-none text-sm bg-transparent',
                       row.isRefund && 'text-red-600 font-medium'
                     )}
                   />
+                  {row.comprobante && (
+                    <span className="text-[10px] text-slate-400 px-2 leading-none">
+                      #{row.comprobante}
+                    </span>
+                  )}
                   <TagSelector
                     selected={row.tags}
                     onChange={tags => updateRow(row.id, { tags })}
@@ -203,24 +209,10 @@ export function UploadSantanderPage() {
                 <div className="flex flex-col gap-0.5">
                   <div className="flex gap-1 items-center">
                     {row.isRefund && <span className="text-red-500 font-bold text-xs">-</span>}
-                    <input
-                      type="number"
-                      step="0.01"
-                      value={row.amount}
-                      onChange={e => updateRow(row.id, { amount: parseFloat(e.target.value) || 0 })}
-                      className={cn(
-                        'w-16 px-2 py-1 rounded-lg border border-transparent hover:border-slate-300 focus:border-blue-400 focus:outline-none text-sm bg-transparent',
-                        row.isRefund && 'text-red-600'
-                      )}
-                    />
-                    <select
-                      value={row.currency}
-                      onChange={e => updateRow(row.id, { currency: e.target.value as Currency })}
-                      className="px-1 py-1 rounded-lg border border-transparent hover:border-slate-300 focus:outline-none text-xs bg-transparent"
-                    >
-                      <option value="ARS">ARS</option>
-                      <option value="USD">USD</option>
-                    </select>
+                    <span className={cn('text-sm font-medium tabular-nums', row.isRefund ? 'text-red-600' : 'text-slate-800')}>
+                      {row.amount.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </span>
+                    <span className="text-xs text-slate-500">{row.currency}</span>
                   </div>
                   {row.isRefund && (
                     <span className="text-[10px] bg-red-100 text-red-600 rounded px-1 w-fit">Devolución</span>
@@ -239,15 +231,10 @@ export function UploadSantanderPage() {
                 />
 
                 {/* Categoría */}
-                <select
+                <CategorySelect
                   value={row.category}
-                  onChange={e => updateRow(row.id, { category: e.target.value })}
-                  className="px-2 py-1 rounded-lg border border-transparent hover:border-slate-300 focus:outline-none text-xs bg-transparent"
-                >
-                  {categories.map(cat => (
-                    <option key={cat.id} value={cat.name}>{cat.icon} {cat.name}</option>
-                  ))}
-                </select>
+                  onChange={category => updateRow(row.id, { category })}
+                />
 
                 {/* Eliminar fila */}
                 <button

@@ -1,6 +1,8 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
+type DocWithAutoTable = jsPDF & { lastAutoTable?: { finalY?: number } };
+
 interface Participant {
     id: string;
     name: string;
@@ -83,7 +85,7 @@ export const generateSharedExpensesPDF= (
 
     // Section 2: Resumen por persona
     if (perPersonSummary) {
-        const finalY1 = (doc as any).lastAutoTable.finalY || 55;
+        const finalY1 = (doc as DocWithAutoTable).lastAutoTable?.finalY ?? 55;
         doc.setFontSize(14);
         doc.setTextColor(0);
         doc.text('Resumen por Persona', 14, finalY1 + 15);
@@ -111,7 +113,7 @@ export const generateSharedExpensesPDF= (
     }
 
     // Section 3: Detalle de Gastos Registrados
-    const finalY = (doc as any).lastAutoTable.finalY || 55;
+    const finalY = (doc as DocWithAutoTable).lastAutoTable?.finalY ?? 55;
     doc.setFontSize(14);
     doc.setTextColor(0);
     doc.text('Detalle de Gastos Registrados', 14, finalY + 15);
@@ -133,7 +135,7 @@ export const generateSharedExpensesPDF= (
 
     // Section 3: Pagos Realizados
     if (payments.length > 0) {
-        const finalY2 = (doc as any).lastAutoTable.finalY || finalY + 40;
+        const finalY2 = (doc as DocWithAutoTable).lastAutoTable?.finalY ?? finalY + 40;
         doc.setFontSize(14);
         doc.text('Pagos Realizados', 14, finalY2 + 15);
 
@@ -155,7 +157,7 @@ export const generateSharedExpensesPDF= (
     }
 
     // Footer simple
-    const pageCount = (doc as any).internal.getNumberOfPages();
+    const pageCount = doc.getNumberOfPages();
     for (let i = 1; i <= pageCount; i++) {
         doc.setPage(i);
         doc.setFontSize(8);

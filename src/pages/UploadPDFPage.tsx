@@ -4,6 +4,7 @@ import { extractTextFromPDF, parseTransactions } from '@/lib/pdfParser';
 import { isMercadoPago, parseMercadoPagoTransactions, extractMPCardInfo, type MPCardInfo } from '@/lib/mercadoPagoParser';
 import { classifyLocal, learnCategory, classifyTags, learnTags } from '@/lib/classifier';
 import { TagSelector } from '@/components/tags/TagSelector';
+import { CategorySelect } from '@/components/upload/CategorySelect';
 import type { ParsedTransaction } from '@/lib/pdfParser';
 import type { Currency } from '@/types';
 import { Upload, FileText, Loader2, Check, Trash2, RotateCcw, Save } from 'lucide-react';
@@ -16,7 +17,7 @@ interface ReviewRow extends ParsedTransaction {
 }
 
 export function UploadPDFPage() {
-  const { addExpense, categories } = useExpenseStore();
+  const { addExpense } = useExpenseStore();
 
   const [file, setFile] = useState<File | null>(null);
   const [parsing, setParsing] = useState(false);
@@ -205,19 +206,20 @@ export function UploadPDFPage() {
         {/* Tabla de revisión */}
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
           {/* Cabecera */}
-          <div className="grid grid-cols-[32px_1fr_110px_90px_140px_36px] gap-2 px-4 py-2 bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase">
+          <div className="grid grid-cols-[32px_1fr_70px_120px_90px_140px_36px] gap-2 px-4 py-2 bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase">
             <div />
             <div>Descripción / Etiquetas</div>
+            <div>Cuotas</div>
             <div>Monto</div>
             <div>Fecha</div>
             <div>Categoría</div>
             <div />
           </div>
 
-          <div className="divide-y divide-slate-100 max-h-[60vh] overflow-y-auto">
+          <div className="divide-y divide-slate-100 max-h-[80vh] overflow-y-auto">
             {rows.map(row => (
               <div key={row.id}
-                className={cn('grid grid-cols-[32px_1fr_110px_90px_140px_36px] gap-2 px-4 py-2 items-center text-sm transition-colors',
+                className={cn('grid grid-cols-[32px_1fr_70px_120px_90px_140px_36px] gap-2 px-4 py-1.5 items-center text-sm transition-colors',
                   row.selected ? 'bg-white' : 'bg-slate-50 opacity-50')}>
 
                 {/* Checkbox */}
@@ -225,28 +227,33 @@ export function UploadPDFPage() {
                   onChange={e => updateRow(row.id, { selected: e.target.checked })}
                   className="w-4 h-4 rounded accent-blue-600" />
 
-                {/* Descripción + Etiquetas */}
+                {/* Descripción + Operación + Etiquetas */}
                 <div className="flex flex-col gap-1">
                   <input value={row.description}
                     onChange={e => updateRow(row.id, { description: e.target.value })}
                     className="w-full px-2 py-1 rounded-lg border border-transparent hover:border-slate-300 focus:border-blue-400 focus:outline-none text-sm bg-transparent" />
+                  {row.operacion && (
+                    <div className="px-2">
+                      <span className="text-[10px] text-slate-400 leading-none font-mono">#{row.operacion}</span>
+                    </div>
+                  )}
                   <TagSelector
                     selected={row.tags}
                     onChange={tags => updateRow(row.id, { tags })}
                   />
                 </div>
 
-                {/* Monto + Moneda */}
-                <div className="flex gap-1">
-                  <input type="number" step="0.01" value={row.amount}
-                    onChange={e => updateRow(row.id, { amount: parseFloat(e.target.value) || 0 })}
-                    className="w-16 px-2 py-1 rounded-lg border border-transparent hover:border-slate-300 focus:border-blue-400 focus:outline-none text-sm bg-transparent" />
-                  <select value={row.currency}
-                    onChange={e => updateRow(row.id, { currency: e.target.value as Currency })}
-                    className="px-1 py-1 rounded-lg border border-transparent hover:border-slate-300 focus:outline-none text-xs bg-transparent">
-                    <option value="ARS">ARS</option>
-                    <option value="USD">USD</option>
-                  </select>
+                {/* Cuotas */}
+                <div className="text-xs text-slate-500 text-center">
+                  {row.cuotas ?? <span className="text-slate-300">—</span>}
+                </div>
+
+                {/* Monto (fijo) */}
+                <div className="flex items-center gap-1">
+                  <span className="text-sm font-medium tabular-nums text-slate-800">
+                    {row.amount.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </span>
+                  <span className="text-xs text-slate-500">{row.currency}</span>
                 </div>
 
                 {/* Fecha */}
@@ -255,13 +262,10 @@ export function UploadPDFPage() {
                   className="px-2 py-1 rounded-lg border border-transparent hover:border-slate-300 focus:border-blue-400 focus:outline-none text-xs bg-transparent" />
 
                 {/* Categoría */}
-                <select value={row.category}
-                  onChange={e => updateRow(row.id, { category: e.target.value })}
-                  className="px-2 py-1 rounded-lg border border-transparent hover:border-slate-300 focus:outline-none text-xs bg-transparent">
-                  {categories.map(cat => (
-                    <option key={cat.id} value={cat.name}>{cat.icon} {cat.name}</option>
-                  ))}
-                </select>
+                <CategorySelect
+                  value={row.category}
+                  onChange={category => updateRow(row.id, { category })}
+                />
 
                 {/* Eliminar fila */}
                 <button onClick={() => setRows(prev => prev.filter(r => r.id !== row.id))}

@@ -7,14 +7,14 @@ import * as XLSX from 'xlsx';
 export function DollarUploadPage() {
     const { setDollar, setDollarHistory, dollarHistory, clearDollarHistory } = useAppStore();
 
-    const handleDataLoaded = (data: any[]) => {
+    const handleDataLoaded = (data: Record<string, unknown>[]) => {
         console.log("Datos Dólar Cargados:", data);
 
         if (data.length === 0) return;
 
         const history: DollarRecord[] = [];
 
-        data.forEach((row: any) => {
+        data.forEach((row) => {
             // Normalize keys to lowercase for searching
             const keys = Object.keys(row);
             const dateKey = keys.find(k => k.toLowerCase().includes('fecha') || k.toLowerCase().includes('date'));
@@ -42,7 +42,7 @@ export function DollarUploadPage() {
                         try {
                             const d = new Date(dateVal);
                             if (!isNaN(d.getTime())) dateStr = d.toISOString().slice(0, 7);
-                        } catch (e) { }
+                        } catch { /* ignore invalid date */ }
                     }
                 }
 

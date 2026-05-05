@@ -245,10 +245,14 @@ export function parseMercadoPagoTransactions(text: string): ParsedTransaction[] 
             desc = desc.replace(am[0], '');
         }
 
-        // Quitar número de operación (5-7 dígitos sueltos)
+        // Capturar número de operación (5-7 dígitos sueltos) antes de quitarlo
+        const operacionMatch = desc.match(/\b(\d{5,7})\b/);
+        const operacion = operacionMatch ? operacionMatch[1] : undefined;
         desc = desc.replace(/\b\d{5,7}\b/g, '');
 
-        // Extraer y quitar cuotas ("5 de 6", "1 de 9")
+        // Capturar cuotas ("5 de 6", "1 de 9") antes de quitarlas
+        const cuotasMatch = desc.match(/\b(\d+\s+de\s+\d+)\b/);
+        const cuotas = cuotasMatch ? cuotasMatch[1] : undefined;
         desc = desc.replace(/\b\d+\s+de\s+\d+\b/g, '');
 
         // Limpiar espacios y caracteres sobrantes
@@ -262,6 +266,8 @@ export function parseMercadoPagoTransactions(text: string): ParsedTransaction[] 
             amount,
             currency,
             date,
+            cuotas,
+            operacion,
             rawLine: line,
         });
     }

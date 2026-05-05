@@ -4,7 +4,7 @@ import { cn } from '../../lib/utils';
 import * as XLSX from 'xlsx';
 
 interface FileUploaderProps {
-    onDataLoaded: (data: any[]) => void;
+    onDataLoaded: (data: Record<string, unknown>[]) => void;
     title?: string;
     description?: string;
     accept?: string;
@@ -46,7 +46,7 @@ export function FileUploader({
             const jsonData = XLSX.utils.sheet_to_json(worksheet);
 
             setFileName(file.name);
-            onDataLoaded(jsonData);
+            onDataLoaded(jsonData as Record<string, unknown>[]);
         };
 
         if (isCSV) {
