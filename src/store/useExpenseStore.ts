@@ -9,6 +9,7 @@ import {
   deleteDoc,
   doc,
   getDocs,
+  setDoc,
   query,
   orderBy,
   Timestamp,
@@ -31,14 +32,16 @@ interface ExpenseStore {
   getMonthSummary: (year: number, month: number) => { totalARS: number; totalUSD: number; byCategory: Record<string, number> };
 
   // Actions categorías
-  addCategory: (category: Category) => void;
-  updateCategory: (id: string, updates: Partial<Omit<Category, 'id'>>) => void;
-  deleteCategory: (id: string) => void;
+  fetchCategories: () => Promise<void>;
+  addCategory: (category: Category) => Promise<void>;
+  updateCategory: (id: string, updates: Partial<Omit<Category, 'id'>>) => Promise<void>;
+  deleteCategory: (id: string) => Promise<void>;
 
   // Actions etiquetas
-  addTag: (tag: Tag) => void;
-  updateTag: (id: string, updates: Partial<Omit<Tag, 'id'>>) => void;
-  deleteTag: (id: string) => void;
+  fetchTags: () => Promise<void>;
+  addTag: (tag: Tag) => Promise<void>;
+  updateTag: (id: string, updates: Partial<Omit<Tag, 'id'>>) => Promise<void>;
+  deleteTag: (id: string) => Promise<void>;
 }
 
 export const useExpenseStore = create<ExpenseStore>()(
@@ -218,35 +221,73 @@ export const useExpenseStore = create<ExpenseStore>()(
         return { totalARS, totalUSD, byCategory };
       },
 
-      addCategory: (category) =>
-        set((state) => ({ categories: [...state.categories, category] })),
+      fetchCategories: async () => {
+        try {
+          const snapshot = await getDocs(collection(db, 'categories'));
+          if (snapshot.empty) {
+            // Primera vez: sembrar categorías por defecto en Firestore
+            await Promise.all(
+              defaultCategories.map((cat) => setDoc(doc(db, 'categories', cat.id), cat))
+            );
+            set({ categories: defaultCategories });
+          } else {
+            const categories: Category[] = snapshot.docs.map((d) => d.data() as Category);
+            set({ categories });
+          }
+        } catch (error) {
+          console.error('Error fetching categories:', error);
+        }
+      },
 
-      updateCategory: (id, updates) =>
+      addCategory: async (category) => {
+        await setDoc(doc(db, 'categories', category.id), category);
+        set((state) => ({ categories: [...state.categories, category] }));
+      },
+
+      updateCategory: async (id, updates) => {
+        await updateDoc(doc(db, 'categories', id), updates);
         set((state) => ({
-          categories: state.categories.map((c) =>
-            c.id === id ? { ...c, ...updates } : c
-          ),
-        })),
+          categories: state.categories.map((c) => c.id === id ? { ...c, ...updates } : c),
+        }));
+      },
 
-      deleteCategory: (id) =>
+      deleteCategory: async (id) => {
+        await deleteDoc(doc(db, 'categories', id));
+        set((state) => ({ categories: state.categories.filter((c) => c.id !== id) }));
+      },
+
+      fetchTags: async () => {
+        try {
+          const snapshot = await getDocs(collection(db, 'tags'));
+          if (!snapshot.empty) {
+            const tags: Tag[] = snapshot.docs.map((d) => d.data() as Tag);
+            set({ tags });
+          }
+        } catch (error) {
+          console.error('Error fetching tags:', error);
+        }
+      },
+
+      addTag: async (tag) => {
+        await setDoc(doc(db, 'tags', tag.id), tag);
+        set((state) => ({ tags: [...state.tags, tag] }));
+      },
+
+      updateTag: async (id, updates) => {
+        await updateDoc(doc(db, 'tags', id), updates);
         set((state) => ({
-          categories: state.categories.filter((c) => c.id !== id),
-        })),
+          tags: state.tags.map((t) => t.id === id ? { ...t, ...updates } : t),
+        }));
+      },
 
-      addTag: (tag) =>
-        set((state) => ({ tags: [...state.tags, tag] })),
-
-      updateTag: (id, updates) =>
-        set((state) => ({
-          tags: state.tags.map((t) => (t.id === id ? { ...t, ...updates } : t)),
-        })),
-
-      deleteTag: (id) =>
-        set((state) => ({ tags: state.tags.filter((t) => t.id !== id) })),
+      deleteTag: async (id) => {
+        await deleteDoc(doc(db, 'tags', id));
+        set((state) => ({ tags: state.tags.filter((t) => t.id !== id) }));
+      },
     }),
     {
       name: 'expense-storage',
-      partialize: (state) => ({ categories: state.categories, tags: state.tags }),
+      partialize: () => ({}),
     }
   )
 );

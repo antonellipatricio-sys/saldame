@@ -4,6 +4,7 @@ import { parseSantanderExcel, type SantanderTransaction } from '@/lib/santanderP
 import { classifyLocal, learnCategory, classifyTags, learnTags } from '@/lib/classifier';
 import { TagSelector } from '@/components/tags/TagSelector';
 import { CategorySelect } from '@/components/upload/CategorySelect';
+import { ResponsableSelect } from '@/components/ResponsableSelect';
 import type { Currency } from '@/types';
 import { Upload, FileSpreadsheet, Loader2, Check, Trash2, RotateCcw, Save } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -94,6 +95,7 @@ export function UploadSantanderPage() {
         tags: row.tags.length > 0 ? row.tags : undefined,
         cardLast4: row.cardLast4,
         cardholder: row.cardholder,
+        responsable: row.responsable,
         source: 'santander',
       });
       count++;
@@ -143,10 +145,11 @@ export function UploadSantanderPage() {
 
         {/* Tabla */}
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-          <div className="grid grid-cols-[32px_1fr_130px_120px_80px_90px_140px_36px] gap-2 px-4 py-2 bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase">
+          <div className="grid grid-cols-[32px_1fr_130px_110px_120px_80px_90px_140px_36px] gap-2 px-4 py-2 bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase">
             <div />
             <div>Descripción</div>
             <div>Titular</div>
+            <div>Responsable</div>
             <div>Monto</div>
             <div>Cuotas</div>
             <div>Fecha</div>
@@ -159,7 +162,7 @@ export function UploadSantanderPage() {
               <div
                 key={row.id}
                 className={cn(
-                  'grid grid-cols-[32px_1fr_130px_120px_80px_90px_140px_36px] gap-2 px-4 py-1.5 items-center text-sm transition-colors',
+                  'grid grid-cols-[32px_1fr_130px_110px_120px_80px_90px_140px_36px] gap-2 px-4 py-1.5 items-center text-sm transition-colors',
                   row.isRefund
                     ? 'bg-red-50'
                     : row.selected ? 'bg-white' : 'bg-slate-50 opacity-50'
@@ -204,6 +207,12 @@ export function UploadSantanderPage() {
                   )}
                   <span className="text-[10px] text-slate-400">···{row.cardLast4}</span>
                 </div>
+
+                {/* Responsable */}
+                <ResponsableSelect
+                  value={row.responsable}
+                  onChange={val => updateRow(row.id, { responsable: val })}
+                />
 
                 {/* Monto + Moneda */}
                 <div className="flex flex-col gap-0.5">

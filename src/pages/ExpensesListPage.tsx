@@ -7,6 +7,7 @@ import { Search, Trash2, Filter, Pencil, Download, X, Check, Loader2 } from 'luc
 import type { Currency, Expense } from '@/types';
 import { cn } from '@/lib/utils';
 import { TagSelector } from '@/components/tags/TagSelector';
+import { ResponsableSelect } from '@/components/ResponsableSelect';
 
 // ── Modal de edición ──────────────────────────────────────────────
 function EditModal({ expense, onClose }: { expense: Expense; onClose: () => void }) {
@@ -18,6 +19,7 @@ function EditModal({ expense, onClose }: { expense: Expense; onClose: () => void
   const [date, setDate] = useState(format(new Date(expense.date), 'yyyy-MM-dd'));
   const [notes, setNotes] = useState(expense.notes ?? '');
   const [selectedTags, setSelectedTags] = useState<string[]>(expense.tags ?? []);
+  const [responsable, setResponsable] = useState(expense.responsable ?? '');
 
   const handleSave = async () => {
     await updateExpense(expense.id, {
@@ -28,6 +30,7 @@ function EditModal({ expense, onClose }: { expense: Expense; onClose: () => void
       date: new Date(date + 'T12:00:00'),
       notes: notes || undefined,
       tags: selectedTags.length > 0 ? selectedTags : undefined,
+      responsable: responsable || undefined,
     });
     onClose();
   };
@@ -80,6 +83,17 @@ function EditModal({ expense, onClose }: { expense: Expense; onClose: () => void
               className="w-full mt-1 px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500" />
           </div>
           <div>
+            <label className="text-sm font-medium text-slate-700">Responsable</label>
+            <div className="mt-1">
+              <ResponsableSelect
+                value={responsable}
+                onChange={setResponsable}
+                className="w-full py-2 text-sm"
+                placeholder="— Sin asignar —"
+              />
+            </div>
+          </div>
+          <div>
             <label className="text-sm font-medium text-slate-700">Notas</label>
             <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={2}
               className="w-full mt-1 px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" />
@@ -110,7 +124,7 @@ function EditModal({ expense, onClose }: { expense: Expense; onClose: () => void
 
 // ── Página principal ──────────────────────────────────────────────
 export function ExpensesListPage() {
-  const { expenses, fetchExpenses, deleteExpense, categories, tags, loading } = useExpenseStore();
+  const { expenses, fetchExpenses, deleteExpense, updateExpense, categories, tags, loading } = useExpenseStore();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState('');
@@ -312,11 +326,22 @@ export function ExpensesListPage() {
                             </span>
                           );
                         })}
+                        {expense.cardLast4 && (
+                          <span className="text-slate-400">···{expense.cardLast4}</span>
+                        )}
+                        {expense.responsable && (
+                          <span className="px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 font-medium">{expense.responsable}</span>
+                        )}
                       </div>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-2 shrink-0">
+                    {/* Selector de responsable */}
+                    <ResponsableSelect
+                      value={expense.responsable ?? (expense.cardLast4 === '3946' ? 'Maru' : expense.cardLast4 === '8337' ? 'Bren' : expense.cardLast4 === '1204' || expense.cardLast4 === '1884' ? 'Patricio' : '')}
+                      onChange={val => updateExpense(expense.id, { responsable: val || undefined })}
+                    />
                     <div className="text-right">
                       <p className="font-bold text-slate-800">
                         {expense.currency === 'ARS' ? '$' : 'US$'} {expense.amount.toLocaleString('es-AR')}

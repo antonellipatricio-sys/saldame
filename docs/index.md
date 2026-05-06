@@ -1,7 +1,18 @@
-# Cuack Cuentas Claras — Documentación Completa
+# Cuack Cuentas Claras — Documentación
 
-> **Aplicación de control financiero personal** construida con React + Vite + TypeScript + Firebase (Firestore) + Zustand.  
-> Permite registrar, clasificar, importar y analizar gastos personales desde múltiples fuentes (manual, PDFs de tarjetas, Excel de Santander).
+> **App de control financiero personal** · React + Vite + TypeScript + Firebase + Zustand  
+> Clasificación automática por IA, importación de PDFs/Excel, consultas en lenguaje natural.
+
+> 🚀 **Nuevo en este repo?** Empezá por [`CLAUDE.md`](../CLAUDE.md) para contexto rápido.
+
+---
+
+## Dos Productos en Este Repositorio
+
+| Producto | Descripción | Acceso |
+|---|---|---|
+| **🦆 Cuack Cuentas Claras** | App financiera personal (este doc) | PIN requerido |
+| **👥 Gastos Compartidos** | Dividir gastos en grupo sin login | [Público — ver docs](./gastos-compartidos/INDICE.md) |
 
 ---
 
@@ -66,25 +77,37 @@ src/
 
 ## Módulos y Guías Detalladas
 
-### Navegación y Layout
-- [Layouts y Navegación](./navegacion.md) — Sidebar, Header, Bottom Nav, enrutamiento
+### 📊 Cuack — Módulo Financiero (CORE)
+Documentación organizada por sectores funcionales:
 
-### Páginas (una guía por módulo)
-- [Dashboard (Inicio)](./pages/inicio.md)
-- [Agregar Gasto](./pages/agregar-gasto.md)
-- [Mis Gastos (Lista)](./pages/mis-gastos.md)
-- [Subir PDF](./pages/subir-pdf.md)
-- [Santander Excel](./pages/santander-excel.md)
-- [Estadísticas](./pages/estadisticas.md)
-- [Categorías](./pages/categorias.md)
-- [Etiquetas](./pages/etiquetas.md)
-- [Gastos Compartidos](./pages/gastos-compartidos.md)
-- [Calculadora](./pages/calculadora.md)
-- [Carga Costos Ninox](./pages/carga-ninox.md)
-- [Variación Dólar](./pages/variacion-dolar.md)
-- [Configuración](./pages/configuracion.md)
+- **[Módulo Financiero Completo](./modulos-financieros/INDICE.md)** ← START HERE
+  - **[Registro de Gastos](./modulos-financieros/registro/INDICE.md)** — Captura desde múltiples canales
+    - [Agregar Manual](./modulos-financieros/registro/agregar-gasto.md)
+    - [Importar PDF](./modulos-financieros/registro/subir-pdf.md)
+    - [Importar Santander Excel](./modulos-financieros/registro/santander-excel.md)
+  
+  - **[Consultas y Análisis](./modulos-financieros/consultas/INDICE.md)** — Visualización e insights
+    - [Dashboard / Inicio](./modulos-financieros/consultas/inicio.md)
+    - [Mis Gastos (Historial)](./modulos-financieros/consultas/mis-gastos.md)
+    - [Estadísticas](./modulos-financieros/consultas/estadisticas.md)
+    - [Estado de Cuenta (IA)](./modulos-financieros/consultas/estado-de-cuenta.md)
+  
+  - **[Configuración Financiera](./modulos-financieros/configuracion/INDICE.md)** — Estructura de categorías/etiquetas
+    - [Categorías](./modulos-financieros/configuracion/categorias.md)
+    - [Etiquetas](./modulos-financieros/configuracion/etiquetas.md)
 
-### Infraestructura
+### 👥 Gastos Compartidos (Módulo Público Independiente)
+- **[Gastos Compartidos — Documentación completa](./gastos-compartidos/INDICE.md)**
+  - [Referencia técnica](./gastos-compartidos/gastos-compartidos.md)
+
+### 🛠️ Herramientas Complementarias
+- **[Herramientas](./herramientas/INDICE.md)** — Utilities adicionales
+  - [Calculadora](./herramientas/calculadora.md)
+  - [Carga Ninox](./herramientas/carga-ninox.md)
+  - [Configuración](./herramientas/configuracion.md)
+
+### 📐 Infraestructura
+- [Navegación y Layout](./navegacion.md) — Sidebar, Header, Bottom Nav, enrutamiento
 - [Componentes Reusables](./componentes.md) — TagSelector, FileUploader, Calculator
 - [Gestión de Estado (Store)](./estado.md) — useExpenseStore, useAppStore
 

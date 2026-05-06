@@ -22,9 +22,9 @@ export function TagsPage() {
     const [newTag, setNewTag] = useState({ name: '', color: TAG_COLOR_OPTIONS[0].value });
     const [editTag, setEditTag] = useState({ name: '', color: '' });
 
-    const handleCreateTag = () => {
+    const handleCreateTag = async () => {
         if (!newTag.name.trim()) return;
-        addTag({ id: `tag-${Date.now()}`, name: newTag.name.trim(), color: newTag.color });
+        await addTag({ id: `tag-${Date.now()}`, name: newTag.name.trim(), color: newTag.color });
         setNewTag({ name: '', color: TAG_COLOR_OPTIONS[0].value });
         setIsCreatingTag(false);
     };
@@ -34,14 +34,14 @@ export function TagsPage() {
         setEditTag({ name: tag.name, color: tag.color });
     };
 
-    const handleUpdateTag = (id: string) => {
+    const handleUpdateTag = async (id: string) => {
         if (!editTag.name.trim()) return;
-        updateTag(id, { name: editTag.name.trim(), color: editTag.color });
+        await updateTag(id, { name: editTag.name.trim(), color: editTag.color });
         setEditingTagId(null);
     };
 
-    const handleDeleteTag = (id: string, name: string) => {
-        if (confirm(`¿Eliminar la etiqueta "${name}"?`)) deleteTag(id);
+    const handleDeleteTag = async (id: string, name: string) => {
+        if (confirm(`¿Eliminar la etiqueta "${name}"?`)) await deleteTag(id);
     };
 
     return (

@@ -20,8 +20,9 @@ export interface SantanderTransaction {
   amountUSD: number | null;
   currency: 'ARS' | 'USD';
   amount: number;
-cardholder: string;     // nombre completo del portador de la tarjeta
+  cardholder: string;     // nombre completo del portador de la tarjeta
   cardLast4: string;      // últimos 4 dígitos de la tarjeta
+  responsable: string;    // persona responsable del gasto ('Patricio', 'Maru', 'Bren')
   isAdditional: boolean;  // true si es adicional
   isRefund: boolean;       // true si es devolución/descuento (monto negativo)
   rawRow: string;
@@ -70,6 +71,15 @@ function detectCardSection(col0: string): { name: string; last4: string; isAddit
   const name = m[2].trim();
   const last4 = m[3];
   return { name, last4, isAdditional };
+}
+
+/**
+ * Resuelve el responsable del gasto según el número de tarjeta.
+ * Por defecto usa el nombre del titular tal como viene en el resumen.
+ * El usuario puede reasignar manualmente desde la UI.
+ */
+function resolveResponsable(_cardLast4: string, cardholder: string): string {
+  return cardholder;
 }
 
 // Patrones de descripción que deben ignorarse (no son transacciones de compra)
@@ -196,6 +206,7 @@ export function parseSantanderRows(rows: unknown[][]): SantanderTransaction[] {
       amount,
       cardholder: currentCardholder,
       cardLast4: currentLast4,
+      responsable: resolveResponsable(currentLast4, currentCardholder),
       isAdditional: currentIsAdditional,
       isRefund,
       rawRow: row.map(c => String(c ?? '')).join(' | '),

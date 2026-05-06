@@ -19,23 +19,23 @@ export function CategoriesPage() {
 
 
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
     if (!newCat.name.trim()) return;
-    addCategory({ id: crypto.randomUUID(), name: newCat.name.trim(), icon: newCat.icon, color: newCat.color });
+    await addCategory({ id: crypto.randomUUID(), name: newCat.name.trim(), icon: newCat.icon, color: newCat.color });
     setNewCat({ name: '', icon: '❓', color: '#B2BEC3' });
     setIsCreating(false);
   };
 
   const startEdit = (cat: Category) => { setEditingId(cat.id); setEditCat({ name: cat.name, icon: cat.icon, color: cat.color }); };
 
-  const handleUpdate = (id: string) => {
+  const handleUpdate = async (id: string) => {
     if (!editCat.name.trim()) return;
-    updateCategory(id, { name: editCat.name.trim(), icon: editCat.icon, color: editCat.color });
+    await updateCategory(id, { name: editCat.name.trim(), icon: editCat.icon, color: editCat.color });
     setEditingId(null);
   };
 
-  const handleDelete = (id: string, name: string) => {
-    if (confirm(`¿Eliminar la categoría "${name}"?`)) deleteCategory(id);
+  const handleDelete = async (id: string, name: string) => {
+    if (confirm(`¿Eliminar la categoría "${name}"?`)) await deleteCategory(id);
   };
 
 

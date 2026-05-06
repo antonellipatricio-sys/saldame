@@ -5,6 +5,8 @@ import { es } from 'date-fns/locale';
 import { CreditCard, DollarSign, Filter, TrendingDown, Wallet, Trash2, Loader2, Download } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { exportExpensesToExcel } from '@/lib/exportExcel';
+import { DebtDashboard } from '@/components/DebtDashboard';
+import { ResponsableSelect } from '@/components/ResponsableSelect';
 
 interface CardSummary {
     cardLast4: string;
@@ -15,7 +17,7 @@ interface CardSummary {
 }
 
 export function AccountPage() {
-    const { expenses, fetchExpenses, deleteExpensesByCard, loading } = useExpenseStore();
+    const { expenses, fetchExpenses, deleteExpensesByCard, updateExpense, loading } = useExpenseStore();
     const [filterMonth, setFilterMonth] = useState('');
     const [deleteTarget, setDeleteTarget] = useState<{ cardLast4: string | null; label: string; count: number } | null>(null);
     const [deleting, setDeleting] = useState(false);
@@ -96,6 +98,9 @@ export function AccountPage() {
 
     return (
         <div className="space-y-6">
+            {/* Debt Dashboard */}
+            <DebtDashboard filterMonth={filterMonth || undefined} />
+
             {/* Header */}
             <div className="flex items-center justify-between flex-wrap gap-3">
                 <div>
@@ -155,11 +160,14 @@ export function AccountPage() {
                 {cardSummaries.map(card => {
                     const isSelected = selectedCard === (card.cardLast4 || 'sin-tarjeta');
                     return (
-                        <button
+                        <div
                             key={card.cardLast4 || 'sin-tarjeta'}
                             onClick={() => setSelectedCard(isSelected ? null : (card.cardLast4 || 'sin-tarjeta'))}
+                            role="button"
+                            tabIndex={0}
+                            onKeyDown={e => e.key === 'Enter' && setSelectedCard(isSelected ? null : (card.cardLast4 || 'sin-tarjeta'))}
                             className={cn(
-                                'bg-white rounded-xl shadow-sm border p-5 text-left transition-all hover:shadow-md',
+                                'bg-white rounded-xl shadow-sm border p-5 text-left transition-all hover:shadow-md cursor-pointer',
                                 isSelected
                                     ? 'border-blue-400 ring-2 ring-blue-200'
                                     : 'border-slate-200 hover:border-slate-300'
@@ -227,7 +235,7 @@ export function AccountPage() {
                                     </div>
                                 )}
                             </div>
-                        </button>
+                        </div>
                     );
                 })}
             </div>
@@ -278,8 +286,11 @@ export function AccountPage() {
                         </div>
                     </div>
                     <div className="divide-y divide-slate-100 max-h-[50vh] overflow-y-auto">
-                        {cardExpenses.map(exp => (
-                            <div key={exp.id} className="flex items-center justify-between px-5 py-3 hover:bg-slate-50 transition-colors">
+                        {cardExpenses.map(exp => {
+                            const isPatricioCard = exp.cardLast4 === '1204' || exp.cardLast4 === '1884';
+                            const currentResponsable = exp.responsable ?? 'Patricio';
+                            return (
+                            <div key={exp.id} className="flex items-center justify-between px-5 py-3 hover:bg-slate-50 transition-colors gap-3">
                                 <div className="flex-1 min-w-0">
                                     <p className="font-medium text-slate-800 truncate">{exp.description}</p>
                                     <div className="flex items-center gap-2 mt-0.5 text-xs text-slate-500">
@@ -296,14 +307,22 @@ export function AccountPage() {
                                         )}
                                     </div>
                                 </div>
-                                <div className="text-right ml-4">
+                                {/* Selector de responsable — solo tarjetas de Patricio */}
+                                {isPatricioCard && (
+                                    <ResponsableSelect
+                                        value={currentResponsable}
+                                        onChange={val => updateExpense(exp.id, { responsable: val })}
+                                        className="shrink-0"
+                                    />
+                                )}
+                                <div className="text-right shrink-0">
                                     <p className="font-bold text-slate-800">
                                         {exp.currency === 'ARS' ? '$' : 'US$'} {exp.amount.toLocaleString('es-AR')}
                                     </p>
                                     <p className="text-xs text-slate-400">{exp.currency}</p>
                                 </div>
                             </div>
-                        ))}
+                        );})}
                     </div>
                 </div>
             )}

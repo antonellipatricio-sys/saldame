@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Home, PlusCircle, FileText, FileSpreadsheet, List, TrendingUp, Tag, Bookmark, CreditCard, Sparkles, Users, Menu, X } from 'lucide-react';
+import { Home, PlusCircle, FileText, FileSpreadsheet, List, TrendingUp, Tag, Bookmark, CreditCard, Sparkles, Users, Menu, X, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 type Page = 'dashboard' | 'add-expense' | 'expenses' | 'upload-pdf' | 'upload-santander' | 'stats' | 'categories' | 'tags' | 'account' | 'query' | 'shared-expenses';
@@ -8,6 +8,7 @@ interface ExpenseLayoutProps {
   children: React.ReactNode;
   activePage: Page;
   onPageChange: (page: Page) => void;
+  onLogout?: () => void;
 }
 
 const navItems = [
@@ -24,7 +25,7 @@ const navItems = [
   { id: 'shared-expenses' as Page, label: 'Gastos Comp.', icon: Users },
 ];
 
-export function ExpenseLayout({ children, activePage, onPageChange }: ExpenseLayoutProps) {
+export function ExpenseLayout({ children, activePage, onPageChange, onLogout }: ExpenseLayoutProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
@@ -62,6 +63,15 @@ export function ExpenseLayout({ children, activePage, onPageChange }: ExpenseLay
                 );
               })}
             </nav>
+            {onLogout && (
+              <button
+                onClick={onLogout}
+                className="mt-4 w-full flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 hover:bg-red-50 hover:text-red-600 transition-all"
+              >
+                <LogOut className="w-5 h-5" />
+                <span className="font-semibold">Cerrar sesión</span>
+              </button>
+            )}
           </div>
         </aside>
 
@@ -121,6 +131,15 @@ export function ExpenseLayout({ children, activePage, onPageChange }: ExpenseLay
                   </button>
                 );
               })}
+              {onLogout && (
+                <button
+                  onClick={onLogout}
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 hover:bg-red-50 hover:text-red-600 transition-all mt-2"
+                >
+                  <LogOut className="w-5 h-5" />
+                  <span>Cerrar sesión</span>
+                </button>
+              )}
             </nav>
           </div>
         )}

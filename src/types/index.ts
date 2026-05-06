@@ -24,6 +24,7 @@ export interface Expense {
   tags?: string[]; // array of tag names
   cardLast4?: string; // últimos 4 dígitos de la tarjeta (ej: '1204')
   cardholder?: string; // nombre del titular de la tarjeta
+  responsable?: string; // persona responsable del gasto (ej: 'Patricio', 'Maru', 'Bren')
   source?: 'manual' | 'pdf' | 'santander'; // origen de la carga
   createdAt: Date;
   updatedAt: Date;
