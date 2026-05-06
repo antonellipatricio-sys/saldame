@@ -3,12 +3,16 @@ import { useExpenseStore } from '@/store/useExpenseStore';
 import { classifyLocal, learnCategory } from '@/lib/classifier';
 import { TagSelector } from '@/components/tags/TagSelector';
 import { ResponsableSelect } from '@/components/ResponsableSelect';
+import { UploadFileSection } from '@/components/upload/UploadFileSection';
 import type { Currency } from '@/types';
-import { Save, Loader2, RotateCcw } from 'lucide-react';
+import { Save, Loader2, RotateCcw, PenLine, FolderUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
+
+type Tab = 'manual' | 'importar';
 
 export function AddExpensePage() {
   const { addExpense, loading, categories } = useExpenseStore();
+  const [tab, setTab] = useState<Tab>('manual');
 
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
@@ -79,7 +83,7 @@ export function AddExpensePage() {
   const categoryObj = categories.find(c => c.name === category);
 
   return (
-    <div className="max-w-2xl mx-auto space-y-3">
+    <div className={cn('space-y-3', tab === 'manual' && 'max-w-2xl mx-auto')}>
 
       {/* Header compacto */}
       <div>
@@ -87,7 +91,29 @@ export function AddExpensePage() {
         <p className="text-slate-400 text-xs mt-0.5">Clasificación automática instantánea</p>
       </div>
 
-      {/* Card */}
+      {/* Tabs */}
+      <div className="flex gap-1 bg-slate-100 rounded-xl p-1 w-fit">
+        {([
+          { id: 'manual', label: 'Manual', icon: <PenLine className="w-4 h-4" /> },
+          { id: 'importar', label: 'Importar archivo', icon: <FolderUp className="w-4 h-4" /> },
+        ] as { id: Tab; label: string; icon: React.ReactNode }[]).map(t => (
+          <button key={t.id} type="button" onClick={() => setTab(t.id)}
+            className={cn(
+              'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all',
+              tab === t.id
+                ? 'bg-white text-slate-800 shadow-sm'
+                : 'text-slate-500 hover:text-slate-700'
+            )}>
+            {t.icon} {t.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Tab: Importar */}
+      {tab === 'importar' && <UploadFileSection />}
+
+      {/* Tab: Manual */}
+      {tab === 'manual' && (
       <div className={cn(
         'bg-white rounded-2xl shadow-sm border p-4 transition-all',
         saved ? 'border-green-400 shadow-green-100' : 'border-slate-200'
@@ -274,6 +300,7 @@ export function AddExpensePage() {
 
         </form>
       </div>
+      )}
     </div>
   );
 }
