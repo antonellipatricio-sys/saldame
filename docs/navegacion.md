@@ -4,12 +4,26 @@ Los layouts determinan la estructura externa fundamental y la navegación a trav
 
 ## 1. ExpenseLayout (Layout de Gastos)
 - **Archivo Fuente:** [`src/components/layout/ExpenseLayout.tsx`](../src/components/layout/ExpenseLayout.tsx)
-- **Propósito:** Actúa como el layout principal de cara al usuario para la app iterativa de gastos.
+- **Propósito:** Layout principal de la app privada de gastos.
 - **Componentes Clave:**
-  - **Sidebar de Escritorio (`<aside>`):** Muestra todas las opciones de navegación lateral. El ítem activo se resalta con fondo morado `brand-primary`. Los ítems inactivos son `text-slate-800 font-semibold` para máxima legibilidad.
-  - **Menú Hamburguesa (Mobile):** Overlay de pantalla completa activado por ícono hamburguesa en el header. Misma paleta de colores que sidebar desktop.
-  - **Logo del Pato:** Visible en ambos contextos (desktop y mobile). Se sirve desde `public/logopato.png` (PNG con fondo transparente). Tamaño: `w-28` en sidebar desktop, `w-20` en header mobile.
-- **Flujo:** Intercepta el evento `onPageChange` para modificar el estado en `App.tsx` y renderizar los distintos hijos (`children`) de páginas.
+  - **Sidebar de Escritorio (`<aside>`):** Muestra todas las opciones de navegación lateral. El ítem activo se resalta con fondo morado `brand-primary`.
+  - **Bottom Nav Bar (Mobile):** Barra de navegación fija en la parte inferior, siempre visible. Muestra todos los ítems con icono + primera palabra del label. El ítem activo se marca con color `brand-primary` y un punto indicador.
+  - **Logo del Pato:** Visible en ambos contextos. `w-28` en sidebar desktop, `w-10` en header mobile compacto.
+- **Flujo:** Intercepta `onPageChange` para modificar el estado en `App.tsx` y renderizar los hijos.
+
+### Orden de navegación
+
+| # | Label | Page ID |
+|---|---|---|
+| 1 | Estado de Cuenta | `account` |
+| 2 | Agregar Gasto | `add-expense` |
+| 3 | Mis Gastos | `expenses` |
+| 4 | Inicio | `dashboard` |
+| 5 | Categorías | `categories` |
+| 6 | Etiquetas | `tags` |
+| 7 | Responsables | `responsables` |
+| 8 | Consultas IA | `query` |
+| 9 | Gastos Comp. | `shared-expenses` |
 
 ## 2. AppLayout (Layout Secundario / Herramientas)
 - **Archivo Fuente:** [`src/components/layout/AppLayout.tsx`](../src/components/layout/AppLayout.tsx)

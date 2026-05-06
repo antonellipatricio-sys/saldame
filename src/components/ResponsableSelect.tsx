@@ -1,13 +1,11 @@
 /**
  * ResponsableSelect — selector de responsable con opción "Otro..." para nombre libre.
- * Muestra Patricio / Maru / Bren como opciones rápidas.
- * Si se elige "Otro..." aparece un input de texto inline.
+ * Las opciones base se leen del store (responsables). Muestra además los nombres
+ * custom usados en gastos existentes que no estén en el store.
  */
 import { useState, useEffect, useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { useExpenseStore } from '@/store/useExpenseStore';
-
-const CONOCIDOS = ['Patricio', 'Maru', 'Bren'];
 
 interface Props {
   value: string;
@@ -19,18 +17,23 @@ interface Props {
 export function ResponsableSelect({ value, onChange, className, placeholder = '— resp. —' }: Props) {
   const [showInput, setShowInput] = useState(false);
   const [custom, setCustom] = useState('');
-  const { expenses } = useExpenseStore();
+  const { expenses, responsables } = useExpenseStore();
 
-  // Recolectar todos los responsables custom usados en el store
-  const customOptions = useMemo(() => {
+  const knownNames = useMemo(() => responsables.map((r) => r.name), [responsables]);
+
+  // Nombres usados en gastos que no están en el store
+  const extraOptions = useMemo(() => {
     const all = new Set<string>();
     for (const e of expenses) {
-      if (e.responsable && !CONOCIDOS.includes(e.responsable)) {
+      if (e.responsable && !knownNames.includes(e.responsable)) {
         all.add(e.responsable);
       }
     }
+    if (value && !knownNames.includes(value)) {
+      all.add(value);
+    }
     return Array.from(all).sort();
-  }, [expenses]);
+  }, [expenses, knownNames, value]);
 
   useEffect(() => {
     setShowInput(false);
@@ -91,11 +94,10 @@ export function ResponsableSelect({ value, onChange, className, placeholder = '�
       )}
     >
       <option value="">{placeholder}</option>
-      <option value="Patricio">Patricio</option>
-      <option value="Maru">Maru</option>
-      <option value="Bren">Bren</option>
-      {/* Todos los custom usados en el store */}
-      {customOptions.map(opt => (
+      {responsables.map((r) => (
+        <option key={r.id} value={r.name}>{r.emoji} {r.name}</option>
+      ))}
+      {extraOptions.map(opt => (
         <option key={opt} value={opt}>{opt}</option>
       ))}
       <option value="__otro__">+ Otro...</option>

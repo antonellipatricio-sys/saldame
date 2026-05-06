@@ -67,6 +67,20 @@ Dashboard actualizado
    - Sistema crea N Expenses en Firestore
 7. **Confirmación**: "X gastos importados correctamente"
 
+## Auto-asignación de Responsable (Mercado Pago)
+
+Al importar un PDF de Mercado Pago, el sistema extrae el nombre del titular del saludo ("¡Hola, [Nombre]!") y lo mapea automáticamente al campo `responsable` de cada gasto:
+
+| Cardholder contiene | Responsable asignado |
+|---|---|
+| `patricio` | `Patricio` |
+| `mariana` / `maru` | `Maru` |
+| `brenda` / `bren` | `Bren` |
+| `micaela` / `mica` | `Mica` |
+| Otro nombre | sin asignar |
+
+Para PDFs de Banco Nación/VISA/Mastercard no aplica (no incluyen nombre del titular por transacción).
+
 ## Parser de PDF (pdfParser.ts)
 
 ### Patrones Soportados

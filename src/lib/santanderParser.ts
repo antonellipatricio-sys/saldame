@@ -74,12 +74,18 @@ function detectCardSection(col0: string): { name: string; last4: string; isAddit
 }
 
 /**
- * Resuelve el responsable del gasto según el número de tarjeta.
- * Por defecto usa el nombre del titular tal como viene en el resumen.
+ * Resuelve el responsable del gasto según el nombre del titular.
+ * Mapea nombres completos a los responsables conocidos de la app.
  * El usuario puede reasignar manualmente desde la UI.
  */
 function resolveResponsable(_cardLast4: string, cardholder: string): string {
-  return cardholder;
+  const name = cardholder.toLowerCase();
+  if (name.includes('patricio')) return 'Patricio';
+  if (name.includes('mariana') || name.includes('maru')) return 'Maru';
+  if (name.includes('brenda') || name.includes('bren')) return 'Bren';
+  if (name.includes('micaela') || name.includes('mica')) return 'Mica';
+  // Para cualquier otro titular, usar su primer nombre
+  return cardholder.trim().split(/\s+/)[0] ?? '';
 }
 
 // Patrones de descripción que deben ignorarse (no son transacciones de compra)

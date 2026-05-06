@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { Expense, Category, Tag } from '@/types';
+import type { Expense, Category, Tag, Responsable } from '@/types';
 import { defaultCategories } from '@/lib/categories';
 import {
   collection,
@@ -20,6 +20,7 @@ interface ExpenseStore {
   expenses: Expense[];
   categories: Category[];
   tags: Tag[];
+  responsables: Responsable[];
   loading: boolean;
   error: string | null;
 
@@ -42,6 +43,12 @@ interface ExpenseStore {
   addTag: (tag: Tag) => Promise<void>;
   updateTag: (id: string, updates: Partial<Omit<Tag, 'id'>>) => Promise<void>;
   deleteTag: (id: string) => Promise<void>;
+
+  // Actions responsables
+  fetchResponsables: () => Promise<void>;
+  addResponsable: (r: Responsable) => Promise<void>;
+  updateResponsable: (id: string, updates: Partial<Omit<Responsable, 'id'>>) => Promise<void>;
+  deleteResponsable: (id: string) => Promise<void>;
 }
 
 export const useExpenseStore = create<ExpenseStore>()(
@@ -51,6 +58,12 @@ export const useExpenseStore = create<ExpenseStore>()(
       categories: defaultCategories,
       tags: [
         { id: 'tag-gastos-fijos', name: 'Gastos Fijos', color: 'bg-blue-100 text-blue-700' },
+      ],
+      responsables: [
+        { id: 'resp-patricio', name: 'Patricio', emoji: '🧔' },
+        { id: 'resp-maru',     name: 'Maru',     emoji: '👩' },
+        { id: 'resp-bren',     name: 'Bren',     emoji: '👧' },
+        { id: 'resp-mica',     name: 'Mica',     emoji: '💁' },
       ],
       loading: false,
       error: null,
@@ -283,6 +296,35 @@ export const useExpenseStore = create<ExpenseStore>()(
       deleteTag: async (id) => {
         await deleteDoc(doc(db, 'tags', id));
         set((state) => ({ tags: state.tags.filter((t) => t.id !== id) }));
+      },
+
+      fetchResponsables: async () => {
+        try {
+          const snapshot = await getDocs(collection(db, 'responsables'));
+          if (!snapshot.empty) {
+            const responsables: Responsable[] = snapshot.docs.map((d) => d.data() as Responsable);
+            set({ responsables });
+          }
+        } catch (error) {
+          console.error('Error fetching responsables:', error);
+        }
+      },
+
+      addResponsable: async (r) => {
+        await setDoc(doc(db, 'responsables', r.id), r);
+        set((state) => ({ responsables: [...state.responsables, r] }));
+      },
+
+      updateResponsable: async (id, updates) => {
+        await updateDoc(doc(db, 'responsables', id), updates);
+        set((state) => ({
+          responsables: state.responsables.map((r) => r.id === id ? { ...r, ...updates } : r),
+        }));
+      },
+
+      deleteResponsable: async (id) => {
+        await deleteDoc(doc(db, 'responsables', id));
+        set((state) => ({ responsables: state.responsables.filter((r) => r.id !== id) }));
       },
     }),
     {

@@ -87,6 +87,20 @@ Fecha         | Concepto                  | Debe      | Haber     | Saldo
 
 ## Parser de Excel (santanderParser.ts)
 
+### Auto-asignación de Responsable
+
+El parser infiere el campo `responsable` del nombre del titular de cada sección de tarjeta:
+
+| Cardholder contiene | Responsable asignado |
+|---|---|
+| `patricio` | `Patricio` |
+| `mariana` / `maru` | `Maru` |
+| `brenda` / `bren` | `Bren` |
+| `micaela` / `mica` | `Mica` |
+| Otro nombre | Primer nombre del titular |
+
+Esto se resuelve en `resolveResponsable()` dentro de `santanderParser.ts`. El usuario puede reasignar manualmente desde la UI de revisión.
+
 ### Algoritmo de Lectura
 
 ```typescript

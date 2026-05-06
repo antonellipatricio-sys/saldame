@@ -46,6 +46,7 @@ Esta página provee un formulario completo para registrar manualmente un gasto i
 | `currency` | enum | Sí | ARS \| USD |
 | `category` | string (UUID) | Sí | Debe existir en store |
 | `date` | Date | Sí | Fecha válida |
+| `responsable` | string | No | Patricio, Maru, Bren, Mica, o nombre libre |
 | `tags` | string[] | No | Array de UUIDs |
 | `notes` | string | No | Máx 500 caracteres |
 | `source` | enum | No | manual \| pdf \| excel |

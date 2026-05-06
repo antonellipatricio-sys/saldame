@@ -30,6 +30,12 @@ export interface Expense {
   updatedAt: Date;
 }
 
+export interface Responsable {
+  id: string;
+  name: string;
+  emoji: string;
+}
+
 export interface MonthSummary {
   totalARS: number;
   totalUSD: number;

@@ -102,6 +102,16 @@ export function UploadPDFPage() {
     if (selected.length === 0) return;
     setSaving(true);
     let count = 0;
+
+    const responsableFromCardholder = (name: string): string | undefined => {
+      const n = name.toLowerCase();
+      if (n.includes('patricio')) return 'Patricio';
+      if (n.includes('mariana') || n.includes('maru')) return 'Maru';
+      if (n.includes('brenda') || n.includes('bren')) return 'Bren';
+      if (n.includes('micaela') || n.includes('mica')) return 'Mica';
+      return undefined;
+    };
+
     for (const row of selected) {
       learnCategory(row.description, row.category);
       learnTags(row.description, row.tags);
@@ -114,6 +124,7 @@ export function UploadPDFPage() {
         tags: row.tags.length > 0 ? row.tags : undefined,
         cardLast4: mpCardInfo?.cardLast4 || undefined,
         cardholder: mpCardInfo?.cardholder || undefined,
+        responsable: mpCardInfo?.cardholder ? responsableFromCardholder(mpCardInfo.cardholder) : undefined,
         source: 'pdf',
       });
       count++;

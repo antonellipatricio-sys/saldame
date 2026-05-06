@@ -37,7 +37,7 @@ Gestión de estructuras y parámetros que categorizan los gastos.
 
 - [Categorías](./configuracion/categorias.md) — CRUD de categorías personalizadas (ícono + color)
 - [Etiquetas](./configuracion/etiquetas.md) — CRUD de etiquetas para clasificación secundaria
-- [Grupos de Categorías](./configuracion/grupos.md) — Agrupación de categorías por sector
+- [Responsables](./configuracion/grupos.md) — CRUD de responsables (personas con gastos asignados)
 
 **Flujo**: Estructura → Categorización → Análisis Segmentado
 
@@ -71,6 +71,7 @@ MÓDULO FINANCIERO — CUACK CUENTAS CLARAS
 └── ⚙️ CONFIGURACIÓN (Master Data)
     ├── Categorías → CategoriesPage
     ├── Etiquetas → TagsPage
+    ├── Responsables → ResponsablesPage
     └── Mapeos → classifier.ts (Auto-classification rules)
 
 👥 GASTOS COMPARTIDOS → Módulo independiente (docs/gastos-compartidos/)
@@ -149,6 +150,15 @@ API DE IA: Gemini API (Clasificación + Consultas)
   name: string        // Ej: "Comida y Restaurantes"
   icon: string        // Emoji: 🍔
   color: string       // Hex: #FF6B6B
+}
+```
+
+### Responsable (Persona responsable)
+```typescript
+{
+  id: string      // Ej: 'resp-patricio'
+  name: string    // Ej: 'Patricio'
+  emoji: string   // Ej: '🧔'
 }
 ```
 
