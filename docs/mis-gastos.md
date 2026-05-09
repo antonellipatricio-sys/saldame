@@ -29,33 +29,33 @@ Columnas visibles:
 ```typescript
 const filtered = expenses.filter(e => {
   const eDate = new Date(e.date);
-  
+
   // Búsqueda textual
   if (searchTerm && !e.description.toLowerCase().includes(searchTerm.toLowerCase())) {
     return false;
   }
-  
+
   // Filtro de mes
   if (selectedMonth !== null) {
     if (eDate.getMonth() !== selectedMonth) return false;
   }
-  
+
   // Filtro de categoría (multi)
   if (selectedCategories.length > 0 && !selectedCategories.includes(e.category)) {
     return false;
   }
-  
+
   // Filtro de moneda
   if (selectedCurrencies.length > 0 && !selectedCurrencies.includes(e.currency)) {
     return false;
   }
-  
+
   // Filtro de etiquetas (AND: debe tener todas)
   if (selectedTags.length > 0) {
     const hasTags = selectedTags.every(tag => e.tags?.includes(tag));
     if (!hasTags) return false;
   }
-  
+
   return true;
 });
 ```

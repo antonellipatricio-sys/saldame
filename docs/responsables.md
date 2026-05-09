@@ -55,4 +55,4 @@ Al importar gastos (Excel Santander / PDF Mercado Pago), el nombre del titular d
 | `brenda` / `bren` | `Bren` |
 | `micaela` / `mica` | `Mica` |
 
-Ver detalles en [`santander-excel.md`](../registro/santander-excel.md) y [`subir-pdf.md`](../registro/subir-pdf.md).
+Ver detalles en [`santander-excel.md`](./santander-excel.md) y [`subir-pdf.md`](./subir-pdf.md).

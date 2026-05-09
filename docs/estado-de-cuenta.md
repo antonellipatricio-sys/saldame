@@ -25,7 +25,7 @@ A:
   Mes pasado: $2.150 promedio (6 viajes)
   Este mes: $1.950 promedio (8 viajes)
   Variación: ↓ -9.3%
-  
+
   Conclusión: Viajaste más económicamente este mes.
 ```
 
@@ -36,7 +36,7 @@ A: Top 3:
   1. Supermercado: $15.500 (44% del total)
   2. Comida y Restaurantes: $8.200 (23%)
   3. Servicios: $5.600 (16%)
-  
+
   El 67% de tus gastos están en estas 3 categorías.
 ```
 

@@ -91,18 +91,18 @@ const validateCategory = (cat: Category): string | null => {
   if (isDuplicate(cat.name)) {
     return "Esa categoría ya existe";
   }
-  
+
   // Emoji
   const emojiRegex = /(\u00d7|\u{1F300}-\u{1F9FF})/u;
   if (!emojiRegex.test(cat.icon)) {
     return "Debes seleccionar un emoji válido";
   }
-  
+
   // Color
   if (!/^#[0-9A-F]{6}$/i.test(cat.color)) {
     return "El color debe ser en formato hex válido";
   }
-  
+
   return null; // Válido
 };
 ```

@@ -28,7 +28,7 @@ Herramienta para dividir gastos en grupo **sin login**.
 - **URL**: `/gastos` y `/gastos/[id]`
 - **Acceso**: público (sin PIN)
 - **Equivalente a**: Splitwise sin autenticación
-- **Docs**: [`docs/gastos-compartidos/`](./docs/gastos-compartidos/INDICE.md)
+- **Docs**: [`gastos-compartidos-indice.md`](./gastos-compartidos-indice.md)
 
 Funcionalidades:
 - Crear eventos colaborativos con URL única
@@ -138,15 +138,65 @@ Definidos en `src/index.css` dentro de `@theme {}` (Tailwind v4).
 
 ## Documentación Completa
 
+Todos los docs están en `docs/` (mismo nivel que este archivo).
+
+### Arquitectura general
+
 | Doc | Contenido |
 |---|---|
-| [`docs/index.md`](./docs/index.md) | Arquitectura completa de Cuack |
-| [`docs/modulos-financieros/INDICE.md`](./docs/modulos-financieros/INDICE.md) | Overview del módulo financiero |
-| [`docs/gastos-compartidos/INDICE.md`](./docs/gastos-compartidos/INDICE.md) | Módulo Gastos Compartidos |
-| [`docs/herramientas/INDICE.md`](./docs/herramientas/INDICE.md) | Calculadora, Configuración |
-| [`docs/navegacion.md`](./docs/navegacion.md) | Layouts y navegación |
-| [`docs/estado.md`](./docs/estado.md) | Zustand stores |
-| [`docs/componentes.md`](./docs/componentes.md) | Componentes reutilizables |
+| [`index.md`](./index.md) | Arquitectura completa del proyecto, árbol de src/, rutas |
+| [`navegacion.md`](./navegacion.md) | Layouts, AppLayout, sidebar, rutas protegidas |
+| [`estado.md`](./estado.md) | Zustand stores: useExpenseStore, useAppStore |
+| [`componentes.md`](./componentes.md) | Componentes reutilizables (CategorySelect, AmountInput, etc.) |
+
+### Módulos Financieros
+
+| Doc | Contenido |
+|---|---|
+| [`modulos-financieros-indice.md`](./modulos-financieros-indice.md) | Overview del módulo financiero completo |
+
+#### Registro de gastos
+
+| Doc | Contenido |
+|---|---|
+| [`registro-indice.md`](./registro-indice.md) | Índice: los 3 canales de carga |
+| [`agregar-gasto.md`](./agregar-gasto.md) | Formulario manual (AddExpensePage) |
+| [`subir-pdf.md`](./subir-pdf.md) | Importar PDF de TC Banco Nación / Mercado Pago |
+| [`santander-excel.md`](./santander-excel.md) | Importar Excel Santander (resumen TC) |
+
+#### Consultas
+
+| Doc | Contenido |
+|---|---|
+| [`consultas-indice.md`](./consultas-indice.md) | Índice: las 4 vistas de consulta |
+| [`inicio.md`](./inicio.md) | Dashboard (DashboardPage) — resumen del mes |
+| [`mis-gastos.md`](./mis-gastos.md) | Historial con filtros (ExpensesListPage) |
+| [`estadisticas.md`](./estadisticas.md) | Estadísticas y gráficos (StatsPage) |
+| [`estado-de-cuenta.md`](./estado-de-cuenta.md) | Consultas IA en lenguaje natural (QueryPage / Gemini) |
+
+#### Configuración
+
+| Doc | Contenido |
+|---|---|
+| [`configuracion-indice.md`](./configuracion-indice.md) | Índice: categorías, etiquetas, responsables |
+| [`categorias.md`](./categorias.md) | CRUD de categorías, 13 categorías por defecto |
+| [`etiquetas.md`](./etiquetas.md) | CRUD de etiquetas, diferencia con categorías |
+| [`responsables.md`](./responsables.md) | Gestión de responsables (titulares de tarjeta) |
+
+### Gastos Compartidos
+
+| Doc | Contenido |
+|---|---|
+| [`gastos-compartidos-indice.md`](./gastos-compartidos-indice.md) | Índice del módulo público |
+| [`gastos-compartidos.md`](./gastos-compartidos.md) | Sala de evento, algoritmo greedy, export PDF/WhatsApp |
+
+### Herramientas
+
+| Doc | Contenido |
+|---|---|
+| [`herramientas-indice.md`](./herramientas-indice.md) | Índice: calculadora y configuración |
+| [`calculadora.md`](./calculadora.md) | Calculadora de precios con costos históricos |
+| [`configuracion.md`](./configuracion.md) | Página de configuración (SettingsPage) |
 
 ---
 

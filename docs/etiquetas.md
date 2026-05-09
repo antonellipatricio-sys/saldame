@@ -14,7 +14,7 @@ Interfaz para la gestión de "Etiquetas" (Tags). Funciona como un atributo descr
 ```
 Categoría (Primaria, 1 por gasto)
   └── Comida y Restaurantes
-  
+
 Etiquetas (Secundarias, Múltiples por gasto)
   ├── Gastos Fijos
   ├── Semanal
@@ -100,18 +100,18 @@ const validateTag = (tag: Tag): string | null => {
   if (isDuplicate(tag.name)) {
     return "Esa etiqueta ya existe";
   }
-  
+
   // Color
   const validTailwindClasses = [
     "bg-blue-100 text-blue-700",
     "bg-green-100 text-green-700",
     // ... etc
   ];
-  
+
   if (!validTailwindClasses.includes(tag.color)) {
     return "Color de Tailwind no válido";
   }
-  
+
   return null; // Valid
 };
 ```

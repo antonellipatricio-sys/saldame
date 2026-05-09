@@ -46,33 +46,33 @@ Botones destacados:
 export function DashboardPage() {
   const { expenses } = useExpenseStore();
   const [selectedMonth, setSelectedMonth] = useState(new Date());
-  
+
   // Calcular totales del mes
   const currentMonthExpenses = expenses.filter(e => {
     const eDate = new Date(e.date);
     return eDate.getMonth() === selectedMonth.getMonth() &&
            eDate.getFullYear() === selectedMonth.getFullYear();
   });
-  
+
   const totalARS = currentMonthExpenses
     .filter(e => e.currency === "ARS")
     .reduce((sum, e) => sum + e.amount, 0);
-  
+
   const totalUSD = currentMonthExpenses
     .filter(e => e.currency === "USD")
     .reduce((sum, e) => sum + e.amount, 0);
-  
+
   // Últimos 10 movimientos
   const lastExpenses = expenses
     .sort((a, b) => new Date(b.date) - new Date(a.date))
     .slice(0, 10);
-  
+
   // Distribución por categoría
   const byCategory = {};
   currentMonthExpenses.forEach(e => {
     byCategory[e.category] = (byCategory[e.category] || 0) + e.amount;
   });
-  
+
   return (
     <div>
       <Cards totalARS={totalARS} totalUSD={totalUSD} />

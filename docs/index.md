@@ -12,7 +12,7 @@
 | Producto | Descripción | Acceso |
 |---|---|---|
 | **🦆 Cuack Cuentas Claras** | App financiera personal (este doc) | PIN requerido |
-| **👥 Gastos Compartidos** | Dividir gastos en grupo sin login | [Público — ver docs](./gastos-compartidos/INDICE.md) |
+| **👥 Gastos Compartidos** | Dividir gastos en grupo sin login | [Público — ver docs](./gastos-compartidos-indice.md) |
 
 ---
 
@@ -79,30 +79,30 @@ src/
 ### 📊 Cuack — Módulo Financiero (CORE)
 Documentación organizada por sectores funcionales:
 
-- **[Módulo Financiero Completo](./modulos-financieros/INDICE.md)** ← START HERE
-  - **[Registro de Gastos](./modulos-financieros/registro/INDICE.md)** — Captura desde múltiples canales
-    - [Agregar Manual](./modulos-financieros/registro/agregar-gasto.md)
-    - [Importar PDF](./modulos-financieros/registro/subir-pdf.md)
-    - [Importar Santander Excel](./modulos-financieros/registro/santander-excel.md)
-  
-  - **[Consultas y Análisis](./modulos-financieros/consultas/INDICE.md)** — Visualización e insights
-    - [Dashboard / Inicio](./modulos-financieros/consultas/inicio.md)
-    - [Mis Gastos (Historial)](./modulos-financieros/consultas/mis-gastos.md)
-    - [Estadísticas](./modulos-financieros/consultas/estadisticas.md)
-    - [Estado de Cuenta (IA)](./modulos-financieros/consultas/estado-de-cuenta.md)
-  
-  - **[Configuración Financiera](./modulos-financieros/configuracion/INDICE.md)** — Estructura de categorías/etiquetas
-    - [Categorías](./modulos-financieros/configuracion/categorias.md)
-    - [Etiquetas](./modulos-financieros/configuracion/etiquetas.md)
+- **[Módulo Financiero Completo](./modulos-financieros-indice.md)** ← START HERE
+  - **[Registro de Gastos](./modulos-financieros/./registro-indice.md)** — Captura desde múltiples canales
+    - [Agregar Manual](./modulos-financieros/./agregar-gasto.md)
+    - [Importar PDF](./modulos-financieros/./subir-pdf.md)
+    - [Importar Santander Excel](./modulos-financieros/./santander-excel.md)
+
+  - **[Consultas y Análisis](./modulos-financieros/./consultas-indice.md)** — Visualización e insights
+    - [Dashboard / Inicio](./modulos-financieros/./inicio.md)
+    - [Mis Gastos (Historial)](./modulos-financieros/./mis-gastos.md)
+    - [Estadísticas](./modulos-financieros/./estadisticas.md)
+    - [Estado de Cuenta (IA)](./modulos-financieros/./estado-de-cuenta.md)
+
+  - **[Configuración Financiera](./modulos-financieros/./configuracion-indice.md)** — Estructura de categorías/etiquetas
+    - [Categorías](./modulos-financieros/./categorias.md)
+    - [Etiquetas](./modulos-financieros/./etiquetas.md)
 
 ### 👥 Gastos Compartidos (Módulo Público Independiente)
-- **[Gastos Compartidos — Documentación completa](./gastos-compartidos/INDICE.md)**
-  - [Referencia técnica](./gastos-compartidos/gastos-compartidos.md)
+- **[Gastos Compartidos — Documentación completa](./gastos-compartidos-indice.md)**
+  - [Referencia técnica](./gastos-compartidos.md)
 
 ### 🛠️ Herramientas Complementarias
-- **[Herramientas](./herramientas/INDICE.md)** — Utilities adicionales
-  - [Calculadora](./herramientas/calculadora.md)
-  - [Configuración](./herramientas/configuracion.md)
+- **[Herramientas](./herramientas-indice.md)** — Utilities adicionales
+  - [Calculadora](./calculadora.md)
+  - [Configuración](./configuracion.md)
 
 ### 📐 Infraestructura
 - [Navegación y Layout](./navegacion.md) — Sidebar, Header, Bottom Nav, enrutamiento
@@ -260,7 +260,6 @@ Definidos en `src/index.css` dentro del bloque `@theme {}` (Tailwind v4).
   - **Identidad:** Uso de píldoras y badges con los colores de la marca para destacar roles (ej: pagadores en gastos compartidos).
 
 ---
-
 
 ## Roadmap
 

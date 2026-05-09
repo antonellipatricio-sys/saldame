@@ -2,7 +2,7 @@
 
 App de **control financiero personal** con clasificación automática por IA. Registrá, importá y analizá tus gastos desde múltiples fuentes.
 
-> **Módulo adicional**: [Gastos Compartidos](./docs/gastos-compartidos/INDICE.md) — dividí gastos en grupo sin login (tipo Splitwise).
+> **Módulo adicional**: [Gastos Compartidos](./docs/./gastos-compartidos-indice.md) — dividí gastos en grupo sin login (tipo Splitwise).
 
 ## ✨ Características
 
@@ -77,7 +77,7 @@ npm run lint     # Ejecutar linter
 
 - [`CLAUDE.md`](./CLAUDE.md) — contexto rápido para IA
 - [`docs/index.md`](./docs/index.md) — arquitectura completa
-- [`docs/gastos-compartidos/`](./docs/gastos-compartidos/INDICE.md) — módulo Gastos Compartidos
+- [`docs/gastos-compartidos/`](./docs/./gastos-compartidos-indice.md) — módulo Gastos Compartidos
 
 ## 🔐 Configuración Firebase
 

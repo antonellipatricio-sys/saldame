@@ -107,23 +107,23 @@ expenses
 const filteredExpenses = expenses.filter(e => {
   // Período
   if (!isInPeriod(e.date, selectedPeriod)) return false;
-  
+
   // Categoría (multi)
   if (selectedCategories.length > 0 && !selectedCategories.includes(e.category)) {
     return false;
   }
-  
+
   // Moneda
   if (selectedCurrency !== "ALL" && e.currency !== selectedCurrency) {
     return false;
   }
-  
+
   // Etiquetas
   if (selectedTags.length > 0) {
     const hasTags = selectedTags.every(t => e.tags?.includes(t));
     if (!hasTags) return false;
   }
-  
+
   return true;
 });
 ```

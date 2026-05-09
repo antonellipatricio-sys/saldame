@@ -134,16 +134,16 @@ const suggestCategory = async (concept: string) => {
   // Primero: reglas locales
   const localMatch = classifyLocal(concept);
   if (localMatch) return localMatch;
-  
+
   // Segundo: Gemini
   const prompt = `
     Clasifica este concepto en una de estas categorías:
     ${CATEGORIES}
-    
+
     Concepto: "${concept}"
     Responde SOLO con el nombre de la categoría.
   `;
-  
+
   const response = await gemini.generateContent(prompt);
   return response.text().trim();
 };

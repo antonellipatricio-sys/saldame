@@ -12,9 +12,9 @@ El módulo financiero se organiza en 4 sectores principales:
 ### 1. **Registro de Gastos** 
 Captura y entrada de movimientos financieros desde diferentes fuentes.
 
-- [Agregar Gasto Manual](./registro/agregar-gasto.md) — Formulario para registrar gastos individuales
-- [Importar desde PDF](./registro/subir-pdf.md) — Parseo de resúmenes de tarjetas de crédito
-- [Importar desde Santander Excel](./registro/santander-excel.md) — Sincronización de movimientos bancarios
+- [Agregar Gasto Manual](././agregar-gasto.md) — Formulario para registrar gastos individuales
+- [Importar desde PDF](././subir-pdf.md) — Parseo de resúmenes de tarjetas de crédito
+- [Importar desde Santander Excel](././santander-excel.md) — Sincronización de movimientos bancarios
 
 **Flujo**: Usuario → Captura Manual o Importación de Archivos → Clasificación → Almacenamiento
 
@@ -23,10 +23,10 @@ Captura y entrada de movimientos financieros desde diferentes fuentes.
 ### 2. **Consultas y Análisis**
 Visualización, búsqueda y análisis de gastos registrados.
 
-- [Dashboard / Inicio](./consultas/inicio.md) — Resumen mensual y últimos movimientos
-- [Mis Gastos](./consultas/mis-gastos.md) — Historial completo con filtros y búsqueda
-- [Estadísticas](./consultas/estadisticas.md) — Análisis gráfico por categoría y período
-- [Estado de Cuenta](./consultas/estado-de-cuenta.md) — Consultas en lenguaje natural con IA
+- [Dashboard / Inicio](././inicio.md) — Resumen mensual y últimos movimientos
+- [Mis Gastos](././mis-gastos.md) — Historial completo con filtros y búsqueda
+- [Estadísticas](././estadisticas.md) — Análisis gráfico por categoría y período
+- [Estado de Cuenta](././estado-de-cuenta.md) — Consultas en lenguaje natural con IA
 
 **Flujo**: Datos → Query → Visualización → Insights Financieros
 
@@ -35,9 +35,9 @@ Visualización, búsqueda y análisis de gastos registrados.
 ### 3. **Configuración Financiera**
 Gestión de estructuras y parámetros que categorizan los gastos.
 
-- [Categorías](./configuracion/categorias.md) — CRUD de categorías personalizadas (ícono + color)
-- [Etiquetas](./configuracion/etiquetas.md) — CRUD de etiquetas para clasificación secundaria
-- [Responsables](./configuracion/responsables.md) — CRUD de responsables (personas con gastos asignados)
+- [Categorías](././categorias.md) — CRUD de categorías personalizadas (ícono + color)
+- [Etiquetas](././etiquetas.md) — CRUD de etiquetas para clasificación secundaria
+- [Responsables](././responsables.md) — CRUD de responsables (personas con gastos asignados)
 
 **Flujo**: Estructura → Categorización → Análisis Segmentado
 
@@ -46,7 +46,7 @@ Gestión de estructuras y parámetros que categorizan los gastos.
 ### 4. **Gastos Compartidos** _(Módulo Público — Independiente)_
 Sistema colaborativo para dividir gastos en grupo. **No requiere login** (rutas `/gastos/*` son públicas).
 
-- [📖 Ver documentación completa](../gastos-compartidos/INDICE.md)
+- [📖 Ver documentación completa](./gastos-compartidos-indice.md)
 
 > Este módulo es independiente del módulo financiero personal de Cuack.
 
@@ -205,7 +205,7 @@ API DE IA: Gemini API (Clasificación + Consultas)
 ```
 
 ### Flujo 4: Dividir Gasto en Grupo
-> Ver [documentación de Gastos Compartidos](../gastos-compartidos/INDICE.md) — módulo independiente.
+> Ver [documentación de Gastos Compartidos](./gastos-compartidos-indice.md) — módulo independiente.
 
 ---
 
