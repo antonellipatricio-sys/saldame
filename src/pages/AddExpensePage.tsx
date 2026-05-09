@@ -3,8 +3,9 @@ import { useExpenseStore } from '@/store/useExpenseStore';
 import { classifyLocal, learnCategory } from '@/lib/classifier';
 import { TagSelector } from '@/components/tags/TagSelector';
 import { ResponsableSelect } from '@/components/ResponsableSelect';
+import { SharedWithEditor } from '@/components/SharedWithEditor';
 import { UploadFileSection } from '@/components/upload/UploadFileSection';
-import type { Currency } from '@/types';
+import type { Currency, SharedParticipant } from '@/types';
 import { Save, Loader2, RotateCcw, PenLine, FolderUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -22,6 +23,7 @@ export function AddExpensePage() {
   const [notes, setNotes] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [responsable, setResponsable] = useState('');
+  const [sharedWith, setSharedWith] = useState<SharedParticipant[]>([]);
 
   const [suggestion, setSuggestion] = useState<{ category: string; confidence: string } | null>(null);
   const [saved, setSaved] = useState(false);
@@ -66,6 +68,7 @@ export function AddExpensePage() {
       notes: notes || undefined,
       tags: selectedTags.length > 0 ? selectedTags : undefined,
       responsable: responsable || undefined,
+      sharedWith: sharedWith.length > 0 ? sharedWith : undefined,
     });
 
     setSaved(true);
@@ -76,6 +79,7 @@ export function AddExpensePage() {
     setNotes('');
     setSelectedTags([]);
     setResponsable('');
+    setSharedWith([]);
     setSuggestion(null);
     descRef.current?.focus();
   };
@@ -251,6 +255,21 @@ export function AddExpensePage() {
                 value={date}
                 onChange={e => setDate(e.target.value)}
                 className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              />
+            </div>
+          </div>
+
+          {/* Gasto compartido */}
+          <div>
+            <label className="block text-xs font-medium text-slate-700 mb-1">
+              Gasto compartido <span className="text-slate-400">(opcional)</span>
+            </label>
+            <div className="border border-slate-200 rounded-xl px-3 py-2 bg-slate-50">
+              <SharedWithEditor
+                value={sharedWith}
+                onChange={setSharedWith}
+                totalAmount={amount ? parseFloat(amount) : undefined}
+                currency={currency}
               />
             </div>
           </div>

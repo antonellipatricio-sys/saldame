@@ -17,13 +17,7 @@
 - **Propósito**: Track dólar blue/oficial para re-costeo
 - **Datos**: API externa (dólar.com.ar, etc.)
 
-### 3️⃣ Carga Costos Ninox
-- [Referencia](./carga-ninox.md)
-- **Archivo**: [`src/pages/NinoxUploadPage.tsx`](../../src/pages/NinoxUploadPage.tsx)
-- **Propósito**: Sincronización con plataforma Ninox
-- **Integración**: API Ninox
-
-### 4️⃣ Configuración
+### 3️⃣ Configuración
 - [Referencia](./configuracion.md)
 - **Archivo**: [`src/pages/SettingsPage.tsx`](../../src/pages/SettingsPage.tsx)
 - **Propósito**: Ajustes generales y preferencias de usuario
@@ -37,7 +31,6 @@
 HERRAMIENTAS
 ├── Calculadora (Standalone)
 ├── Dólar (API externa)
-├── Ninox (Integration)
 └── Settings (Preferences)
 ```
 
@@ -60,7 +53,6 @@ Todas desde menú lateral/bottom nav:
 │ ⚙️ Herramientas ◀─── Submenu        │
 │    ├─ 🧮 Calculadora               │
 │    ├─ 💱 Variación Dólar           │
-│    ├─ 📤 Ninox                     │
 │    └─ ⚙️ Configuración              │
 └─────────────────────────────────────┘
 ```
@@ -82,7 +74,6 @@ Todas desde menú lateral/bottom nav:
 ### Persistencia
 - Calculadora: `localStorage` (calculations)
 - Dólar: API cache (5-10 min)
-- Ninox: Cloud (credenciales)
 - Settings: `localStorage`
 
 ---

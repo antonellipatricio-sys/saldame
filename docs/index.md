@@ -49,7 +49,7 @@ src/
 ├── components/
 │   ├── layout/
 │   │   ├── ExpenseLayout.tsx       # Layout principal: Sidebar (desktop) + Hamburger Menu (mobile)
-│   │   └── AppLayout.tsx           # Layout secundario: Tabs superiores (Calculadora/Ninox)
+│   │   └── AppLayout.tsx           # Layout secundario: Tabs superiores (Calculadora/Herramientas)
 │   ├── tags/
 │   │   └── TagSelector.tsx         # Componente picker de etiquetas (chips + dropdown)
 │   ├── calculator/
@@ -67,7 +67,6 @@ src/
     ├── CategoriesPage.tsx          # CRUD de categorías (ícono + color)
     ├── TagsPage.tsx                # CRUD de etiquetas (nombre + color)
     ├── CalculatorPage.tsx          # Wrapper de la herramienta calculadora
-    ├── NinoxUploadPage.tsx         # Sincronización con Ninox
     ├── DollarUploadPage.tsx        # Variación de dólar para re-costeo
     ├── SettingsPage.tsx            # Configuraciones generales
     └── QueryPage.tsx               # Consultas en lenguaje natural con Gemini
@@ -103,7 +102,6 @@ Documentación organizada por sectores funcionales:
 ### 🛠️ Herramientas Complementarias
 - **[Herramientas](./herramientas/INDICE.md)** — Utilities adicionales
   - [Calculadora](./herramientas/calculadora.md)
-  - [Carga Ninox](./herramientas/carga-ninox.md)
   - [Configuración](./herramientas/configuracion.md)
 
 ### 📐 Infraestructura

@@ -1,5 +1,10 @@
 export type Currency = 'ARS' | 'USD';
 
+export interface SharedParticipant {
+  responsable: string;
+  amount: number;
+}
+
 export interface Category {
   id: string;
   name: string;
@@ -25,6 +30,7 @@ export interface Expense {
   cardLast4?: string; // últimos 4 dígitos de la tarjeta (ej: '1204')
   cardholder?: string; // nombre del titular de la tarjeta
   responsable?: string; // persona responsable del gasto (ej: 'Patricio', 'Maru', 'Bren')
+  sharedWith?: SharedParticipant[]; // participantes con los que se comparte el gasto
   source?: 'manual' | 'pdf' | 'santander'; // origen de la carga
   createdAt: Date;
   updatedAt: Date;
@@ -34,6 +40,7 @@ export interface Responsable {
   id: string;
   name: string;
   emoji: string;
+  aliases?: string[]; // nombres alternativos usados en resúmenes de TC (ej: "mariana antonelli" → Maru)
 }
 
 export interface MonthSummary {

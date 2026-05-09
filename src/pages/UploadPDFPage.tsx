@@ -3,10 +3,13 @@ import { useExpenseStore } from '@/store/useExpenseStore';
 import { extractTextFromPDF, parseTransactions } from '@/lib/pdfParser';
 import { isMercadoPago, parseMercadoPagoTransactions, extractMPCardInfo, type MPCardInfo } from '@/lib/mercadoPagoParser';
 import { classifyLocal, learnCategory, classifyTags, learnTags } from '@/lib/classifier';
+import { resolveCardholder } from '@/lib/resolveCardholder';
 import { TagSelector } from '@/components/tags/TagSelector';
 import { CategorySelect } from '@/components/upload/CategorySelect';
+import { ResponsableSelect } from '@/components/ResponsableSelect';
+import { SharedWithEditor } from '@/components/SharedWithEditor';
 import type { ParsedTransaction } from '@/lib/pdfParser';
-import type { Currency } from '@/types';
+import type { Currency, SharedParticipant } from '@/types';
 import { Upload, FileText, Loader2, Check, Trash2, RotateCcw, Save } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -14,10 +17,12 @@ interface ReviewRow extends ParsedTransaction {
   category: string;
   tags: string[];
   selected: boolean;
+  responsable?: string;
+  sharedWith: SharedParticipant[];
 }
 
 export function UploadPDFPage() {
-  const { addExpense } = useExpenseStore();
+  const { addExpense, responsables, addResponsable } = useExpenseStore();
 
   const [file, setFile] = useState<File | null>(null);
   const [parsing, setParsing] = useState(false);
@@ -61,10 +66,11 @@ export function UploadPDFPage() {
 
       // Auto-detectar formato del PDF
       let transactions: ParsedTransaction[];
+      let cardInfo: import('@/lib/mercadoPagoParser').MPCardInfo | null = null;
       if (isMercadoPago(text)) {
         console.log('[PDF] Formato detectado: Mercado Pago');
         setDetectedFormat('mercadopago');
-        const cardInfo = extractMPCardInfo(text);
+        cardInfo = extractMPCardInfo(text);
         setMpCardInfo(cardInfo);
         console.log('[PDF] Info tarjeta MP:', cardInfo);
         transactions = parseMercadoPagoTransactions(text);
@@ -87,7 +93,25 @@ export function UploadPDFPage() {
         category: classifyLocal(t.description).category,
         tags: classifyTags(t.description),
         selected: true,
+        responsable: cardInfo ? resolveCardholder(cardInfo.cardholder, responsables) : undefined,
+        sharedWith: [],
       }));
+
+      // Auto-crear responsable para el titular del MP si no existe exactamente
+      if (cardInfo) {
+        const exactMatch = resolveCardholder(cardInfo.cardholder, responsables);
+        if (!exactMatch) {
+          const name = cardInfo.cardholder;
+          const existsInStore = responsables.some(r => r.name.toLowerCase() === name.toLowerCase());
+          if (!existsInStore) {
+            const id = `resp-${name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${Date.now()}`;
+            await addResponsable({ id, name, emoji: '🧑' });
+          }
+          // Asignar el nombre al responsable de todas las filas
+          reviewRows.forEach(r => { r.responsable = name; });
+        }
+      }
+
       setRows(reviewRows);
     } catch (err) {
       setError('Error al leer el PDF. Asegurate de que el archivo no esté protegido con contraseña.');
@@ -103,15 +127,6 @@ export function UploadPDFPage() {
     setSaving(true);
     let count = 0;
 
-    const responsableFromCardholder = (name: string): string | undefined => {
-      const n = name.toLowerCase();
-      if (n.includes('patricio')) return 'Patricio';
-      if (n.includes('mariana') || n.includes('maru')) return 'Maru';
-      if (n.includes('brenda') || n.includes('bren')) return 'Bren';
-      if (n.includes('micaela') || n.includes('mica')) return 'Mica';
-      return undefined;
-    };
-
     for (const row of selected) {
       learnCategory(row.description, row.category);
       learnTags(row.description, row.tags);
@@ -124,7 +139,8 @@ export function UploadPDFPage() {
         tags: row.tags.length > 0 ? row.tags : undefined,
         cardLast4: mpCardInfo?.cardLast4 || undefined,
         cardholder: mpCardInfo?.cardholder || undefined,
-        responsable: mpCardInfo?.cardholder ? responsableFromCardholder(mpCardInfo.cardholder) : undefined,
+        responsable: row.responsable,
+        sharedWith: row.sharedWith.length > 0 ? row.sharedWith : undefined,
         source: 'pdf',
       });
       count++;
@@ -145,7 +161,7 @@ export function UploadPDFPage() {
   // ── Vista de revisión ──────────────────────────────
   if (rows.length > 0) {
     return (
-      <div className="max-w-4xl mx-auto space-y-5">
+      <div className="space-y-5">
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div>
             <div className="flex items-center gap-3">
@@ -217,10 +233,11 @@ export function UploadPDFPage() {
         {/* Tabla de revisión */}
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
           {/* Cabecera */}
-          <div className="grid grid-cols-[32px_1fr_70px_120px_90px_140px_36px] gap-2 px-4 py-2 bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase">
+          <div className="grid grid-cols-[32px_1fr_70px_140px_120px_90px_140px_36px] gap-2 px-4 py-2 bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase">
             <div />
             <div>Descripción / Etiquetas</div>
             <div>Cuotas</div>
+            <div>Responsable</div>
             <div>Monto</div>
             <div>Fecha</div>
             <div>Categoría</div>
@@ -230,13 +247,13 @@ export function UploadPDFPage() {
           <div className="divide-y divide-slate-100 max-h-[80vh] overflow-y-auto">
             {rows.map(row => (
               <div key={row.id}
-                className={cn('grid grid-cols-[32px_1fr_70px_120px_90px_140px_36px] gap-2 px-4 py-1.5 items-center text-sm transition-colors',
+                className={cn('grid grid-cols-[32px_1fr_70px_140px_120px_90px_140px_36px] gap-2 px-4 py-1.5 items-start text-sm transition-colors',
                   row.selected ? 'bg-white' : 'bg-slate-50 opacity-50')}>
 
                 {/* Checkbox */}
                 <input type="checkbox" checked={row.selected}
                   onChange={e => updateRow(row.id, { selected: e.target.checked })}
-                  className="w-4 h-4 rounded accent-blue-600" />
+                  className="w-4 h-4 rounded accent-blue-600 mt-2" />
 
                 {/* Descripción + Operación + Etiquetas */}
                 <div className="flex flex-col gap-1">
@@ -255,12 +272,26 @@ export function UploadPDFPage() {
                 </div>
 
                 {/* Cuotas */}
-                <div className="text-xs text-slate-500 text-center">
+                <div className="text-xs text-slate-500 text-center mt-2">
                   {row.cuotas ?? <span className="text-slate-300">—</span>}
                 </div>
 
+                {/* Responsable + Compartido */}
+                <div className="flex flex-col gap-1">
+                  <ResponsableSelect
+                    value={row.responsable}
+                    onChange={val => updateRow(row.id, { responsable: val })}
+                  />
+                  <SharedWithEditor
+                    value={row.sharedWith}
+                    onChange={sharedWith => updateRow(row.id, { sharedWith })}
+                    totalAmount={row.amount}
+                    currency={row.currency}
+                  />
+                </div>
+
                 {/* Monto (fijo) */}
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1 mt-2">
                   <span className="text-sm font-medium tabular-nums text-slate-800">
                     {row.amount.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
@@ -270,7 +301,7 @@ export function UploadPDFPage() {
                 {/* Fecha */}
                 <input type="date" value={row.date}
                   onChange={e => updateRow(row.id, { date: e.target.value })}
-                  className="px-2 py-1 rounded-lg border border-transparent hover:border-slate-300 focus:border-blue-400 focus:outline-none text-xs bg-transparent" />
+                  className="px-2 py-1 rounded-lg border border-transparent hover:border-slate-300 focus:border-blue-400 focus:outline-none text-xs bg-transparent mt-1" />
 
                 {/* Categoría */}
                 <CategorySelect
@@ -280,7 +311,7 @@ export function UploadPDFPage() {
 
                 {/* Eliminar fila */}
                 <button onClick={() => setRows(prev => prev.filter(r => r.id !== row.id))}
-                  className="p-1 text-slate-400 hover:text-red-500 rounded transition-colors">
+                  className="p-1 text-slate-400 hover:text-red-500 rounded transition-colors mt-1">
                   <Trash2 className="w-4 h-4" />
                 </button>
               </div>

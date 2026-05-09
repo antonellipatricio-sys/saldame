@@ -4,10 +4,11 @@ import { exportExpensesToExcel } from '@/lib/exportExcel';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Search, Trash2, Filter, Pencil, Download, X, Check, Loader2 } from 'lucide-react';
-import type { Currency, Expense } from '@/types';
+import type { Currency, Expense, SharedParticipant } from '@/types';
 import { cn } from '@/lib/utils';
 import { TagSelector } from '@/components/tags/TagSelector';
 import { ResponsableSelect } from '@/components/ResponsableSelect';
+import { SharedWithEditor } from '@/components/SharedWithEditor';
 
 // ── Modal de edición ──────────────────────────────────────────────
 function EditModal({ expense, onClose }: { expense: Expense; onClose: () => void }) {
@@ -20,6 +21,7 @@ function EditModal({ expense, onClose }: { expense: Expense; onClose: () => void
   const [notes, setNotes] = useState(expense.notes ?? '');
   const [selectedTags, setSelectedTags] = useState<string[]>(expense.tags ?? []);
   const [responsable, setResponsable] = useState(expense.responsable ?? '');
+  const [sharedWith, setSharedWith] = useState<SharedParticipant[]>(expense.sharedWith ?? []);
 
   const handleSave = async () => {
     await updateExpense(expense.id, {
@@ -31,19 +33,22 @@ function EditModal({ expense, onClose }: { expense: Expense; onClose: () => void
       notes: notes || undefined,
       tags: selectedTags.length > 0 ? selectedTags : undefined,
       responsable: responsable || undefined,
+      sharedWith: sharedWith.length > 0 ? sharedWith : undefined,
     });
     onClose();
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 space-y-4" onClick={e => e.stopPropagation()}>
-        <div className="flex items-center justify-between">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md flex flex-col max-h-[90vh]" onClick={e => e.stopPropagation()}>
+        {/* Header fijo */}
+        <div className="flex items-center justify-between p-6 pb-4 shrink-0">
           <h2 className="text-xl font-bold text-slate-800">Editar gasto</h2>
           <button onClick={onClose} className="p-1 rounded-lg hover:bg-slate-100"><X className="w-5 h-5" /></button>
         </div>
 
-        <div className="space-y-3">
+        {/* Contenido scrolleable */}
+        <div className="overflow-y-auto flex-1 px-6 space-y-3">
           <div>
             <label className="text-sm font-medium text-slate-700">Descripción</label>
             <input value={description} onChange={e => setDescription(e.target.value)}
@@ -94,11 +99,22 @@ function EditModal({ expense, onClose }: { expense: Expense; onClose: () => void
             </div>
           </div>
           <div>
+            <label className="text-sm font-medium text-slate-700">Gasto compartido</label>
+            <div className="mt-1 border border-slate-200 rounded-xl px-3 py-2 bg-slate-50">
+              <SharedWithEditor
+                value={sharedWith}
+                onChange={setSharedWith}
+                totalAmount={amount ? parseFloat(amount) : undefined}
+                currency={currency}
+              />
+            </div>
+          </div>
+          <div>
             <label className="text-sm font-medium text-slate-700">Notas</label>
             <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={2}
               className="w-full mt-1 px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" />
           </div>
-          <div>
+          <div className="pb-2">
             <label className="text-sm font-medium text-slate-700">Etiquetas</label>
             <div className="mt-1">
               <TagSelector selected={selectedTags} onChange={setSelectedTags} />
@@ -106,7 +122,8 @@ function EditModal({ expense, onClose }: { expense: Expense; onClose: () => void
           </div>
         </div>
 
-        <div className="flex gap-3 pt-2">
+        {/* Botones fijos al pie */}
+        <div className="flex gap-3 p-6 pt-4 shrink-0 border-t border-slate-100">
           <button onClick={onClose}
             className="flex-1 py-2 rounded-lg border border-slate-300 text-slate-600 hover:bg-slate-50 font-medium">
             Cancelar
@@ -331,6 +348,11 @@ export function ExpensesListPage() {
                         )}
                         {expense.responsable && (
                           <span className="px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 font-medium">{expense.responsable}</span>
+                        )}
+                        {expense.sharedWith && expense.sharedWith.length > 0 && (
+                          <span className="px-2 py-0.5 rounded-full bg-violet-100 text-violet-700 font-medium">
+                            👥 {expense.sharedWith.map(s => s.responsable).join(', ')}
+                          </span>
                         )}
                       </div>
                     </div>

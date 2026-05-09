@@ -5,7 +5,8 @@ import { classifyLocal, learnCategory, classifyTags, learnTags } from '@/lib/cla
 import { TagSelector } from '@/components/tags/TagSelector';
 import { CategorySelect } from '@/components/upload/CategorySelect';
 import { ResponsableSelect } from '@/components/ResponsableSelect';
-import type { Currency } from '@/types';
+import { SharedWithEditor } from '@/components/SharedWithEditor';
+import type { Currency, SharedParticipant } from '@/types';
 import { Upload, FileSpreadsheet, Loader2, Check, Trash2, RotateCcw, Save } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -13,10 +14,11 @@ interface ReviewRow extends SantanderTransaction {
   category: string;
   selected: boolean;
   tags: string[];
+  sharedWith: SharedParticipant[];
 }
 
 export function UploadSantanderPage() {
-  const { addExpense } = useExpenseStore();
+  const { addExpense, responsables, addResponsable } = useExpenseStore();
 
   const [file, setFile] = useState<File | null>(null);
   const [parsing, setParsing] = useState(false);
@@ -51,7 +53,7 @@ export function UploadSantanderPage() {
     setParsing(true);
     setError(null);
     try {
-      const transactions = await parseSantanderExcel(file);
+      const transactions = await parseSantanderExcel(file, responsables);
       console.log('[Santander] Transacciones encontradas:', transactions.length, transactions);
 
       if (transactions.length === 0) {
@@ -68,7 +70,20 @@ export function UploadSantanderPage() {
         category: classifyLocal(t.description).category,
         selected: !t.isRefund,
         tags: classifyTags(t.description),
+        sharedWith: [],
       }));
+
+      // Auto-crear responsables para titulares no existentes en el store
+      const existingNames = new Set(responsables.map(r => r.name.toLowerCase()));
+      const uniqueCardholders = [...new Set(transactions.map(t => t.responsable).filter(Boolean))];
+      for (const name of uniqueCardholders) {
+        if (!existingNames.has(name.toLowerCase())) {
+          const id = `resp-${name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${Date.now()}`;
+          await addResponsable({ id, name, emoji: '🧑' });
+          existingNames.add(name.toLowerCase());
+        }
+      }
+
       setRows(reviewRows);
     } catch (err) {
       setError('Error al leer el archivo Excel. Asegurate de que sea un .xlsx/.xls válido de Santander.');
@@ -96,6 +111,7 @@ export function UploadSantanderPage() {
         cardLast4: row.cardLast4,
         cardholder: row.cardholder,
         responsable: row.responsable,
+        sharedWith: row.sharedWith.length > 0 ? row.sharedWith : undefined,
         source: 'santander',
       });
       count++;
@@ -154,7 +170,7 @@ export function UploadSantanderPage() {
 
         {/* Tabla */}
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-          <div className="grid grid-cols-[32px_1fr_130px_110px_120px_80px_90px_140px_36px] gap-2 px-4 py-2 bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase">
+          <div className="grid grid-cols-[32px_1fr_130px_150px_120px_80px_90px_140px_36px] gap-2 px-4 py-2 bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase">
             <div className="flex items-center">
               <input
                 ref={masterCheckboxRef}
@@ -180,7 +196,7 @@ export function UploadSantanderPage() {
               <div
                 key={row.id}
                 className={cn(
-                  'grid grid-cols-[32px_1fr_130px_110px_120px_80px_90px_140px_36px] gap-2 px-4 py-1.5 items-center text-sm transition-colors',
+                  'grid grid-cols-[32px_1fr_130px_150px_120px_80px_90px_140px_36px] gap-2 px-4 py-1.5 items-start text-sm transition-colors',
                   row.isRefund
                     ? 'bg-red-50'
                     : row.selected ? 'bg-white' : 'bg-slate-50 opacity-50'
@@ -191,7 +207,7 @@ export function UploadSantanderPage() {
                   type="checkbox"
                   checked={row.selected}
                   onChange={e => updateRow(row.id, { selected: e.target.checked })}
-                  className="w-4 h-4 rounded accent-blue-600"
+                  className="w-4 h-4 rounded accent-blue-600 mt-2"
                 />
 
                 {/* Descripción + Comprobante + Etiquetas */}
@@ -216,7 +232,7 @@ export function UploadSantanderPage() {
                 </div>
 
                 {/* Titular / Adicional */}
-                <div className="flex flex-col gap-0.5">
+                <div className="flex flex-col gap-0.5 mt-1">
                   <span className="text-xs text-slate-600 truncate" title={row.cardholder}>
                     {row.cardholder.split(' ').slice(0, 2).join(' ')}
                   </span>
@@ -226,14 +242,22 @@ export function UploadSantanderPage() {
                   <span className="text-[10px] text-slate-400">···{row.cardLast4}</span>
                 </div>
 
-                {/* Responsable */}
-                <ResponsableSelect
-                  value={row.responsable}
-                  onChange={val => updateRow(row.id, { responsable: val })}
-                />
+                {/* Responsable + Compartido */}
+                <div className="flex flex-col gap-1">
+                  <ResponsableSelect
+                    value={row.responsable}
+                    onChange={val => updateRow(row.id, { responsable: val })}
+                  />
+                  <SharedWithEditor
+                    value={row.sharedWith}
+                    onChange={sharedWith => updateRow(row.id, { sharedWith })}
+                    totalAmount={row.amount}
+                    currency={row.currency}
+                  />
+                </div>
 
                 {/* Monto + Moneda */}
-                <div className="flex flex-col gap-0.5">
+                <div className="flex flex-col gap-0.5 mt-1">
                   <div className="flex gap-1 items-center">
                     {row.isRefund && <span className="text-red-500 font-bold text-xs">-</span>}
                     <span className={cn('text-sm font-medium tabular-nums', row.isRefund ? 'text-red-600' : 'text-slate-800')}>
@@ -247,14 +271,14 @@ export function UploadSantanderPage() {
                 </div>
 
                 {/* Cuotas */}
-                <span className="text-xs text-slate-400 text-center">{row.cuotas || '—'}</span>
+                <span className="text-xs text-slate-400 text-center mt-2">{row.cuotas || '—'}</span>
 
                 {/* Fecha */}
                 <input
                   type="date"
                   value={row.date}
                   onChange={e => updateRow(row.id, { date: e.target.value })}
-                  className="px-2 py-1 rounded-lg border border-transparent hover:border-slate-300 focus:border-blue-400 focus:outline-none text-xs bg-transparent"
+                  className="px-2 py-1 rounded-lg border border-transparent hover:border-slate-300 focus:border-blue-400 focus:outline-none text-xs bg-transparent mt-1"
                 />
 
                 {/* Categoría */}
@@ -266,7 +290,7 @@ export function UploadSantanderPage() {
                 {/* Eliminar fila */}
                 <button
                   onClick={() => setRows(prev => prev.filter(r => r.id !== row.id))}
-                  className="p-1 text-slate-400 hover:text-red-500 rounded transition-colors"
+                  className="p-1 text-slate-400 hover:text-red-500 rounded transition-colors mt-1"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>

@@ -27,7 +27,7 @@ Los layouts determinan la estructura externa fundamental y la navegación a trav
 
 ## 2. AppLayout (Layout Secundario / Herramientas)
 - **Archivo Fuente:** [`src/components/layout/AppLayout.tsx`](../src/components/layout/AppLayout.tsx)
-- **Propósito:** Un layout basado en Tabs superiores y Navbar, utilizado en partes accesorias del sistema (herramientas: calculadora, variaciones de dólar, Ninox).
+- **Propósito:** Un layout basado en Tabs superiores y Navbar, utilizado en partes accesorias del sistema (herramientas: calculadora, variaciones de dólar).
 - **Componentes Clave:**
   - **Header Superior (`<header>`):** Elemento fijo superior con logo del pato (`w-16`) y nombre de la app. Contiene navegación en pestañas alineadas a la derecha.
 

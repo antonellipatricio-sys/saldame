@@ -49,6 +49,7 @@ interface ExpenseStore {
   addResponsable: (r: Responsable) => Promise<void>;
   updateResponsable: (id: string, updates: Partial<Omit<Responsable, 'id'>>) => Promise<void>;
   deleteResponsable: (id: string) => Promise<void>;
+  renameResponsable: (id: string, newName: string) => Promise<void>;
 }
 
 export const useExpenseStore = create<ExpenseStore>()(
@@ -110,6 +111,8 @@ export const useExpenseStore = create<ExpenseStore>()(
           if (expense.tags !== undefined) data.tags = expense.tags;
           if (expense.cardLast4 !== undefined) data.cardLast4 = expense.cardLast4;
           if (expense.cardholder !== undefined) data.cardholder = expense.cardholder;
+          if (expense.responsable !== undefined) data.responsable = expense.responsable;
+          if (expense.sharedWith !== undefined) data.sharedWith = expense.sharedWith;
           if (expense.source !== undefined) data.source = expense.source;
 
           const docRef = await addDoc(collection(db, 'expenses'), data);
@@ -301,9 +304,47 @@ export const useExpenseStore = create<ExpenseStore>()(
       fetchResponsables: async () => {
         try {
           const snapshot = await getDocs(collection(db, 'responsables'));
-          if (!snapshot.empty) {
-            const responsables: Responsable[] = snapshot.docs.map((d) => d.data() as Responsable);
-            set({ responsables });
+          const defaultResponsables: Responsable[] = [
+            { id: 'resp-patricio', name: 'Patricio', emoji: '🧔', aliases: ['patricio', 'pato', 'p. antonelli'] },
+            { id: 'resp-maru',     name: 'Maru',     emoji: '👩', aliases: ['mariana', 'maru', 'm. antonelli'] },
+            { id: 'resp-bren',     name: 'Bren',     emoji: '👧', aliases: ['brenda', 'bren'] },
+            { id: 'resp-mica',     name: 'Mica',     emoji: '💁', aliases: ['micaela', 'mica', 'm. boggio'] },
+          ];
+
+          if (snapshot.empty) {
+            // Primera vez: sembrar defaults en Firestore
+            await Promise.all(
+              defaultResponsables.map((r) => setDoc(doc(db, 'responsables', r.id), r))
+            );
+            set({ responsables: defaultResponsables });
+          } else {
+            const fromFirestore: Responsable[] = snapshot.docs.map((d) => d.data() as Responsable);
+            const existingIds = new Set(fromFirestore.map(r => r.id));
+
+            // Sembrar los defaults que falten en Firestore
+            const missing = defaultResponsables.filter(r => !existingIds.has(r.id));
+            if (missing.length > 0) {
+              await Promise.all(missing.map((r) => setDoc(doc(db, 'responsables', r.id), r)));
+            }
+
+            // Migrar: agregar aliases a defaults existentes que no los tengan
+            const needsAliases = fromFirestore.filter(r => {
+              const def = defaultResponsables.find(d => d.id === r.id);
+              return def && !r.aliases;
+            });
+            if (needsAliases.length > 0) {
+              await Promise.all(needsAliases.map(r => {
+                const def = defaultResponsables.find(d => d.id === r.id)!;
+                return updateDoc(doc(db, 'responsables', r.id), { aliases: def.aliases });
+              }));
+              // Actualizar en memoria también
+              needsAliases.forEach(r => {
+                const def = defaultResponsables.find(d => d.id === r.id)!;
+                r.aliases = def.aliases;
+              });
+            }
+
+            set({ responsables: [...missing, ...fromFirestore] });
           }
         } catch (error) {
           console.error('Error fetching responsables:', error);
@@ -325,6 +366,48 @@ export const useExpenseStore = create<ExpenseStore>()(
       deleteResponsable: async (id) => {
         await deleteDoc(doc(db, 'responsables', id));
         set((state) => ({ responsables: state.responsables.filter((r) => r.id !== id) }));
+      },
+
+      renameResponsable: async (id, newName) => {
+        const { expenses, responsables } = get();
+        const r = responsables.find(r => r.id === id);
+        if (!r) return;
+        const oldName = r.name;
+        if (oldName === newName) return;
+
+        // Actualizar nombre en Firestore
+        await updateDoc(doc(db, 'responsables', id), { name: newName });
+
+        // Migrar todos los gastos que referencian el nombre viejo
+        const toUpdate = expenses.filter(e =>
+          e.responsable === oldName ||
+          e.sharedWith?.some(p => p.responsable === oldName)
+        );
+
+        if (toUpdate.length > 0) {
+          await Promise.all(toUpdate.map(async (e) => {
+            const updates: Record<string, unknown> = { updatedAt: Timestamp.fromDate(new Date()) };
+            if (e.responsable === oldName) updates.responsable = newName;
+            if (e.sharedWith?.some(p => p.responsable === oldName)) {
+              updates.sharedWith = e.sharedWith.map(p =>
+                p.responsable === oldName ? { ...p, responsable: newName } : p
+              );
+            }
+            await updateDoc(doc(db, 'expenses', e.id), updates);
+          }));
+        }
+
+        // Actualizar estado local
+        set((state) => ({
+          responsables: state.responsables.map(r => r.id === id ? { ...r, name: newName } : r),
+          expenses: state.expenses.map(e => ({
+            ...e,
+            responsable: e.responsable === oldName ? newName : e.responsable,
+            sharedWith: e.sharedWith?.map(p =>
+              p.responsable === oldName ? { ...p, responsable: newName } : p
+            ),
+          })),
+        }));
       },
     }),
     {

@@ -6,12 +6,12 @@ import { Plus, Trash2, Pencil, Check, X, UserCircle2 } from 'lucide-react';
 const EMOJI_OPTIONS = ['🧔', '👩', '👧', '👦', '🧑', '👨', '💁', '🙋', '🧑‍💼', '👱', '🧒', '🧓'];
 
 export function ResponsablesPage() {
-    const { responsables, addResponsable, updateResponsable, deleteResponsable, expenses } = useExpenseStore();
+    const { responsables, addResponsable, updateResponsable, deleteResponsable, renameResponsable, expenses } = useExpenseStore();
 
     const [isCreating, setIsCreating] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
     const [newItem, setNewItem] = useState({ name: '', emoji: EMOJI_OPTIONS[0] });
-    const [editItem, setEditItem] = useState({ name: '', emoji: '' });
+    const [editItem, setEditItem] = useState({ name: '', emoji: '', aliases: '' });
 
     const handleCreate = async () => {
         if (!newItem.name.trim()) return;
@@ -23,12 +23,31 @@ export function ResponsablesPage() {
 
     const startEdit = (r: Responsable) => {
         setEditingId(r.id);
-        setEditItem({ name: r.name, emoji: r.emoji });
+        setEditItem({
+            name: r.name,
+            emoji: r.emoji,
+            aliases: (r.aliases ?? []).join(', '),
+        });
     };
 
     const handleUpdate = async (id: string) => {
         if (!editItem.name.trim()) return;
-        await updateResponsable(id, { name: editItem.name.trim(), emoji: editItem.emoji });
+        const r = responsables.find(r => r.id === id);
+        const aliases = editItem.aliases
+            .split(',')
+            .map(a => a.trim().toLowerCase())
+            .filter(Boolean);
+
+        if (r && editItem.name.trim() !== r.name) {
+            // Nombre cambió: renombrar + migrar todos los gastos asociados
+            await renameResponsable(id, editItem.name.trim());
+        }
+
+        await updateResponsable(id, {
+            name: editItem.name.trim(),
+            emoji: editItem.emoji,
+            aliases: aliases.length > 0 ? aliases : undefined,
+        });
         setEditingId(null);
     };
 
@@ -138,6 +157,18 @@ export function ResponsablesPage() {
                                                 </button>
                                             ))}
                                         </div>
+                                        <div>
+                                            <label className="block text-xs font-medium text-slate-500 mb-1">
+                                                Aliases (separados por coma) — nombres en resúmenes de TC
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={editItem.aliases}
+                                                onChange={(e) => setEditItem((p) => ({ ...p, aliases: e.target.value }))}
+                                                placeholder="Ej: mariana, mariana antonelli, m. antonelli"
+                                                className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-violet-500 text-sm"
+                                            />
+                                        </div>
                                         <div className="flex gap-2">
                                             <button onClick={() => handleUpdate(r.id)} className="flex items-center gap-1 bg-blue-600 text-white px-3 py-1.5 rounded text-sm hover:bg-blue-700">
                                                 <Check className="w-3 h-3" /> Guardar
@@ -154,6 +185,11 @@ export function ResponsablesPage() {
                                             <div>
                                                 <p className="font-semibold text-slate-800">{r.name}</p>
                                                 <p className="text-xs text-slate-400">{gastoCount} gasto{gastoCount !== 1 ? 's' : ''}</p>
+                                                {r.aliases && r.aliases.length > 0 && (
+                                                    <p className="text-xs text-violet-500 mt-0.5">
+                                                        🔗 {r.aliases.join(', ')}
+                                                    </p>
+                                                )}
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-2">

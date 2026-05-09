@@ -9,6 +9,8 @@
  *     Filas de transacciones (fecha en col0 o vacío = hereda última fecha vista)
  */
 import * as XLSX from 'xlsx';
+import type { Responsable } from '@/types';
+import { resolveCardholder } from '@/lib/resolveCardholder';
 
 export interface SantanderTransaction {
   id: string;
@@ -75,17 +77,15 @@ function detectCardSection(col0: string): { name: string; last4: string; isAddit
 
 /**
  * Resuelve el responsable del gasto según el nombre del titular.
- * Mapea nombres completos a los responsables conocidos de la app.
- * El usuario puede reasignar manualmente desde la UI.
+ * Si se pasan responsables del store, usa aliases dinámicos; si no, usa fallback hardcoded.
  */
-function resolveResponsable(_cardLast4: string, cardholder: string): string {
-  const name = cardholder.toLowerCase();
-  if (name.includes('patricio')) return 'Patricio';
-  if (name.includes('mariana') || name.includes('maru')) return 'Maru';
-  if (name.includes('brenda') || name.includes('bren')) return 'Bren';
-  if (name.includes('micaela') || name.includes('mica')) return 'Mica';
-  // Para cualquier otro titular, usar su primer nombre
-  return cardholder.trim().split(/\s+/)[0] ?? '';
+function resolveResponsable(_cardLast4: string, cardholder: string, responsables?: Responsable[]): string {
+  if (responsables && responsables.length > 0) {
+    const resolved = resolveCardholder(cardholder, responsables);
+    if (resolved) return resolved;
+  }
+  // Usar nombre completo del titular; el caller auto-creará el responsable si no existe
+  return cardholder.trim();
 }
 
 // Patrones de descripción que deben ignorarse (no son transacciones de compra)
@@ -118,7 +118,7 @@ function shouldSkipDesc(desc: string): boolean {
 
 // ── Parser principal ───────────────────────────────────────────────────────────
 
-export function parseSantanderRows(rows: unknown[][]): SantanderTransaction[] {
+export function parseSantanderRows(rows: unknown[][], responsables?: Responsable[]): SantanderTransaction[] {
   // Paso 1: construir mapa last4 → isAdditional desde la tabla "Tarjetas incluidas"
   // Esa tabla tiene filas como: ["Visa Crédito terminada en 1204", "Patricio... (Titular)", ...]
   const additionalMap: Record<string, boolean> = {};
@@ -212,7 +212,7 @@ export function parseSantanderRows(rows: unknown[][]): SantanderTransaction[] {
       amount,
       cardholder: currentCardholder,
       cardLast4: currentLast4,
-      responsable: resolveResponsable(currentLast4, currentCardholder),
+      responsable: resolveResponsable(currentLast4, currentCardholder, responsables),
       isAdditional: currentIsAdditional,
       isRefund,
       rawRow: row.map(c => String(c ?? '')).join(' | '),
@@ -232,7 +232,7 @@ export function parseSantanderRows(rows: unknown[][]): SantanderTransaction[] {
 /**
  * Lee un File (.xlsx/.xls) de Santander y devuelve todas las transacciones.
  */
-export async function parseSantanderExcel(file: File): Promise<SantanderTransaction[]> {
+export async function parseSantanderExcel(file: File, responsables?: Responsable[]): Promise<SantanderTransaction[]> {
   const data = await file.arrayBuffer();
   const workbook = XLSX.read(new Uint8Array(data), { type: 'array' });
 
@@ -245,7 +245,7 @@ export async function parseSantanderExcel(file: File): Promise<SantanderTransact
       raw: false,
       defval: '',
     });
-    allTransactions.push(...parseSantanderRows(rows));
+    allTransactions.push(...parseSantanderRows(rows, responsables));
   }
 
   // Deduplicar entre hojas

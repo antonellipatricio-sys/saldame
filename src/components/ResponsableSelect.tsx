@@ -1,44 +1,40 @@
 /**
  * ResponsableSelect — selector de responsable con opción "Otro..." para nombre libre.
- * Las opciones base se leen del store (responsables). Muestra además los nombres
- * custom usados en gastos existentes que no estén en el store.
+ * Las opciones base se leen del store (responsables). Al ingresar un nombre nuevo
+ * lo persiste automáticamente en el store (visible en el módulo Responsables).
  */
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { useExpenseStore } from '@/store/useExpenseStore';
 
 interface Props {
-  value: string;
+  value: string | undefined;
   onChange: (val: string) => void;
   className?: string;
   placeholder?: string;
 }
 
+const DEFAULT_EMOJI = '🧑';
+
 export function ResponsableSelect({ value, onChange, className, placeholder = '— resp. —' }: Props) {
   const [showInput, setShowInput] = useState(false);
   const [custom, setCustom] = useState('');
-  const { expenses, responsables } = useExpenseStore();
+  const { responsables, addResponsable } = useExpenseStore();
 
   const knownNames = useMemo(() => responsables.map((r) => r.name), [responsables]);
 
-  // Nombres usados en gastos que no están en el store
-  const extraOptions = useMemo(() => {
-    const all = new Set<string>();
-    for (const e of expenses) {
-      if (e.responsable && !knownNames.includes(e.responsable)) {
-        all.add(e.responsable);
-      }
-    }
-    if (value && !knownNames.includes(value)) {
-      all.add(value);
-    }
-    return Array.from(all).sort();
-  }, [expenses, knownNames, value]);
+  const confirmCustom = async (name: string) => {
+    const trimmed = name.trim();
+    if (!trimmed) { onChange(''); setShowInput(false); return; }
 
-  useEffect(() => {
-    setShowInput(false);
-    setCustom('');
-  }, [value]);
+    // Si el nombre no está en el store, lo persiste automáticamente
+    if (!knownNames.includes(trimmed)) {
+      const id = `resp-${trimmed.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}`;
+      await addResponsable({ id, name: trimmed, emoji: DEFAULT_EMOJI });
+    }
+
+    onChange(trimmed);
+  };
 
   if (showInput) {
     return (
@@ -47,18 +43,10 @@ export function ResponsableSelect({ value, onChange, className, placeholder = '�
           autoFocus
           value={custom}
           onChange={e => setCustom(e.target.value)}
-          onBlur={() => {
-            if (custom.trim()) {
-              onChange(custom.trim());
-            } else {
-              onChange('');
-              setShowInput(false);
-            }
-          }}
+          onBlur={() => confirmCustom(custom)}
           onKeyDown={e => {
             if (e.key === 'Enter') {
-              if (custom.trim()) onChange(custom.trim());
-              else { onChange(''); setShowInput(false); }
+              confirmCustom(custom);
               (e.target as HTMLInputElement).blur();
             }
             if (e.key === 'Escape') {
@@ -96,9 +84,6 @@ export function ResponsableSelect({ value, onChange, className, placeholder = '�
       <option value="">{placeholder}</option>
       {responsables.map((r) => (
         <option key={r.id} value={r.name}>{r.emoji} {r.name}</option>
-      ))}
-      {extraOptions.map(opt => (
-        <option key={opt} value={opt}>{opt}</option>
       ))}
       <option value="__otro__">+ Otro...</option>
     </select>

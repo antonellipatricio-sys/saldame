@@ -143,7 +143,7 @@ Definidos en `src/index.css` dentro de `@theme {}` (Tailwind v4).
 | [`docs/index.md`](./docs/index.md) | Arquitectura completa de Cuack |
 | [`docs/modulos-financieros/INDICE.md`](./docs/modulos-financieros/INDICE.md) | Overview del módulo financiero |
 | [`docs/gastos-compartidos/INDICE.md`](./docs/gastos-compartidos/INDICE.md) | Módulo Gastos Compartidos |
-| [`docs/herramientas/INDICE.md`](./docs/herramientas/INDICE.md) | Calculadora, Ninox, Configuración |
+| [`docs/herramientas/INDICE.md`](./docs/herramientas/INDICE.md) | Calculadora, Configuración |
 | [`docs/navegacion.md`](./docs/navegacion.md) | Layouts y navegación |
 | [`docs/estado.md`](./docs/estado.md) | Zustand stores |
 | [`docs/componentes.md`](./docs/componentes.md) | Componentes reutilizables |

@@ -37,7 +37,7 @@ Gestión de estructuras y parámetros que categorizan los gastos.
 
 - [Categorías](./configuracion/categorias.md) — CRUD de categorías personalizadas (ícono + color)
 - [Etiquetas](./configuracion/etiquetas.md) — CRUD de etiquetas para clasificación secundaria
-- [Responsables](./configuracion/grupos.md) — CRUD de responsables (personas con gastos asignados)
+- [Responsables](./configuracion/responsables.md) — CRUD de responsables (personas con gastos asignados)
 
 **Flujo**: Estructura → Categorización → Análisis Segmentado
 
@@ -223,7 +223,6 @@ API DE IA: Gemini API (Clasificación + Consultas)
 
 ## Próximos Pasos y Roadmap
 
-- [ ] Sincronización bidireccional con Ninox
 - [ ] Exportación de reportes a Excel/PDF
 - [ ] Presupuesto y alertas automáticas
 - [ ] Análisis predictivo de gastos

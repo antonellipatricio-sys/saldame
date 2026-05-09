@@ -5,6 +5,11 @@
  * excepto 'Patricio' (el titular). Agrupa en:
  *  - Consumos propios: gastos en su tarjeta asignada
  *  - En tarjeta de Patricio: gastos de tarjeta 1204/1884 con responsable === persona
+ *  - Gastos compartidos: gastos de otro responsable donde esta persona aparece en sharedWith
+ *
+ * Para el titular del gasto (quien lo dividió):
+ *  - Su total se muestra como NETO (restando lo que van a pagar otros)
+ *  - Se muestra sección "💳 Gastos divididos" con el detalle del split
  */
 import { useMemo, useState } from 'react';
 import { useExpenseStore } from '@/store/useExpenseStore';
@@ -45,6 +50,26 @@ function sumExpenses(exps: Expense[]) {
   };
 }
 
+/** Porción de un gasto compartido que le corresponde a una persona */
+interface SharedEntry {
+  expense: Expense;
+  amount: number;
+  paidBy: string; // responsable del gasto original
+}
+
+/** Gasto que este responsable dividió con otros */
+interface SplitEntry {
+  expense: Expense;
+  participants: { responsable: string; amount: number }[];
+  netAmount: number; // monto neto del titular (expense.amount - suma de participantes)
+}
+
+function sumShared(entries: SharedEntry[], currency: 'ARS' | 'USD') {
+  return entries
+    .filter(e => e.expense.currency === currency)
+    .reduce((s, e) => s + e.amount, 0);
+}
+
 interface Props {
   filterMonth?: string;
 }
@@ -59,11 +84,13 @@ export function DebtDashboard({ filterMonth }: Props) {
   }, [expenses, filterMonth]);
 
   const personas = useMemo(() => {
-    // Recopilar todos los responsables únicos
+    // Recopilar todos los responsables únicos (de gastos directos + de sharedWith)
     const allResponsables = new Set<string>();
     for (const e of filtered) {
-      const r = getResponsable(e);
-      allResponsables.add(r);
+      allResponsables.add(getResponsable(e));
+      for (const p of e.sharedWith ?? []) {
+        allResponsables.add(p.responsable);
+      }
     }
 
     // Ordenar: conocidos primero en orden preferido, luego el resto
@@ -92,9 +119,47 @@ export function DebtDashboard({ filterMonth }: Props) {
           getResponsable(e) === persona
       );
 
+      // Gastos compartidos con esta persona (de cualquier otro responsable)
+      const sharedEntries: SharedEntry[] = [];
+      for (const e of filtered) {
+        if (getResponsable(e) === persona) continue; // ya contados arriba
+        for (const p of e.sharedWith ?? []) {
+          if (p.responsable === persona) {
+            sharedEntries.push({ expense: e, amount: p.amount, paidBy: getResponsable(e) });
+          }
+        }
+      }
+
+      // Gastos que este responsable dividió con otros (para mostrar desglose neto)
+      const splitEntries: SplitEntry[] = filtered
+        .filter(e => getResponsable(e) === persona && (e.sharedWith ?? []).length > 0)
+        .map(e => {
+          const participants = e.sharedWith!;
+          const sharedTotal = participants.reduce((s, p) => s + p.amount, 0);
+          return { expense: e, participants, netAmount: e.amount - sharedTotal };
+        });
+
+      // Calcular cuánto se descuenta del total del titular por gastos que dividió
+      const splitDeductionARS = splitEntries
+        .filter(s => s.expense.currency === 'ARS')
+        .reduce((sum, s) => sum + (s.expense.amount - s.netAmount), 0);
+      const splitDeductionUSD = splitEntries
+        .filter(s => s.expense.currency === 'USD')
+        .reduce((sum, s) => sum + (s.expense.amount - s.netAmount), 0);
+
       const propiosTotals = sumExpenses(propios);
       const patricioTotals = sumExpenses(enPatricio);
       const otrosTotals = sumExpenses(otrosTitulares);
+      const sharedTotals = {
+        totalARS: sumShared(sharedEntries, 'ARS'),
+        totalUSD: sumShared(sharedEntries, 'USD'),
+      };
+
+      // Total neto: suma de todas las secciones, menos lo que otros le van a devolver
+      const totalARS = propiosTotals.totalARS + patricioTotals.totalARS + otrosTotals.totalARS
+        + sharedTotals.totalARS - splitDeductionARS;
+      const totalUSD = propiosTotals.totalUSD + patricioTotals.totalUSD + otrosTotals.totalUSD
+        + sharedTotals.totalUSD - splitDeductionUSD;
 
       return {
         persona,
@@ -102,11 +167,16 @@ export function DebtDashboard({ filterMonth }: Props) {
         propios,
         enPatricio,
         otrosTitulares,
+        sharedEntries,
+        splitEntries,
         propiosTotals,
         patricioTotals,
         otrosTotals,
-        totalARS: propiosTotals.totalARS + patricioTotals.totalARS + otrosTotals.totalARS,
-        totalUSD: propiosTotals.totalUSD + patricioTotals.totalUSD + otrosTotals.totalUSD,
+        sharedTotals,
+        splitDeductionARS,
+        splitDeductionUSD,
+        totalARS,
+        totalUSD,
       };
     });
   }, [filtered]);
@@ -191,12 +261,33 @@ export function DebtDashboard({ filterMonth }: Props) {
                 badgeClass="bg-sky-100 text-sky-700"
               />
             )}
+
+            {p.sharedEntries.length > 0 && (
+              <SharedSection
+                entries={p.sharedEntries}
+                totals={p.sharedTotals}
+                expanded={!!expanded[`${p.persona}-shared`]}
+                onToggle={() => toggle(p.persona, 'shared')}
+              />
+            )}
+
+            {p.splitEntries.length > 0 && (
+              <SplitSection
+                entries={p.splitEntries}
+                deductionARS={p.splitDeductionARS}
+                deductionUSD={p.splitDeductionUSD}
+                expanded={!!expanded[`${p.persona}-split`]}
+                onToggle={() => toggle(p.persona, 'split')}
+              />
+            )}
           </div>
         ))}
       </div>
     </div>
   );
 }
+
+// ── Sección estándar (gastos completos) ─────────────────────────────────────
 
 interface DebtSectionProps {
   label: string;
@@ -247,6 +338,126 @@ function DebtSection({ label, expenses, totals, expanded, onToggle, badgeClass }
               </p>
             </div>
           ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Sección gastos compartidos (porción que le corresponde a esta persona) ──
+
+interface SharedSectionProps {
+  entries: SharedEntry[];
+  totals: { totalARS: number; totalUSD: number };
+  expanded: boolean;
+  onToggle: () => void;
+}
+
+function SharedSection({ entries, totals, expanded, onToggle }: SharedSectionProps) {
+  return (
+    <div className="rounded-lg border border-orange-100 overflow-hidden">
+      <button
+        onClick={onToggle}
+        className="w-full flex items-center justify-between px-4 py-2.5 bg-orange-50 hover:bg-orange-100 transition-colors text-sm"
+      >
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-orange-100 text-orange-700">
+            👥 Gastos compartidos
+          </span>
+          <span className="text-slate-500">{entries.length} ítem{entries.length !== 1 ? 's' : ''}</span>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="text-right">
+            {totals.totalARS > 0 && (
+              <span className="font-semibold text-orange-700 mr-2">+${totals.totalARS.toLocaleString('es-AR')} ARS</span>
+            )}
+            {totals.totalUSD > 0 && (
+              <span className="font-semibold text-orange-700">+US$ {totals.totalUSD.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+            )}
+          </div>
+          {expanded ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
+        </div>
+      </button>
+
+      {expanded && (
+        <div className="divide-y divide-orange-50">
+          {entries.map((entry, i) => (
+            <div key={`${entry.expense.id}-${i}`} className="flex items-center justify-between px-4 py-2 text-sm">
+              <div className="min-w-0 flex-1">
+                <p className="text-slate-700 truncate">{entry.expense.description}</p>
+                <p className="text-xs text-slate-400">
+                  {format(new Date(entry.expense.date), 'dd/MM/yyyy')}
+                  {entry.expense.cardLast4 && <> · ···{entry.expense.cardLast4}</>}
+                  {' · '}pagado por <span className="font-medium">{entry.paidBy}</span>
+                </p>
+              </div>
+              <p className="font-medium text-orange-700 ml-4 shrink-0">
+                {entry.expense.currency === 'ARS' ? '$' : 'US$'} {entry.amount.toLocaleString('es-AR')}
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Sección gastos divididos (desglose neto del titular) ────────────────────
+
+interface SplitSectionProps {
+  entries: SplitEntry[];
+  deductionARS: number;
+  deductionUSD: number;
+  expanded: boolean;
+  onToggle: () => void;
+}
+
+function SplitSection({ entries, deductionARS, deductionUSD, expanded, onToggle }: SplitSectionProps) {
+  return (
+    <div className="rounded-lg border border-violet-100 overflow-hidden">
+      <button
+        onClick={onToggle}
+        className="w-full flex items-center justify-between px-4 py-2.5 bg-violet-50 hover:bg-violet-100 transition-colors text-sm"
+      >
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-violet-100 text-violet-700">
+            💳 Gastos divididos
+          </span>
+          <span className="text-slate-500">{entries.length} ítem{entries.length !== 1 ? 's' : ''}</span>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="text-right text-xs text-violet-600">
+            {deductionARS > 0 && <span className="mr-2">-${deductionARS.toLocaleString('es-AR')} ARS</span>}
+            {deductionUSD > 0 && <span>-US$ {deductionUSD.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>}
+          </div>
+          {expanded ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
+        </div>
+      </button>
+
+      {expanded && (
+        <div className="divide-y divide-violet-50">
+          {entries.map((entry, i) => {
+            const sharedStr = entry.participants.map(p =>
+              `${p.responsable} ${entry.expense.currency === 'ARS' ? '$' : 'US$'}${p.amount.toLocaleString('es-AR')}`
+            ).join(' + ');
+            return (
+              <div key={`${entry.expense.id}-${i}`} className="px-4 py-2 text-sm">
+                <div className="flex items-center justify-between">
+                  <p className="text-slate-700 truncate flex-1">{entry.expense.description}</p>
+                  <p className="font-medium text-slate-500 ml-4 shrink-0 line-through text-xs">
+                    {entry.expense.currency === 'ARS' ? '$' : 'US$'} {entry.expense.amount.toLocaleString('es-AR')}
+                  </p>
+                </div>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  {format(new Date(entry.expense.date), 'dd/MM/yyyy')}
+                  {' · '}dividido con {sharedStr}
+                  {' · '}tu parte: <span className="font-semibold text-violet-700">
+                    {entry.expense.currency === 'ARS' ? '$' : 'US$'} {entry.netAmount.toLocaleString('es-AR')}
+                  </span>
+                </p>
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
