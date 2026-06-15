@@ -204,10 +204,17 @@ Documentación organizada por sectores funcionales:
 | Dato | Dónde | Clave |
 |---|---|---|
 | Gastos (expenses) | Firebase Firestore | Colección `expenses` en BD `saldame` |
+| Eventos compartidos | Firebase Firestore | Colección `sharedGroups` en BD `saldame` |
 | Categorías y Etiquetas | `localStorage` (Zustand persist) | `expense-storage` |
 | Productos / Calculadora | `localStorage` (Zustand persist) | `saldame-app-storage` |
 | Aprendizaje del clasificador | `localStorage` | `expense-learned-categories` |
 | Aprendizaje de etiquetas | `localStorage` | `expense-learned-tags` |
+
+### Acceso a Firestore
+
+- La app privada usa autenticación para `expenses`, `categories`, `tags` y `responsables`.
+- El módulo público de juntadas usa `sharedGroups` sin autenticación.
+- `firebase.json` publica `firestore.rules` en las bases `(default)` y `saldame`, porque el cliente inicializa Firestore con `getFirestore(app, 'saldame')`.
 
 ---
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, PlusCircle, List, Tag, Bookmark, CreditCard, Sparkles, Users, LogOut, UserCircle2 } from 'lucide-react';
+import { Home, PlusCircle, List, Tag, Bookmark, CreditCard, Sparkles, Users, LogOut, UserCircle2, BarChart3 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 type Page = 'dashboard' | 'add-expense' | 'expenses' | 'upload-pdf' | 'upload-santander' | 'stats' | 'categories' | 'tags' | 'account' | 'query' | 'shared-expenses' | 'responsables';
@@ -16,6 +16,7 @@ const navItems = [
   { id: 'add-expense'     as Page, label: 'Agregar Gasto',    icon: PlusCircle },
   { id: 'expenses'        as Page, label: 'Mis Gastos',        icon: List },
   { id: 'dashboard'       as Page, label: 'Inicio',            icon: Home },
+  { id: 'stats'           as Page, label: 'Estadísticas',      icon: BarChart3 },
   { id: 'categories'      as Page, label: 'Categorías',        icon: Tag },
   { id: 'tags'            as Page, label: 'Etiquetas',         icon: Bookmark },
   { id: 'responsables'    as Page, label: 'Responsables',      icon: UserCircle2 },

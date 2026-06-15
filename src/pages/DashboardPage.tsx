@@ -1,8 +1,10 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useExpenseStore } from '@/store/useExpenseStore';
-import { format, subMonths } from 'date-fns';
+import { useBudgetStore } from '@/store/useBudgetStore';
+import { useDollarRate } from '@/hooks/useDollarRate';
+import { format, subMonths, addMonths } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { DollarSign, TrendingUp, TrendingDown, Wallet, ArrowUpRight, ArrowDownRight, Minus } from 'lucide-react';
+import { DollarSign, TrendingUp, TrendingDown, Wallet, ArrowUpRight, ArrowDownRight, Minus, ChevronLeft, ChevronRight, Zap, BarChart2, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -33,27 +35,43 @@ export function DashboardPage() {
     fetchExpenses();
   }, [fetchExpenses]);
 
-  const currentDate = useMemo(() => new Date(), []);
-  const currentYear = currentDate.getFullYear();
-  const currentMonth = currentDate.getMonth();
+  const today = useMemo(() => new Date(), []);
+  const [selectedDate, setSelectedDate] = useState(() => new Date(today.getFullYear(), today.getMonth(), 1));
+
+  const isCurrentMonth = selectedDate.getFullYear() === today.getFullYear() && selectedDate.getMonth() === today.getMonth();
+
+  const navigateMonth = (delta: number) => {
+    setSelectedDate(prev => delta > 0 ? addMonths(prev, 1) : subMonths(prev, 1));
+  };
+
+  const selectedYear = selectedDate.getFullYear();
+  const selectedMonth = selectedDate.getMonth();
 
   const summary = useMemo(
-    () => getMonthSummary(currentYear, currentMonth),
-    [getMonthSummary, currentYear, currentMonth]
+    () => getMonthSummary(selectedYear, selectedMonth),
+    [getMonthSummary, selectedYear, selectedMonth]
   );
 
   // Resumen del mes anterior para comparativa
-  const prevDate = useMemo(() => subMonths(currentDate, 1), [currentDate]);
+  const prevDate = useMemo(() => subMonths(selectedDate, 1), [selectedDate]);
   const prevSummary = useMemo(
     () => getMonthSummary(prevDate.getFullYear(), prevDate.getMonth()),
     [getMonthSummary, prevDate]
   );
 
-  const monthName = format(currentDate, 'MMMM yyyy', { locale: es });
+  const monthName = format(selectedDate, 'MMMM yyyy', { locale: es });
   const prevMonthName = format(prevDate, 'MMMM', { locale: es });
 
-  // Gastos recientes
-  const recentExpenses = useMemo(() => expenses.slice(0, 5), [expenses]);
+  // Gastos recientes del mes seleccionado
+  const recentExpenses = useMemo(() =>
+    expenses
+      .filter(e => {
+        const d = new Date(e.date);
+        return d.getFullYear() === selectedYear && d.getMonth() === selectedMonth;
+      })
+      .slice(0, 5),
+    [expenses, selectedYear, selectedMonth]
+  );
 
   // Categorías ordenadas por monto
   const sortedCategories = useMemo(() => {
@@ -90,14 +108,64 @@ export function DashboardPage() {
     ? Math.round((arsChange / prevSummary.totalARS) * 100)
     : null;
 
-  // Gastos del mes
+  // Gastos del mes seleccionado
   const monthExpenseCount = useMemo(() =>
     expenses.filter(exp => {
       const d = new Date(exp.date);
-      return d.getFullYear() === currentYear && d.getMonth() === currentMonth;
+      return d.getFullYear() === selectedYear && d.getMonth() === selectedMonth;
     }).length,
-    [expenses, currentYear, currentMonth]
+    [expenses, selectedYear, selectedMonth]
   );
+
+  // ── Nuevas features ──
+  const { budgets } = useBudgetStore();
+  const dollar = useDollarRate();
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+
+  // Gastos del mes actual (para cálculos)
+  const monthExpenses = useMemo(() =>
+    expenses.filter(e => {
+      const d = new Date(e.date);
+      return d.getFullYear() === selectedYear && d.getMonth() === selectedMonth;
+    }),
+    [expenses, selectedYear, selectedMonth]
+  );
+
+  // Top 5 gastos individuales del mes (por monto ARS)
+  const topExpenses = useMemo(() =>
+    [...monthExpenses]
+      .filter(e => e.currency === 'ARS')
+      .sort((a, b) => b.amount - a.amount)
+      .slice(0, 5),
+    [monthExpenses]
+  );
+
+  // Gastos fijos vs variables (tag "Gastos Fijos")
+  const FIXED_TAG = 'Gastos Fijos';
+  const fixedARS = useMemo(() =>
+    monthExpenses.filter(e => e.currency === 'ARS' && e.tags?.includes(FIXED_TAG))
+      .reduce((s, e) => s + e.amount, 0),
+    [monthExpenses]
+  );
+  const variableARS = useMemo(() =>
+    summary.totalARS - fixedARS,
+    [summary.totalARS, fixedARS]
+  );
+  const fixedPct = summary.totalARS > 0 ? Math.round((fixedARS / summary.totalARS) * 100) : 0;
+
+  // Drill-down: gastos de la categoría seleccionada en el mes
+  const drillExpenses = useMemo(() => {
+    if (!selectedCategory) return [];
+    return monthExpenses
+      .filter(e => e.category === selectedCategory)
+      .sort((a, b) => b.amount - a.amount);
+  }, [monthExpenses, selectedCategory]);
+
+  // Total en ARS equivalente (USD convertido al tipo de cambio blue)
+  const totalARSEquivalent = useMemo(() => {
+    if (!dollar.sell || dollar.sell === 0) return null;
+    return summary.totalARS + summary.totalUSD * dollar.sell;
+  }, [summary.totalARS, summary.totalUSD, dollar.sell]);
 
   if (loading && expenses.length === 0) {
     return (
@@ -112,20 +180,46 @@ export function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-brand-primary capitalize">Resumen de {monthName}</h1>
-        <p className="text-brand-text mt-1">Tu control financiero del mes</p>
+      {/* Header con navegación de mes */}
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div>
+          <h1 className="text-3xl font-bold text-brand-primary capitalize">Resumen de {monthName}</h1>
+          <p className="text-brand-text mt-1">Tu control financiero del mes</p>
+        </div>
+        <div className="flex items-center gap-2">
+          {isCurrentMonth && (
+            <span className="text-xs font-semibold bg-brand-primary/10 text-brand-primary px-2.5 py-1 rounded-full">
+              Mes actual
+            </span>
+          )}
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => navigateMonth(-1)}
+              className="p-2 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-600 transition-colors"
+              title="Mes anterior"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => navigateMonth(1)}
+              disabled={isCurrentMonth}
+              className="p-2 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-600 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              title="Mes siguiente"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {/* Summary Cards — 4 cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Total ARS */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5 col-span-2 lg:col-span-1">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-slate-600 font-medium">Total en Pesos</p>
-              <p className="text-3xl font-bold text-brand-success mt-2">
+              <p className="text-2xl font-bold text-brand-success mt-1">
                 ${summary.totalARS.toLocaleString('es-AR')}
               </p>
               {arsPct !== null && (
@@ -138,70 +232,248 @@ export function DashboardPage() {
                   {arsChange > 0 ? '+' : ''}{arsPct}% vs {prevMonthName}
                 </div>
               )}
+              {totalARSEquivalent !== null && summary.totalUSD > 0 && (
+                <p className="text-xs text-slate-400 mt-1">
+                  ≈ ${totalARSEquivalent.toLocaleString('es-AR')} total unificado
+                </p>
+              )}
             </div>
-            <div className="w-12 h-12 bg-brand-primary/10 rounded-full flex items-center justify-center">
-              <DollarSign className="w-6 h-6 text-brand-primary" />
+            <div className="w-10 h-10 bg-brand-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
+              <DollarSign className="w-5 h-5 text-brand-primary" />
             </div>
           </div>
         </div>
 
         {/* Total USD */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-slate-600 font-medium">Total en Dólares</p>
-              <p className="text-3xl font-bold text-brand-success mt-2">
+              <p className="text-2xl font-bold text-brand-success mt-1">
                 US$ {summary.totalUSD.toLocaleString('en-US', { minimumFractionDigits: 2 })}
               </p>
             </div>
-            <div className="w-12 h-12 bg-brand-primary/10 rounded-full flex items-center justify-center">
-              <Wallet className="w-6 h-6 text-brand-primary" />
+            <div className="w-10 h-10 bg-brand-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
+              <Wallet className="w-5 h-5 text-brand-primary" />
             </div>
           </div>
         </div>
 
-        {/* Total Gastos */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        {/* Gastos del Mes */}
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-slate-600 font-medium">Gastos del Mes</p>
-              <p className="text-3xl font-bold text-brand-success mt-2">
+              <p className="text-2xl font-bold text-brand-success mt-1">
                 {monthExpenseCount}
               </p>
             </div>
-            <div className="w-12 h-12 bg-brand-primary/10 rounded-full flex items-center justify-center">
-              <TrendingUp className="w-6 h-6 text-brand-primary" />
+            <div className="w-10 h-10 bg-brand-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
+              <TrendingUp className="w-5 h-5 text-brand-primary" />
+            </div>
+          </div>
+        </div>
+
+        {/* Dólar Blue */}
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-slate-600 font-medium">Dólar Blue</p>
+              {dollar.loading ? (
+                <p className="text-lg font-semibold text-slate-400 mt-1">Cargando…</p>
+              ) : dollar.error ? (
+                <p className="text-sm text-slate-400 mt-1">No disponible</p>
+              ) : (
+                <>
+                  <p className="text-2xl font-bold text-brand-primary mt-1">
+                    ${dollar.sell.toLocaleString('es-AR')}
+                  </p>
+                  <p className="text-xs text-slate-400">compra ${dollar.buy.toLocaleString('es-AR')}</p>
+                </>
+              )}
+            </div>
+            <div className="w-10 h-10 bg-blue-50 rounded-full flex items-center justify-center flex-shrink-0">
+              <span className="text-blue-600 font-bold text-sm">$</span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Gráfico de barras por categoría */}
+      {/* Fijos vs Variables + Top Gastos — 2 col grid */}
+      {monthExpenses.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+          {/* Gastos Fijos vs Variables */}
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+            <div className="flex items-center gap-2 mb-4">
+              <Zap className="w-5 h-5 text-brand-primary" />
+              <h2 className="text-base font-bold text-brand-primary">Fijos vs Variables</h2>
+            </div>
+            {summary.totalARS === 0 ? (
+              <p className="text-sm text-slate-400">Sin gastos en ARS este mes</p>
+            ) : (
+              <>
+                <div className="w-full h-3 bg-slate-100 rounded-full overflow-hidden mb-3">
+                  <div
+                    className="h-full rounded-full bg-brand-primary transition-all duration-500"
+                    style={{ width: `${fixedPct}%` }}
+                  />
+                </div>
+                <div className="flex justify-between text-sm">
+                  <div>
+                    <span className="inline-block w-2.5 h-2.5 rounded-full bg-brand-primary mr-1.5" />
+                    <span className="font-semibold text-slate-700">Fijos</span>
+                    <p className="text-xs text-slate-500 mt-0.5">${fixedARS.toLocaleString('es-AR')} ({fixedPct}%)</p>
+                  </div>
+                  <div className="text-right">
+                    <span className="inline-block w-2.5 h-2.5 rounded-full bg-slate-200 mr-1.5" />
+                    <span className="font-semibold text-slate-700">Variables</span>
+                    <p className="text-xs text-slate-500 mt-0.5">${variableARS.toLocaleString('es-AR')} ({100 - fixedPct}%)</p>
+                  </div>
+                </div>
+                {fixedARS === 0 && (
+                  <p className="text-xs text-slate-400 mt-2">Etiquetá gastos con "Gastos Fijos" para ver la división</p>
+                )}
+              </>
+            )}
+          </div>
+
+          {/* Top 5 Gastos Individuales */}
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+            <div className="flex items-center gap-2 mb-4">
+              <BarChart2 className="w-5 h-5 text-brand-primary" />
+              <h2 className="text-base font-bold text-brand-primary">Top Gastos del Mes</h2>
+            </div>
+            {topExpenses.length === 0 ? (
+              <p className="text-sm text-slate-400">Sin gastos ARS este mes</p>
+            ) : (
+              <div className="space-y-2">
+                {topExpenses.map((e, i) => (
+                  <div key={e.id} className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-slate-400 w-4">{i + 1}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-slate-800 truncate">{e.description}</p>
+                      <p className="text-xs text-slate-400">{e.category}</p>
+                    </div>
+                    <span className="text-sm font-bold text-slate-900 flex-shrink-0">
+                      ${e.amount.toLocaleString('es-AR')}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Presupuestos por categoría (solo si hay alguno configurado) */}
+      {Object.keys(budgets).length > 0 && sortedCategories.length > 0 && (
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+          <h2 className="text-xl font-bold text-brand-primary mb-5">Presupuestos</h2>
+          <div className="space-y-4">
+            {sortedCategories
+              .filter(([cat]) => budgets[cat] !== undefined)
+              .map(([cat, spent]) => {
+                const budget = budgets[cat];
+                const pct = Math.min(Math.round((spent / budget) * 100), 100);
+                const over = spent > budget;
+                const catObj = categories.find(c => c.name === cat);
+                return (
+                  <div key={cat}>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-sm font-semibold text-slate-800 flex items-center gap-1.5">
+                        {catObj?.icon} {cat}
+                      </span>
+                      <span className={cn('text-sm font-bold', over ? 'text-brand-alert' : 'text-slate-700')}>
+                        ${spent.toLocaleString('es-AR')} / ${budget.toLocaleString('es-AR')}
+                        {over && <span className="ml-1 text-xs">⚠️ Excedido</span>}
+                      </span>
+                    </div>
+                    <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden">
+                      <div
+                        className={cn('h-full rounded-full transition-all duration-500', over ? 'bg-brand-alert' : pct >= 80 ? 'bg-amber-400' : 'bg-brand-success')}
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                    <p className="text-xs text-slate-400 mt-0.5">{pct}% utilizado</p>
+                  </div>
+                );
+              })}
+          </div>
+        </div>
+      )}
+
+      {/* Gráfico de barras por categoría (clickeable para drill-down) */}
       {sortedCategories.length > 0 && (
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-          <h2 className="text-xl font-bold text-brand-primary mb-5">Gastos por Categoría</h2>
+          <div className="flex items-center justify-between mb-5">
+            <h2 className="text-xl font-bold text-brand-primary">Gastos por Categoría</h2>
+            <span className="text-xs text-slate-400">Hacé clic para ver detalle</span>
+          </div>
           <div className="space-y-3">
             {sortedCategories.map(([cat, amount]) => {
               const pct = maxCategoryAmount > 0 ? (amount / maxCategoryAmount) * 100 : 0;
               const catObj = categories.find(c => c.name === cat);
               const color = getCatColor(cat);
+              const isSelected = selectedCategory === cat;
               return (
-                <div key={cat} className="group">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm font-semibold text-slate-900 flex items-center gap-1.5">
-                      {catObj?.icon && <span>{catObj.icon}</span>}
-                      {cat}
-                    </span>
-                    <span className="text-sm font-bold text-slate-900">
-                      ${amount.toLocaleString('es-AR')}
-                    </span>
-                  </div>
-                  <div className="w-full h-3 bg-slate-100 rounded-full overflow-hidden">
-                    <div
-                      className="h-full rounded-full transition-all duration-500 ease-out"
-                      style={{ width: `${Math.max(pct, 2)}%`, backgroundColor: color }}
-                    />
-                  </div>
+                <div key={cat}>
+                  <button
+                    onClick={() => setSelectedCategory(isSelected ? null : cat)}
+                    className={cn(
+                      'w-full text-left group rounded-lg p-2 -mx-2 transition-colors',
+                      isSelected ? 'bg-brand-primary/5' : 'hover:bg-slate-50'
+                    )}
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-sm font-semibold text-slate-900 flex items-center gap-1.5">
+                        {catObj?.icon && <span>{catObj.icon}</span>}
+                        {cat}
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-bold text-slate-900">
+                          ${amount.toLocaleString('es-AR')}
+                        </span>
+                        <span className={cn('text-slate-400 transition-transform text-xs', isSelected ? 'rotate-180' : '')}>▾</span>
+                      </div>
+                    </div>
+                    <div className="w-full h-3 bg-slate-100 rounded-full overflow-hidden">
+                      <div
+                        className="h-full rounded-full transition-all duration-500 ease-out"
+                        style={{ width: `${Math.max(pct, 2)}%`, backgroundColor: color }}
+                      />
+                    </div>
+                  </button>
+
+                  {/* Drill-down de categoría */}
+                  {isSelected && (
+                    <div className="mt-2 mb-1 border border-slate-100 rounded-xl bg-slate-50 p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <p className="text-sm font-bold text-slate-700">{catObj?.icon} {cat} — {format(selectedDate, 'MMMM yyyy', { locale: es })}</p>
+                        <button onClick={() => setSelectedCategory(null)} className="text-slate-400 hover:text-slate-600">
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                      {drillExpenses.length === 0 ? (
+                        <p className="text-sm text-slate-400">Sin gastos</p>
+                      ) : (
+                        <div className="space-y-2">
+                          {drillExpenses.map(e => (
+                            <div key={e.id} className="flex items-center justify-between py-1.5 border-b border-slate-100 last:border-0">
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-slate-800 truncate">{e.description}</p>
+                                <p className="text-xs text-slate-400">{format(new Date(e.date), 'dd/MM', { locale: es })}{e.cardholder ? ` · ${e.cardholder}` : ''}</p>
+                              </div>
+                              <span className="text-sm font-bold text-slate-900 ml-3 flex-shrink-0">
+                                {e.currency === 'ARS' ? '$' : 'US$'} {e.amount.toLocaleString('es-AR')}
+                              </span>
+                            </div>
+                          ))}
+                          <p className="text-xs text-slate-400 text-right pt-1">{drillExpenses.length} transacciones</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -244,9 +516,9 @@ export function DashboardPage() {
         </div>
       )}
 
-      {/* Recent Expenses */}
+      {/* Últimos Gastos del mes */}
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-        <h2 className="text-xl font-bold text-brand-primary mb-4">Últimos Gastos</h2>
+        <h2 className="text-xl font-bold text-brand-primary mb-4">Últimos Gastos del Mes</h2>
 
         {recentExpenses.length === 0 ? (
           <div className="text-center py-12">

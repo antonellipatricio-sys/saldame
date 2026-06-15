@@ -121,6 +121,13 @@ src/
 | Aprendizaje del clasificador | `localStorage` (`expense-learned-categories`) |
 | Aprendizaje de etiquetas | `localStorage` (`expense-learned-tags`) |
 
+### Reglas de acceso Firestore
+
+- La app privada (`expenses`, `categories`, `tags`, `responsables`) requiere `request.auth != null`.
+- El módulo público `/gastos` usa la colección `sharedGroups` y permite lectura/escritura sin login.
+- La app trabaja contra la base nombrada `saldame` (`getFirestore(app, 'saldame')`).
+- `firebase.json` despliega `firestore.rules` tanto a `(default)` como a `saldame` para evitar desfasajes entre reglas y base activa.
+
 ---
 
 ## Design System — Pato Contador

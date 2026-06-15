@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useExpenseStore } from '@/store/useExpenseStore';
+import { useBudgetStore } from '@/store/useBudgetStore';
 import type { Category } from '@/types';
-import { Plus, Trash2, Pencil, Check, X } from 'lucide-react';
+import { Plus, Trash2, Pencil, Check, X, Target } from 'lucide-react';
 
 const ICON_OPTIONS = ['🍔', '🚗', '🛒', '💊', '🎬', '👕', '🏠', '✈️', '💼', '❓', '💰', '🎮', '📱', '🐾', '🎓', '⚽', '🍷', '💅', '🏋️', '🎁', '🔧', '💡', '🏥', '📚', '🎵', '☕', '🍕', '🚌', '💳', '🏦'];
 const COLOR_OPTIONS = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DFE6E9', '#74B9FF', '#A29BFE', '#FD79A8', '#B2BEC3', '#00B894', '#E17055', '#6C5CE7', '#FDCB6E', '#81ECEC', '#55EFC4'];
@@ -10,12 +11,17 @@ const COLOR_OPTIONS = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#
 
 export function CategoriesPage() {
   const { categories, addCategory, updateCategory, deleteCategory } = useExpenseStore();
+  const { budgets, setBudget, removeBudget } = useBudgetStore();
 
   // ── Estado categorías ──
   const [isCreating, setIsCreating] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [newCat, setNewCat] = useState({ name: '', icon: '❓', color: '#B2BEC3' });
   const [editCat, setEditCat] = useState({ name: '', icon: '', color: '' });
+
+  // ── Estado presupuestos ──
+  const [editingBudgetId, setEditingBudgetId] = useState<string | null>(null);
+  const [budgetInput, setBudgetInput] = useState('');
 
 
 
@@ -36,6 +42,18 @@ export function CategoriesPage() {
 
   const handleDelete = async (id: string, name: string) => {
     if (confirm(`¿Eliminar la categoría "${name}"?`)) await deleteCategory(id);
+  };
+
+  const startEditBudget = (cat: Category) => {
+    setEditingBudgetId(cat.id);
+    setBudgetInput(budgets[cat.name] ? String(budgets[cat.name]) : '');
+  };
+
+  const saveBudget = (cat: Category) => {
+    const val = parseInt(budgetInput.replace(/\D/g, ''), 10);
+    if (val > 0) setBudget(cat.name, val);
+    else removeBudget(cat.name);
+    setEditingBudgetId(null);
   };
 
 
@@ -184,30 +202,64 @@ export function CategoriesPage() {
                 </div>
               ) : (
                 /* Modo vista */
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <span className="text-2xl">{cat.icon}</span>
-                    <span
-                      className="px-3 py-1 rounded-full text-white text-sm font-medium"
-                      style={{ backgroundColor: cat.color }}
-                    >
-                      {cat.name}
-                    </span>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">{cat.icon}</span>
+                      <span
+                        className="px-3 py-1 rounded-full text-white text-sm font-medium"
+                        style={{ backgroundColor: cat.color }}
+                      >
+                        {cat.name}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => startEdit(cat)}
+                        className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(cat.id, cat.name)}
+                        className="p-2 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
+
+                  {/* Presupuesto inline */}
+                  {editingBudgetId === cat.id ? (
+                    <div className="flex items-center gap-2 pl-1">
+                      <span className="text-xs text-slate-500">Presupuesto mensual $</span>
+                      <input
+                        type="number"
+                        value={budgetInput}
+                        onChange={e => setBudgetInput(e.target.value)}
+                        onKeyDown={e => { if (e.key === 'Enter') saveBudget(cat); if (e.key === 'Escape') setEditingBudgetId(null); }}
+                        placeholder="0"
+                        className="w-32 px-2 py-1 text-sm rounded border border-slate-300 focus:outline-none focus:ring-1 focus:ring-brand-primary"
+                        autoFocus
+                      />
+                      <button onClick={() => saveBudget(cat)} className="p-1 text-brand-success hover:bg-green-50 rounded">
+                        <Check className="w-3.5 h-3.5" />
+                      </button>
+                      <button onClick={() => setEditingBudgetId(null)} className="p-1 text-slate-400 hover:bg-slate-100 rounded">
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ) : (
                     <button
-                      onClick={() => startEdit(cat)}
-                      className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                      onClick={() => startEditBudget(cat)}
+                      className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-brand-primary pl-1 transition-colors"
                     >
-                      <Pencil className="w-4 h-4" />
+                      <Target className="w-3 h-3" />
+                      {budgets[cat.name]
+                        ? `Presupuesto: $${budgets[cat.name].toLocaleString('es-AR')}/mes`
+                        : 'Agregar presupuesto mensual'}
                     </button>
-                    <button
-                      onClick={() => handleDelete(cat.id, cat.name)}
-                      className="p-2 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
+                  )}
                 </div>
               )}
             </div>

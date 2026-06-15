@@ -14,6 +14,13 @@ La herramienta **Gastos Compartidos** permite dividir gastos grupales —como ce
 
 **Equivalente a**: Splitwise, pero sin autenticación.
 
+### Acceso y persistencia
+
+- **Colección Firestore**: `sharedGroups`
+- **Base de datos**: `saldame`
+- **Autenticación**: no requiere login
+- **Reglas**: lectura y escritura públicas solo para `sharedGroups`; el resto de la app sigue protegido por auth
+
 ---
 
 ## Flujo General
@@ -237,6 +244,8 @@ Transferencia sugerida: Ana → Javier ($1.500)
 Firestore guarda: `{ from: "Ana", to: "Javier", amount: $1.500, status: "paid", method: "transfer" }`
 
 UI actualiza balances en tiempo real.
+
+> Nota operativa: como este módulo es público, cualquier persona con el link puede abrir la juntada y editarla. No hay ownership ni permisos por participante.
 
 ---
 
