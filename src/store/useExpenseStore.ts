@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { Expense, Category, Tag, Responsable } from '@/types';
+import type { Expense, Category, Tag, Responsable, MonthSummary } from '@/types';
 import { defaultCategories } from '@/lib/categories';
 import {
   collection,
@@ -32,7 +32,7 @@ interface ExpenseStore {
   updateExpense: (id: string, expense: Partial<Expense>) => Promise<void>;
   deleteExpense: (id: string) => Promise<void>;
   deleteExpensesByCard: (cardLast4: string | null, month?: string) => Promise<number>;
-  getMonthSummary: (year: number, month: number) => { totalARS: number; totalUSD: number; byCategory: Record<string, number> };
+  getMonthSummary: (year: number, month: number) => MonthSummary;
 
   // Actions categorías
   fetchCategories: () => Promise<void>;
@@ -232,13 +232,15 @@ export const useExpenseStore = create<ExpenseStore>()(
           .filter((exp) => exp.currency === 'USD')
           .reduce((sum, exp) => sum + exp.amount, 0);
 
+        // Por categoría, separado por moneda: sumar pesos y dólares juntos da montos sin sentido
         const byCategory: Record<string, number> = {};
+        const byCategoryUSD: Record<string, number> = {};
         filtered.forEach((exp) => {
-          const key = exp.category;
-          byCategory[key] = (byCategory[key] || 0) + exp.amount;
+          const target = exp.currency === 'USD' ? byCategoryUSD : byCategory;
+          target[exp.category] = (target[exp.category] || 0) + exp.amount;
         });
 
-        return { totalARS, totalUSD, byCategory };
+        return { totalARS, totalUSD, byCategory, byCategoryUSD };
       },
 
       fetchCategories: async () => {

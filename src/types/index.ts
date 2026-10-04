@@ -47,5 +47,6 @@ export interface Responsable {
 export interface MonthSummary {
   totalARS: number;
   totalUSD: number;
-  byCategory: Record<string, number>;
+  byCategory: Record<string, number>; // solo ARS
+  byCategoryUSD: Record<string, number>;
 }

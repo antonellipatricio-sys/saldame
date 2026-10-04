@@ -73,11 +73,13 @@ export function DashboardPage() {
     [expenses, selectedYear, selectedMonth]
   );
 
-  // Categorías ordenadas por monto
+  // Categorías ordenadas por monto en pesos; las que solo tienen dólares van al final
   const sortedCategories = useMemo(() => {
-    return Object.entries(summary.byCategory)
-      .sort(([, a], [, b]) => b - a);
-  }, [summary.byCategory]);
+    const names = new Set([...Object.keys(summary.byCategory), ...Object.keys(summary.byCategoryUSD)]);
+    return Array.from(names)
+      .map(cat => [cat, summary.byCategory[cat] ?? 0] as [string, number])
+      .sort(([catA, a], [catB, b]) => b - a || (summary.byCategoryUSD[catB] ?? 0) - (summary.byCategoryUSD[catA] ?? 0));
+  }, [summary.byCategory, summary.byCategoryUSD]);
 
   const maxCategoryAmount = sortedCategories.length > 0 ? sortedCategories[0][1] : 0;
 
@@ -436,9 +438,14 @@ export function DashboardPage() {
                         {catObj?.icon && <span>{catObj.icon}</span>}
                         {cat}
                       </span>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-bold text-slate-900">
-                          ${amount.toLocaleString('es-AR')}
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className="text-sm font-bold text-slate-900 text-right">
+                          {amount > 0 && `$${amount.toLocaleString('es-AR')}`}
+                          {summary.byCategoryUSD[cat] > 0 && (
+                            <span className={cn('whitespace-nowrap', amount > 0 && 'font-semibold text-slate-500')}>
+                              {amount > 0 && ' + '}US$ {summary.byCategoryUSD[cat].toLocaleString('es-AR', { maximumFractionDigits: 2 })}
+                            </span>
+                          )}
                         </span>
                         <span className={cn('text-slate-400 transition-transform text-xs', isSelected ? 'rotate-180' : '')}>▾</span>
                       </div>
@@ -446,7 +453,7 @@ export function DashboardPage() {
                     <div className="w-full h-3 bg-slate-100 rounded-full overflow-hidden">
                       <div
                         className="h-full rounded-full transition-all duration-500 ease-out"
-                        style={{ width: `${Math.max(pct, 2)}%`, backgroundColor: color }}
+                        style={{ width: amount > 0 ? `${Math.max(pct, 2)}%` : '0%', backgroundColor: color }}
                       />
                     </div>
                   </button>
@@ -551,7 +558,7 @@ export function DashboardPage() {
                 </div>
                 <div className="text-right shrink-0">
                   <p className="font-bold text-slate-900 whitespace-nowrap">
-                    {expense.currency === 'ARS' ? '$' : 'US$'} {expense.amount.toLocaleString()}
+                    {expense.currency === 'ARS' ? '$' : 'US$'} {expense.amount.toLocaleString('es-AR')}
                   </p>
                 </div>
               </div>
