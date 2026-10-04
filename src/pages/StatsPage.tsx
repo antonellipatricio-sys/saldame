@@ -108,7 +108,7 @@ export function StatsPage() {
             <option value="">Todos los meses</option>
             {availableMonths.map(m => (
               <option key={m} value={m}>
-                {format(new Date(m + '-01'), 'MMMM yyyy', { locale: es })}
+                {format(new Date(m + '-01T12:00:00'), 'MMMM yyyy', { locale: es })}
               </option>
             ))}
           </select>
@@ -264,7 +264,7 @@ export function StatsPage() {
                       )}
                     >
                       <td className="py-2.5 capitalize">
-                        {format(new Date(row.key + '-01'), 'MMMM yyyy', { locale: es })}
+                        {format(new Date(row.key + '-01T12:00:00'), 'MMMM yyyy', { locale: es })}
                         {isCurrent && (
                           <span className="ml-2 text-[10px] bg-brand-primary/10 text-brand-primary px-1.5 py-0.5 rounded-full font-semibold">
                             actual

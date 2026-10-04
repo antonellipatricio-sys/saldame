@@ -16,7 +16,11 @@ Para organizar el código UI se generan agrupaciones de distintos recursos dentr
 ## 3. Elementos Extras / UI (`src/components/tags/`)
 - Se presume la agrupación de recursos atómicos (Tags, Badges, etc.) para el dibujado visual y tipificación de estados y datos estéticos con `lucide-react` y variables de Tailwind.
 
-## 4. ResponsableSelect (`src/components/ResponsableSelect.tsx`)
+## 4. QuienPaga (`src/components/QuienPaga.tsx`)
+- Selector de un toque `[Yo] [persona] [½] [⋯]` para decidir de quién es un gasto. Controlado: devuelve `{ responsable, sharedWith }`.
+- Con `descripcion` ofrece crear una regla "Siempre". Ver [quien-paga.md](./quien-paga.md).
+
+## 5. ResponsableSelect (`src/components/ResponsableSelect.tsx`)
 - Dropdown para asignar el responsable de un gasto. Lee las opciones desde `useExpenseStore` (colección `responsables` en Firestore).
 - Muestra cada responsable con su emoji + nombre. Si el gasto tiene un responsable que ya no existe en el store, lo agrega como opción extra.
 - Permite agregar nombres libres con "Otro..." (input inline).
@@ -24,10 +28,13 @@ Para organizar el código UI se generan agrupaciones de distintos recursos dentr
 
 ### Auto-asignación desde cardholder
 
-En los flujos de importación (Excel y PDF), el responsable se infiere automáticamente del nombre del titular de la tarjeta (`cardholder`):
+En los flujos de importación el responsable se infiere del titular de la tarjeta con
+`resolveCardholder()` ([`src/lib/resolveCardholder.ts`](../src/lib/resolveCardholder.ts)), que usa
+`canonicalName()` de `lib/quienPaga.ts`: nombre exacto o **alias** del responsable
+(ej. "MARIANA L ANTONELLI" → Maru porque `mariana` es alias de Maru). Los alias se editan en Responsables.
+Después se aplican las reglas "Siempre" ([quien-paga.md](./quien-paga.md)).
 
-| Cardholder contiene | Responsable asignado |
-|---|---|
+---|---|
 | `patricio` | `Patricio` |
 | `mariana` / `maru` | `Maru` |
 | `brenda` / `bren` | `Bren` |

@@ -32,6 +32,7 @@ export interface Expense {
   responsable?: string; // persona responsable del gasto (ej: 'Patricio', 'Maru', 'Bren')
   sharedWith?: SharedParticipant[]; // participantes con los que se comparte el gasto
   source?: 'manual' | 'pdf' | 'santander'; // origen de la carga
+  resumen?: string; // 'yyyy-MM' del vencimiento del resumen de tarjeta en que se cobra (ver lib/resumen)
   createdAt: Date;
   updatedAt: Date;
 }
