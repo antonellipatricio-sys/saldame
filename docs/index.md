@@ -103,6 +103,7 @@ Documentación organizada por sectores funcionales:
 ### 🛠️ Herramientas Complementarias
 - **[Herramientas](./herramientas-indice.md)** — Utilities adicionales
   - [Calculadora](./calculadora.md)
+- **[Deploy automático](./deploy.md)** — GitHub Action que publica en Firebase en cada push a `master`
   - [Configuración](./configuracion.md)
 
 ### 📐 Infraestructura

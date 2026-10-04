@@ -244,3 +244,9 @@ npm run dev      # Desarrollo
 npm run build    # Build producción
 npm run lint     # Linter
 ```
+
+---
+
+## Deploy
+
+Cada push a `master` publica en Firebase (hosting + reglas) vía `.github/workflows/deploy.yml`. Configuración de secretos en [`deploy.md`](./deploy.md).
