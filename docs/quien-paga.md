@@ -40,7 +40,7 @@ creados automáticamente con el nombre completo (sin alias) se resuelven hacia e
 |---|---|
 | **Yo** | `responsable = 'Patricio'`, sin `sharedWith` |
 | **Persona** | `responsable = persona`, sin `sharedWith` |
-| **½** (elegir persona) | `responsable = 'Patricio'`, `sharedWith = [{ persona, total / 2 }]` |
+| **½** (elegir persona) | `responsable = 'Patricio'`, `sharedWith = [{ persona, total / 2 }]` (se recalcula si el monto cambia en el formulario) |
 | **⋯** | reparto libre: quién se queda con el resto + montos por persona |
 
 Aparece en: Estado de Cuenta (detalle de cualquier tarjeta), Mis Gastos (fila y modal de
@@ -57,7 +57,8 @@ Al elegir una persona o ½, si el selector conoce la descripción pregunta
 - **Sí**: guarda la regla en `reglasPago` (`patron`, `tipo` = `todo` | `mitad`, `persona`) y la aplica
   a los gastos ya cargados que coinciden y siguen en "Yo" (no pisa lo asignado a mano).
   En la revisión de importación, la aplica a las otras filas.
-- **Al importar**: cada fila que coincide llega asignada ("N asignadas por reglas").
+- **Al importar**: cada fila que viene como del dueño y coincide llega asignada ("N asignadas por reglas").
+  Las filas que ya llegan asignadas por titular (ej. tarjeta adicional de Maru) no se tocan.
 - **Volver a "Yo"** en un gasto con regla ofrece borrarla.
 - Se listan y borran al final de **Responsables**.
 
@@ -75,8 +76,12 @@ Maru te debe $132.500 · 8 gastos      [Ver] [WhatsApp] [✓ Cobrado]
 - **Pendiente** = suma de sus partes en los gastos del período − cobros.
 - **Ver**: detalle de gastos (con "su parte de $X" si es compartido) y pagos registrados (con deshacer).
 - **WhatsApp**: abre `wa.me` con el detalle, total, ya pagado y falta.
-- **Cobrado**: guarda un doc en `cobros` (`persona`, `periodo`, `ars`, `usd`, `fecha`) por el pendiente.
+- **Cobrado**: registra el pendiente **partido por mes de resumen**: un doc en `cobros` por mes
+  (`persona`, `periodo` = `yyyy-MM`, `ars`, `usd`, `fecha`, `lote`). Así un cobro hecho en
+  "Todos los meses" también se descuenta al mirar cada mes. Deshacer borra el lote entero.
 - Con filtro de resumen, solo cuentan gastos y cobros de ese mes; en "Todos los meses", todos.
+- Cobros viejos con `periodo = 'todos'` solo se descuentan en "Todos los meses".
+- Renombrar un responsable migra también sus `cobros` y `reglasPago`.
 
 ## Resumen (mes en que se paga)
 

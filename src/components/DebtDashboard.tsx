@@ -81,7 +81,6 @@ export function DebtDashboard({ filterMonth }: Props) {
 
   useEffect(() => { fetchCobros(); }, [fetchCobros]);
 
-  const periodo = filterMonth ?? 'todos';
   const periodoLabel = filterMonth
     ? `del resumen de ${format(new Date(filterMonth + '-01T12:00:00'), 'MMMM yyyy', { locale: es })}`
     : 'pendientes';
@@ -122,11 +121,59 @@ export function DebtDashboard({ filterMonth }: Props) {
       .sort((a, b) => (b.pendienteARS + b.pendienteUSD * 1000) - (a.pendienteARS + a.pendienteUSD * 1000));
   }, [expenses, responsables, cobros, filterMonth]);
 
+  /**
+   * Registra el pago de lo pendiente, partido por mes de resumen: así un
+   * "Cobrado" hecho en "Todos los meses" también se descuenta al ver cada mes.
+   */
   const marcarCobrado = async (d: Deuda) => {
-    const pARS = Math.max(0, d.pendienteARS);
-    const pUSD = Math.max(0, d.pendienteUSD);
-    if (!confirm(`¿${d.persona} te pagó ${montos(pARS, pUSD)}?`)) return;
-    await addCobro({ persona: d.persona, periodo, ars: pARS, usd: pUSD });
+    const porMes = new Map<string, { ars: number; usd: number }>();
+    for (const { expense: e, amount } of d.items) {
+      const mes = mesResumen(e);
+      const m = porMes.get(mes) ?? { ars: 0, usd: 0 };
+      if (e.currency === 'USD') m.usd += amount; else m.ars += amount;
+      porMes.set(mes, m);
+    }
+    // Cobros viejos sin mes ('todos'): se descuentan de los meses más antiguos primero
+    const meses = [...porMes.keys()].sort();
+    for (const c of cobros) {
+      if (c.persona !== d.persona) continue;
+      const m = porMes.get(c.periodo);
+      if (m) { m.ars -= c.ars; m.usd -= c.usd; continue; }
+      if (c.periodo !== 'todos' || filterMonth) continue; // en vista de un mes no se descuentan
+      let restoARS = c.ars, restoUSD = c.usd;
+      for (const mes of meses) {
+        const x = porMes.get(mes)!;
+        const a = Math.min(Math.max(0, x.ars), restoARS); x.ars -= a; restoARS -= a;
+        const u = Math.min(Math.max(0, x.usd), restoUSD); x.usd -= u; restoUSD -= u;
+      }
+    }
+    const partes = [...porMes.entries()]
+      .map(([mes, m]) => ({ mes, ars: Math.max(0, m.ars), usd: Math.max(0, m.usd) }))
+      .filter(p => p.ars > 0.005 || p.usd > 0.005);
+    if (partes.length === 0) return;
+    const totARS = partes.reduce((s, p) => s + p.ars, 0);
+    const totUSD = partes.reduce((s, p) => s + p.usd, 0);
+    if (!confirm(`¿${d.persona} te pagó ${montos(totARS, totUSD)}?`)) return;
+    const lote = crypto.randomUUID();
+    for (const p of partes) {
+      await addCobro({ persona: d.persona, periodo: p.mes, ars: p.ars, usd: p.usd, lote });
+    }
+  };
+
+  /** Cobros agrupados por lote (un "Cobrado" = una línea, aunque abarque varios meses). */
+  const lotes = (cs: Cobro[]) => {
+    const map = new Map<string, Cobro[]>();
+    for (const c of cs) {
+      const k = c.lote ?? c.id;
+      map.set(k, [...(map.get(k) ?? []), c]);
+    }
+    return [...map.entries()].map(([key, items]) => ({
+      key,
+      items,
+      fecha: items[0].fecha,
+      ars: items.reduce((s, c) => s + c.ars, 0),
+      usd: items.reduce((s, c) => s + c.usd, 0),
+    }));
   };
 
   if (deudas.length === 0) return null;
@@ -221,14 +268,17 @@ export function DebtDashboard({ filterMonth }: Props) {
                         <p className="font-medium text-slate-700 shrink-0">{money(amount, e.currency)}</p>
                       </div>
                     ))}
-                  {d.cobros.map(c => (
-                    <div key={c.id} className="flex items-center justify-between px-4 py-2 text-sm gap-3 bg-emerald-50/50">
+                  {lotes(d.cobros).map(l => (
+                    <div key={l.key} className="flex items-center justify-between px-4 py-2 text-sm gap-3 bg-emerald-50/50">
                       <p className="text-emerald-700 flex-1">
-                        Pagó el {format(c.fecha, 'dd/MM/yyyy')}
+                        Pagó el {format(l.fecha, 'dd/MM/yyyy')}
                       </p>
-                      <p className="font-medium text-emerald-700 shrink-0">−{montos(c.ars, c.usd)}</p>
+                      <p className="font-medium text-emerald-700 shrink-0">−{montos(l.ars, l.usd)}</p>
                       <button
-                        onClick={() => { if (confirm('¿Deshacer este cobro?')) deleteCobro(c.id); }}
+                        onClick={async () => {
+                          if (!confirm('¿Deshacer este cobro?')) return;
+                          for (const c of l.items) await deleteCobro(c.id);
+                        }}
                         className="p-1 text-slate-400 hover:text-red-500"
                         title="Deshacer"
                       >

@@ -24,9 +24,7 @@ interface ReglasStore {
   deleteRegla: (id: string) => Promise<void>;
 }
 
-const idDe = (patron: string) => `regla-${patron.replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'x'}`;
-
-export const useReglasStore = create<ReglasStore>()((set) => ({
+export const useReglasStore = create<ReglasStore>()((set, get) => ({
   reglas: [],
 
   fetchReglas: async () => {
@@ -49,7 +47,8 @@ export const useReglasStore = create<ReglasStore>()((set) => ({
   },
 
   saveRegla: async (r) => {
-    const id = idDe(r.patron);
+    // Un doc por patrón exacto: si ya existe se reemplaza, si no se crea con id nuevo.
+    const id = get().reglas.find(x => x.patron === r.patron)?.id ?? doc(collection(db, 'reglasPago')).id;
     const creada = new Date();
     await setDoc(doc(db, 'reglasPago', id), { ...r, creada: Timestamp.fromDate(creada) });
     set(state => ({ reglas: [...state.reglas.filter(x => x.id !== id), { ...r, id, creada }] }));
