@@ -9,11 +9,11 @@
 Este repositorio contiene **dos productos independientes** que comparten la misma base de código:
 
 ### 1. 🦆 Cuack Cuentas Claras (app principal — privada)
-App de **control financiero personal** con PIN de acceso.
+App de **control financiero personal** con login de acceso.
 
 - **URL**: `https://cuack.com.ar` (o `saldame.web.app`)
 - **Rutas**: todo excepto `/gastos/*`
-- **Acceso**: requiere autenticación Google (solo `antonellipatricio@gmail.com`)
+- **Acceso**: login email + contraseña de Firebase Auth (solo `antonellipatricio@gmail.com`, forzado en `firestore.rules`)
 - **Stack**: React 18 + TypeScript + Vite + Firebase Firestore + Zustand + TailwindCSS v4
 
 Funcionalidades:
@@ -60,7 +60,7 @@ Funcionalidades:
 
 ```
 src/
-├── App.tsx                    # Enrutador principal + auth Google (email whitelist via VITE_ALLOWED_EMAIL)
+├── App.tsx                    # Enrutador principal + login email/contraseña (email whitelist via VITE_ALLOWED_EMAIL)
 ├── types/index.ts             # Tipos globales: Expense, Category, Tag
 ├── store/
 │   ├── useExpenseStore.ts     # Store Zustand: gastos, categorías, etiquetas
@@ -224,7 +224,7 @@ Todos los docs están en `docs/` (mismo nivel que este archivo).
 
 ## Autenticación
 
-La app usa **Firebase Auth con Google**. El acceso está restringido en `App.tsx`: si el email del usuario autenticado no coincide con `VITE_ALLOWED_EMAIL`, se hace `signOut` automáticamente y se muestra un error. Si la variable está vacía, cualquier cuenta puede acceder.
+La app usa **Firebase Auth con email y contraseña** (`signInWithEmailAndPassword`). `App.tsx` cierra la sesión si el email no coincide con `VITE_ALLOWED_EMAIL`, pero eso es solo UI: la protección real está en `firestore.rules`, que exige `request.auth.token.email == 'antonellipatricio@gmail.com'` para todo salvo `sharedGroups`.
 
 ---
 

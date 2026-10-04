@@ -10,6 +10,7 @@ import {
   doc,
   getDocs,
   setDoc,
+  deleteField,
   query,
   orderBy,
   Timestamp,
@@ -140,20 +141,25 @@ export const useExpenseStore = create<ExpenseStore>()(
           const docRef = doc(db, 'expenses', id);
           const now = new Date();
 
-          // Filtrar campos undefined para evitar error de Firestore
+          // Un campo presente con valor undefined significa "borrarlo"
+          // (Firestore no acepta undefined, hay que usar deleteField()).
           const updateData: Record<string, unknown> = { updatedAt: Timestamp.fromDate(now) };
           for (const [key, val] of Object.entries(updates)) {
-            if (val !== undefined) {
-              updateData[key] = key === 'date' ? Timestamp.fromDate(val as Date) : val;
-            }
+            if (val === undefined) updateData[key] = deleteField();
+            else updateData[key] = key === 'date' ? Timestamp.fromDate(val as Date) : val;
           }
 
           await updateDoc(docRef, updateData);
 
           set((state) => ({
-            expenses: state.expenses.map((exp) =>
-              exp.id === id ? { ...exp, ...updates, updatedAt: now } : exp
-            ),
+            expenses: state.expenses.map((exp) => {
+              if (exp.id !== id) return exp;
+              const next = { ...exp, ...updates, updatedAt: now } as Record<string, unknown>;
+              for (const [key, val] of Object.entries(updates)) {
+                if (val === undefined) delete next[key];
+              }
+              return next as unknown as Expense;
+            }),
             loading: false,
           }));
         } catch (error) {

@@ -1,21 +1,11 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // App privada: requiere usuario autenticado.
-    match /expenses/{document} {
-      allow read, write: if request.auth != null;
-    }
-
-    match /categories/{document} {
-      allow read, write: if request.auth != null;
-    }
-
-    match /tags/{document} {
-      allow read, write: if request.auth != null;
-    }
-
-    match /responsables/{document} {
-      allow read, write: if request.auth != null;
+    // App privada: solo el dueño. El chequeo de email en App.tsx es solo de UI;
+    // la protección real es esta (cualquiera podría crearse un usuario en Auth).
+    function isOwner() {
+      return request.auth != null
+        && request.auth.token.email == 'antonellipatricio@gmail.com';
     }
 
     // Módulo público de gastos compartidos: sin login.
@@ -23,9 +13,9 @@ service cloud.firestore {
       allow read, write: if true;
     }
 
-    // Denegar todo lo demás por defecto.
+    // Todo lo demás (expenses, categories, tags, responsables, cobros, ...)
     match /{document=**} {
-      allow read, write: if request.auth != null;
+      allow read, write: if isOwner();
     }
   }
 }
