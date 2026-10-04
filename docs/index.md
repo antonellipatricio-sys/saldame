@@ -11,7 +11,7 @@
 
 | Producto | Descripción | Acceso |
 |---|---|---|
-| **🦆 Cuack Cuentas Claras** | App financiera personal (este doc) | PIN requerido |
+| **🦆 Cuack Cuentas Claras** | App financiera personal (este doc) | Login (solo el dueño) |
 | **👥 Gastos Compartidos** | Dividir gastos en grupo sin login | [Público — ver docs](./gastos-compartidos-indice.md) |
 
 ---
@@ -84,6 +84,7 @@ Documentación organizada por sectores funcionales:
     - [Agregar Manual](./modulos-financieros/./agregar-gasto.md)
     - [Importar PDF](./modulos-financieros/./subir-pdf.md)
     - [Importar Santander Excel](./modulos-financieros/./santander-excel.md)
+    - [¿De quién es? — gastos por persona, Quién te debe, reglas, PDF Santander](./quien-paga.md)
 
   - **[Consultas y Análisis](./modulos-financieros/./consultas-indice.md)** — Visualización e insights
     - [Dashboard / Inicio](./modulos-financieros/./inicio.md)

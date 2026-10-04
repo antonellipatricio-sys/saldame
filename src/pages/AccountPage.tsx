@@ -6,7 +6,9 @@ import { CreditCard, DollarSign, Filter, TrendingDown, Wallet, Trash2, Loader2, 
 import { cn } from '@/lib/utils';
 import { exportExpensesToExcel } from '@/lib/exportExcel';
 import { DebtDashboard } from '@/components/DebtDashboard';
-import { ResponsableSelect } from '@/components/ResponsableSelect';
+import { mesResumen } from '@/lib/resumen';
+import { QuienPaga } from '@/components/QuienPaga';
+import { useAplicarReglaAGuardados } from '@/hooks/useAplicarRegla';
 
 interface CardSummary {
     cardLast4: string;
@@ -21,19 +23,20 @@ export function AccountPage() {
     const [filterMonth, setFilterMonth] = useState('');
     const [deleteTarget, setDeleteTarget] = useState<{ cardLast4: string | null; label: string; count: number } | null>(null);
     const [deleting, setDeleting] = useState(false);
+    const aplicarRegla = useAplicarReglaAGuardados();
 
     useEffect(() => { fetchExpenses(); }, [fetchExpenses]);
 
     // Meses disponibles
     const availableMonths = useMemo(() => {
-        const months = new Set(expenses.map(exp => format(new Date(exp.date), 'yyyy-MM')));
+        const months = new Set(expenses.map(mesResumen));
         return Array.from(months).sort().reverse();
     }, [expenses]);
 
     // Filtrar por mes si se elige uno
     const filtered = useMemo(() => {
         if (!filterMonth) return expenses;
-        return expenses.filter(exp => format(new Date(exp.date), 'yyyy-MM') === filterMonth);
+        return expenses.filter(exp => mesResumen(exp) === filterMonth);
     }, [expenses, filterMonth]);
 
     // Agrupar por tarjeta
@@ -117,7 +120,7 @@ export function AccountPage() {
                         <option value="">Todos los meses</option>
                         {availableMonths.map(m => (
                             <option key={m} value={m}>
-                                {format(new Date(m + '-01'), 'MMMM yyyy', { locale: es })}
+                                Resumen {format(new Date(m + '-01T12:00:00'), 'MMMM yyyy', { locale: es })}
                             </option>
                         ))}
                     </select>
@@ -286,14 +289,11 @@ export function AccountPage() {
                         </div>
                     </div>
                     <div className="divide-y divide-slate-100 max-h-[50vh] overflow-y-auto">
-                        {cardExpenses.map(exp => {
-                            const isPatricioCard = exp.cardLast4 === '1204' || exp.cardLast4 === '1884';
-                            const currentResponsable = exp.responsable ?? 'Patricio';
-                            return (
-                            <div key={exp.id} className="flex items-center justify-between px-5 py-3 hover:bg-slate-50 transition-colors gap-3">
+                        {cardExpenses.map(exp => (
+                            <div key={exp.id} className="flex flex-col sm:flex-row sm:items-center justify-between px-5 py-3 hover:bg-slate-50 transition-colors gap-2 sm:gap-3">
                                 <div className="flex-1 min-w-0">
                                     <p className="font-medium text-slate-800 truncate">{exp.description}</p>
-                                    <div className="flex items-center gap-2 mt-0.5 text-xs text-slate-500">
+                                    <div className="flex items-center gap-2 mt-0.5 text-xs text-slate-500 flex-wrap">
                                         <span>{format(new Date(exp.date), 'dd/MM/yyyy', { locale: es })}</span>
                                         <span className="text-slate-300">•</span>
                                         <span>{exp.category}</span>
@@ -307,22 +307,25 @@ export function AccountPage() {
                                         )}
                                     </div>
                                 </div>
-                                {/* Selector de responsable — solo tarjetas de Patricio */}
-                                {isPatricioCard && (
-                                    <ResponsableSelect
-                                        value={currentResponsable}
-                                        onChange={val => updateExpense(exp.id, { responsable: val })}
-                                        className="shrink-0"
+                                <div className="flex items-center justify-between sm:justify-end gap-3">
+                                    <QuienPaga
+                                        amount={exp.amount}
+                                        currency={exp.currency}
+                                        responsable={exp.responsable}
+                                        sharedWith={exp.sharedWith}
+                                        onChange={a => updateExpense(exp.id, a)}
+                                        descripcion={exp.description}
+                                        onReglaCreada={aplicarRegla}
                                     />
-                                )}
-                                <div className="text-right shrink-0">
-                                    <p className="font-bold text-slate-800">
-                                        {exp.currency === 'ARS' ? '$' : 'US$'} {exp.amount.toLocaleString('es-AR')}
-                                    </p>
-                                    <p className="text-xs text-slate-400">{exp.currency}</p>
+                                    <div className="text-right shrink-0">
+                                        <p className="font-bold text-slate-800">
+                                            {exp.currency === 'ARS' ? '$' : 'US$'} {exp.amount.toLocaleString('es-AR')}
+                                        </p>
+                                        <p className="text-xs text-slate-400">{exp.currency}</p>
+                                    </div>
                                 </div>
                             </div>
-                        );})}
+                        ))}
                     </div>
                 </div>
             )}

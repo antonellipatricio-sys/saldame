@@ -10,11 +10,13 @@ import {
   doc,
   getDocs,
   setDoc,
+  deleteField,
   query,
   orderBy,
   Timestamp,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { mesResumen } from '@/lib/resumen';
 
 interface ExpenseStore {
   expenses: Expense[];
@@ -114,6 +116,7 @@ export const useExpenseStore = create<ExpenseStore>()(
           if (expense.responsable !== undefined) data.responsable = expense.responsable;
           if (expense.sharedWith !== undefined) data.sharedWith = expense.sharedWith;
           if (expense.source !== undefined) data.source = expense.source;
+          if (expense.resumen !== undefined) data.resumen = expense.resumen;
 
           const docRef = await addDoc(collection(db, 'expenses'), data);
 
@@ -140,20 +143,25 @@ export const useExpenseStore = create<ExpenseStore>()(
           const docRef = doc(db, 'expenses', id);
           const now = new Date();
 
-          // Filtrar campos undefined para evitar error de Firestore
+          // Un campo presente con valor undefined significa "borrarlo"
+          // (Firestore no acepta undefined, hay que usar deleteField()).
           const updateData: Record<string, unknown> = { updatedAt: Timestamp.fromDate(now) };
           for (const [key, val] of Object.entries(updates)) {
-            if (val !== undefined) {
-              updateData[key] = key === 'date' ? Timestamp.fromDate(val as Date) : val;
-            }
+            if (val === undefined) updateData[key] = deleteField();
+            else updateData[key] = key === 'date' ? Timestamp.fromDate(val as Date) : val;
           }
 
           await updateDoc(docRef, updateData);
 
           set((state) => ({
-            expenses: state.expenses.map((exp) =>
-              exp.id === id ? { ...exp, ...updates, updatedAt: now } : exp
-            ),
+            expenses: state.expenses.map((exp) => {
+              if (exp.id !== id) return exp;
+              const next = { ...exp, ...updates, updatedAt: now } as Record<string, unknown>;
+              for (const [key, val] of Object.entries(updates)) {
+                if (val === undefined) delete next[key];
+              }
+              return next as unknown as Expense;
+            }),
             loading: false,
           }));
         } catch (error) {
@@ -183,11 +191,7 @@ export const useExpenseStore = create<ExpenseStore>()(
         const toDelete = expenses.filter(exp => {
           const expCard = exp.cardLast4 ?? null;
           if (expCard !== cardLast4) return false;
-          if (month) {
-            const d = new Date(exp.date);
-            const expMonth = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-            if (expMonth !== month) return false;
-          }
+          if (month && mesResumen(exp) !== month) return false;
           return true;
         });
 

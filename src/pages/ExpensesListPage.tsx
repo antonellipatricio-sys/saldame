@@ -8,8 +8,8 @@ import { Search, Trash2, Filter, Pencil, Download, X, Check, Loader2, SlidersHor
 import type { Currency, Expense, SharedParticipant } from '@/types';
 import { cn } from '@/lib/utils';
 import { TagSelector } from '@/components/tags/TagSelector';
-import { ResponsableSelect } from '@/components/ResponsableSelect';
-import { SharedWithEditor } from '@/components/SharedWithEditor';
+import { QuienPaga } from '@/components/QuienPaga';
+import { useAplicarReglaAGuardados } from '@/hooks/useAplicarRegla';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { SwipeRow } from '@/components/ui/SwipeRow';
 import { UndoToast } from '@/components/ui/UndoToast';
@@ -18,15 +18,17 @@ import { useUndoableDelete } from '@/hooks/useUndoableDelete';
 // ── Modal de edición ──────────────────────────────────────────────
 function EditModal({ expense, onClose }: { expense: Expense; onClose: () => void }) {
   const { updateExpense, categories, loading } = useExpenseStore();
+  const aplicarRegla = useAplicarReglaAGuardados();
   const [description, setDescription] = useState(expense.description);
   const [amount, setAmount] = useState(String(expense.amount));
   const [currency, setCurrency] = useState<Currency>(expense.currency);
   const [category, setCategory] = useState(expense.category);
   const [date, setDate] = useState(format(new Date(expense.date), 'yyyy-MM-dd'));
   const [notes, setNotes] = useState(expense.notes ?? '');
+  const [resumen, setResumen] = useState(expense.resumen ?? '');
   const [selectedTags, setSelectedTags] = useState<string[]>(expense.tags ?? []);
-  const [responsable, setResponsable] = useState(expense.responsable ?? '');
-  const [sharedWith, setSharedWith] = useState<SharedParticipant[]>(expense.sharedWith ?? []);
+  const [responsable, setResponsable] = useState<string | undefined>(expense.responsable);
+  const [sharedWith, setSharedWith] = useState<SharedParticipant[] | undefined>(expense.sharedWith);
 
   const handleSave = async () => {
     await updateExpense(expense.id, {
@@ -36,9 +38,10 @@ function EditModal({ expense, onClose }: { expense: Expense; onClose: () => void
       category,
       date: new Date(date + 'T12:00:00'),
       notes: notes || undefined,
+      resumen: resumen || undefined,
       tags: selectedTags.length > 0 ? selectedTags : undefined,
       responsable: responsable || undefined,
-      sharedWith: sharedWith.length > 0 ? sharedWith : undefined,
+      sharedWith: sharedWith && sharedWith.length > 0 ? sharedWith : undefined,
     });
     onClose();
   };
@@ -93,26 +96,24 @@ function EditModal({ expense, onClose }: { expense: Expense; onClose: () => void
               className="w-full mt-1 px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500" />
           </div>
           <div>
-            <label className="text-sm font-medium text-slate-700">Responsable</label>
-            <div className="mt-1">
-              <ResponsableSelect
-                value={responsable}
-                onChange={setResponsable}
-                className="w-full py-2 text-sm"
-                placeholder="— Sin asignar —"
-              />
-            </div>
+            <label className="text-sm font-medium text-slate-700">
+              Resumen <span className="text-slate-400 font-normal">(mes en que se paga; vacío = mes de la fecha)</span>
+            </label>
+            <input type="month" value={resumen} onChange={e => setResumen(e.target.value)}
+              className="w-full mt-1 px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500" />
           </div>
           <div>
-            <label className="text-sm font-medium text-slate-700">Gasto compartido</label>
-            <div className="mt-1 border border-slate-200 rounded-xl px-3 py-2 bg-slate-50">
-              <SharedWithEditor
-                value={sharedWith}
-                onChange={setSharedWith}
-                totalAmount={amount ? parseFloat(amount) : undefined}
-                currency={currency}
-              />
-            </div>
+            <label className="text-sm font-medium text-slate-700">¿De quién es?</label>
+            <QuienPaga
+              className="mt-1"
+              amount={parseFloat(amount) || 0}
+              currency={currency}
+              responsable={responsable}
+              sharedWith={sharedWith}
+              onChange={a => { setResponsable(a.responsable); setSharedWith(a.sharedWith); }}
+              descripcion={description}
+              onReglaCreada={aplicarRegla}
+            />
           </div>
           <div>
             <label className="text-sm font-medium text-slate-700">Notas</label>
@@ -148,6 +149,7 @@ function EditModal({ expense, onClose }: { expense: Expense; onClose: () => void
 // ── Página principal ──────────────────────────────────────────────
 export function ExpensesListPage() {
   const { expenses, fetchExpenses, deleteExpense, updateExpense, categories, tags, loading } = useExpenseStore();
+  const aplicarRegla = useAplicarReglaAGuardados();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState('');
@@ -208,7 +210,7 @@ export function ExpensesListPage() {
         <option value="">Todos los meses</option>
         {availableMonths.map(m => (
           <option key={m} value={m}>
-            {format(new Date(m + '-01'), 'MMMM yyyy', { locale: es })}
+            {format(new Date(m + '-01T12:00:00'), 'MMMM yyyy', { locale: es })}
           </option>
         ))}
       </select>
@@ -409,15 +411,19 @@ export function ExpensesListPage() {
                 {expense.cardLast4 && (
                   <span className="text-slate-400">···{expense.cardLast4}</span>
                 )}
-                {expense.responsable && (
-                  <span className="px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 font-medium">{expense.responsable}</span>
-                )}
-                {expense.sharedWith && expense.sharedWith.length > 0 && (
-                  <span className="px-2 py-0.5 rounded-full bg-violet-100 text-violet-700 font-medium">
-                    👥 {expense.sharedWith.map(s => s.responsable).join(', ')}
-                  </span>
-                )}
               </>
+            );
+            const quienPaga = (
+              <QuienPaga
+                className="mt-2"
+                amount={expense.amount}
+                currency={expense.currency}
+                responsable={expense.responsable}
+                sharedWith={expense.sharedWith}
+                onChange={a => updateExpense(expense.id, a)}
+                descripcion={expense.description}
+                onReglaCreada={aplicarRegla}
+              />
             );
             return (
               <div key={expense.id}>
@@ -426,26 +432,28 @@ export function ExpensesListPage() {
                   className="md:hidden rounded-xl border border-slate-200 shadow-sm"
                   open={swipedId === expense.id}
                   onOpenChange={open => setSwipedId(open ? expense.id : null)}
-                  onTap={() => setEditingExpense(expense)}
                   actions={[
                     { label: 'Editar', icon: <Pencil className="w-5 h-5" />, className: 'bg-brand-primary', onClick: () => setEditingExpense(expense) },
                     { label: 'Borrar', icon: <Trash2 className="w-5 h-5" />, className: 'bg-red-600', onClick: () => removeWithUndo(expense.id, `Borraste "${expense.description}"`) },
                   ]}
                 >
                   <div className="flex items-start gap-3 px-3 py-3">
-                    <span className="text-xl leading-none mt-0.5 w-7 text-center shrink-0">{catObj?.icon ?? '•'}</span>
+                    <span className="text-xl leading-none mt-0.5 w-7 text-center shrink-0" aria-hidden="true">{catObj?.icon ?? '•'}</span>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-baseline justify-between gap-3">
-                        <h3 className="font-semibold text-slate-800 truncate">{expense.description}</h3>
-                        <span className="font-bold text-slate-800 whitespace-nowrap tabular-nums">{amountLabel}</span>
-                      </div>
-                      <p className="text-xs text-slate-500 mt-0.5 truncate">
-                        {expense.category}, {format(new Date(expense.date), 'd MMM', { locale: es })}
-                        {expense.notes && <span className="italic">. {expense.notes}</span>}
-                      </p>
-                      {(expense.tags?.length || expense.cardLast4 || expense.responsable || expense.sharedWith?.length) ? (
+                      <button type="button" onClick={() => setEditingExpense(expense)} className="block w-full text-left">
+                        <span className="flex items-baseline justify-between gap-3">
+                          <span className="font-semibold text-slate-800 truncate">{expense.description}</span>
+                          <span className="font-bold text-slate-800 whitespace-nowrap tabular-nums">{amountLabel}</span>
+                        </span>
+                        <span className="block text-xs text-slate-500 mt-0.5 truncate">
+                          {expense.category}, {format(new Date(expense.date), 'd MMM', { locale: es })}
+                          {expense.notes && <span className="italic">. {expense.notes}</span>}
+                        </span>
+                      </button>
+                      {(expense.tags?.length || expense.cardLast4) ? (
                         <div className="flex flex-wrap items-center gap-1.5 mt-1.5 text-xs">{chips}</div>
                       ) : null}
+                      {quienPaga}
                     </div>
                   </div>
                 </SwipeRow>
@@ -470,15 +478,11 @@ export function ExpensesListPage() {
                           {expense.notes && <span className="italic truncate max-w-xs">{expense.notes}</span>}
                           {chips}
                         </div>
+                        {quienPaga}
                       </div>
                     </div>
 
                     <div className="flex items-center gap-2 shrink-0">
-                      {/* Selector de responsable */}
-                      <ResponsableSelect
-                        value={expense.responsable ?? (expense.cardLast4 === '3946' ? 'Maru' : expense.cardLast4 === '8337' ? 'Bren' : expense.cardLast4 === '1204' || expense.cardLast4 === '1884' ? 'Patricio' : '')}
-                        onChange={val => updateExpense(expense.id, { responsable: val || undefined })}
-                      />
                       <div className="text-right">
                         <p className="font-bold text-slate-800">{amountLabel}</p>
                         <p className="text-xs text-slate-400">{expense.currency}</p>

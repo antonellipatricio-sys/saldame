@@ -12,7 +12,6 @@ interface SwipeRowProps {
   actions: SwipeAction[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onTap?: () => void;
   children: React.ReactNode;
   className?: string;
 }
@@ -22,7 +21,7 @@ const DECIDE_THRESHOLD = 8;
 
 // Fila que se desliza hacia la izquierda para mostrar acciones (estilo iOS).
 // El scroll vertical sigue funcionando: solo se toma el gesto si es claramente horizontal.
-export function SwipeRow({ actions, open, onOpenChange, onTap, children, className }: SwipeRowProps) {
+export function SwipeRow({ actions, open, onOpenChange, children, className }: SwipeRowProps) {
   const maxOffset = actions.length * ACTION_WIDTH;
   const [dragOffset, setDragOffset] = useState<number | null>(null);
   const gesture = useRef<{ x: number; y: number; mode: 'pending' | 'swipe' | 'scroll' } | null>(null);
@@ -64,13 +63,14 @@ export function SwipeRow({ actions, open, onOpenChange, onTap, children, classNa
     setDragOffset(null);
   };
 
-  const onClick = () => {
-    if (suppressClick.current) {
+  // Un toque que termina un deslizamiento, o que cierra la fila abierta, no llega al contenido
+  const onClickCapture = (e: React.MouseEvent) => {
+    if (suppressClick.current || open) {
+      e.stopPropagation();
+      e.preventDefault();
       suppressClick.current = false;
-      return;
+      if (open) onOpenChange(false);
     }
-    if (open) onOpenChange(false);
-    else onTap?.();
   };
 
   return (
@@ -94,16 +94,11 @@ export function SwipeRow({ actions, open, onOpenChange, onTap, children, classNa
         ))}
       </div>
       <div
-        role="button"
-        tabIndex={0}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={endGesture}
         onPointerCancel={endGesture}
-        onClick={onClick}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter') onTap?.();
-        }}
+        onClickCapture={onClickCapture}
         className={cn(
           'relative bg-white touch-pan-y select-none',
           dragOffset === null && 'motion-safe:transition-transform motion-safe:duration-200'

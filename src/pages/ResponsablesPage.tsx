@@ -1,13 +1,15 @@
 import { useState } from 'react';
 import { useExpenseStore } from '@/store/useExpenseStore';
+import { useReglasStore } from '@/store/useReglasStore';
 import type { Responsable } from '@/types';
-import { Plus, Trash2, Pencil, Check, X, UserCircle2 } from 'lucide-react';
+import { Plus, Trash2, Pencil, Check, X, UserCircle2, Repeat } from 'lucide-react';
 
 const EMOJI_OPTIONS = ['🧔', '👩', '👧', '👦', '🧑', '👨', '💁', '🙋', '🧑‍💼', '👱', '🧒', '🧓'];
 
 export function ResponsablesPage() {
     const { responsables, addResponsable, updateResponsable, deleteResponsable, renameResponsable, expenses } = useExpenseStore();
 
+    const { reglas, deleteRegla } = useReglasStore();
     const [isCreating, setIsCreating] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
     const [newItem, setNewItem] = useState({ name: '', emoji: EMOJI_OPTIONS[0] });
@@ -206,6 +208,42 @@ export function ResponsablesPage() {
                         );
                     })}
                 </div>
+            </div>
+
+            {/* Reglas "Siempre" */}
+            <div className="space-y-3">
+                <div>
+                    <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                        <Repeat className="w-5 h-5 text-amber-600" /> Reglas automáticas
+                    </h2>
+                    <p className="text-sm text-slate-600 mt-1">
+                        Se crean al asignar un gasto y responder «Sí» a «¿Siempre que venga…?». Se aplican al importar resúmenes.
+                    </p>
+                </div>
+                {reglas.length === 0 ? (
+                    <div className="bg-white rounded-xl border border-slate-200 p-6 text-center text-sm text-slate-500">
+                        Todavía no hay reglas.
+                    </div>
+                ) : (
+                    <div className="bg-white rounded-xl shadow-sm border border-slate-200 divide-y divide-slate-100">
+                        {[...reglas].sort((a, b) => a.patron.localeCompare(b.patron)).map(r => (
+                            <div key={r.id} className="flex items-center justify-between gap-3 px-4 py-3">
+                                <p className="text-sm text-slate-700 min-w-0">
+                                    <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded break-all">{r.patron}</span>
+                                    {' → '}
+                                    <strong>{r.tipo === 'mitad' ? `½ con ${r.persona}` : r.persona}</strong>
+                                </p>
+                                <button
+                                    onClick={() => { if (confirm(`¿Borrar la regla «${r.patron}»?`)) deleteRegla(r.id); }}
+                                    className="p-2 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors shrink-0"
+                                    title="Borrar regla"
+                                >
+                                    <Trash2 className="w-4 h-4" />
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                )}
             </div>
         </div>
     );

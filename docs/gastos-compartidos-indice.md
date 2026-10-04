@@ -99,10 +99,10 @@ Opción 3: ...
 
 ## Seguridad
 
-**IMPORTANTE**: Esta ruta es la **única excepción pública** en la app (protegida por PIN).
+**IMPORTANTE**: Esta ruta es la **única excepción pública** en la app (el resto requiere login).
 
 - `/gastos` y `/gastos/*` son públicas (acceso sin autenticación)
-- Resto de la app (`/dashboard`, `/add-expense`, etc.) requieren PIN
+- Resto de la app (`/dashboard`, `/add-expense`, etc.) requieren login
 
 Reglas Firestore (deben ser así):
 ```json
@@ -131,4 +131,4 @@ Reglas Firestore (deben ser así):
 
 **Última actualización**: Mayo 2026  
 **Tecnología**: Firestore + React + pdflib  
-**Acceso**: Público (sin PIN requerido)
+**Acceso**: Público (sin login)

@@ -6,7 +6,7 @@ Gestión de las personas que pueden tener gastos asignados en la aplicación.
 - **Página:** [`src/pages/ResponsablesPage.tsx`](../../../src/pages/ResponsablesPage.tsx)
 - **Store:** [`src/store/useExpenseStore.ts`](../../../src/store/useExpenseStore.ts) — acciones `fetchResponsables`, `addResponsable`, `updateResponsable`, `deleteResponsable`
 - **Tipo:** [`src/types/index.ts`](../../../src/types/index.ts) — interfaz `Responsable`
-- **Selector:** [`src/components/ResponsableSelect.tsx`](../../../src/components/ResponsableSelect.tsx)
+- **Selector:** [`src/components/ResponsableSelect.tsx`](../../../src/components/ResponsableSelect.tsx) (para nombres sueltos; en los gastos se usa `QuienPaga`, ver [quien-paga.md](./quien-paga.md))
 
 ## Descripción
 
@@ -56,3 +56,8 @@ Al importar gastos (Excel Santander / PDF Mercado Pago), el nombre del titular d
 | `micaela` / `mica` | `Mica` |
 
 Ver detalles en [`santander-excel.md`](./santander-excel.md) y [`subir-pdf.md`](./subir-pdf.md).
+
+## Asignar gastos y reglas
+
+El selector "¿De quién es?", las reglas "Siempre" (listadas al final de esta página) y
+"Quién te debe" están documentados en [quien-paga.md](./quien-paga.md).

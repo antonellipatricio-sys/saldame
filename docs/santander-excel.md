@@ -92,15 +92,10 @@ El parser escanea el Excel buscando filas que coincidan con el patrón `"Tarjeta
 
 El parser infiere el campo `responsable` del nombre del titular de cada sección de tarjeta:
 
-| Cardholder contiene | Responsable asignado |
-|---|---|
-| `patricio` | `Patricio` |
-| `mariana` / `maru` | `Maru` |
-| `brenda` / `bren` | `Bren` |
-| `micaela` / `mica` | `Mica` |
-| Otro nombre | Primer nombre del titular |
-
-Esto se resuelve en `resolveResponsable()` dentro de `santanderParser.ts`. El usuario puede reasignar manualmente desde la UI de revisión.
+El titular se resuelve con `resolveCardholder()` por nombre o alias del responsable
+(ej. "MARIANA L ANTONELLI" → Maru) y después se aplican las reglas "Siempre".
+Ver [quien-paga.md](./quien-paga.md). También existe el importador de **PDF** de Santander,
+documentado ahí mismo.
 
 ## Clasificación Automática
 

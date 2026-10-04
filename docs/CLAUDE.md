@@ -9,11 +9,11 @@
 Este repositorio contiene **dos productos independientes** que comparten la misma base de código:
 
 ### 1. 🦆 Cuack Cuentas Claras (app principal — privada)
-App de **control financiero personal** con PIN de acceso.
+App de **control financiero personal** con login de acceso.
 
 - **URL**: `https://cuack.com.ar` (o `saldame.web.app`)
 - **Rutas**: todo excepto `/gastos/*`
-- **Acceso**: requiere autenticación Google (solo `antonellipatricio@gmail.com`)
+- **Acceso**: login email + contraseña de Firebase Auth (solo `antonellipatricio@gmail.com`, forzado en `firestore.rules`)
 - **Stack**: React 18 + TypeScript + Vite + Firebase Firestore + Zustand + TailwindCSS v4
 
 Funcionalidades:
@@ -26,7 +26,7 @@ Funcionalidades:
 Herramienta para dividir gastos en grupo **sin login**.
 
 - **URL**: `/gastos` y `/gastos/[id]`
-- **Acceso**: público (sin PIN)
+- **Acceso**: público (sin login)
 - **Equivalente a**: Splitwise sin autenticación
 - **Docs**: [`gastos-compartidos-indice.md`](./gastos-compartidos-indice.md)
 
@@ -60,7 +60,7 @@ Funcionalidades:
 
 ```
 src/
-├── App.tsx                    # Enrutador principal + auth Google (email whitelist via VITE_ALLOWED_EMAIL)
+├── App.tsx                    # Enrutador principal + login email/contraseña (email whitelist via VITE_ALLOWED_EMAIL)
 ├── types/index.ts             # Tipos globales: Expense, Category, Tag
 ├── store/
 │   ├── useExpenseStore.ts     # Store Zustand: gastos, categorías, etiquetas
@@ -72,10 +72,13 @@ src/
 │   ├── pdfParser.ts           # Parser PDFs Banco Nación/VISA/MC
 │   ├── mercadoPagoParser.ts   # Parser PDFs Mercado Pago
 │   ├── santanderParser.ts     # Parser Excel Santander (.xlsx)
+│   ├── santanderPdfParser.ts  # Parser PDF resumen Visa Santander
+│   ├── quienPaga.ts           # ¿De quién es cada gasto? reparto, alias, reglas
+│   ├── resumen.ts             # Mes de resumen (vencimiento) de cada gasto
 │   └── pdfGenerator.ts        # Generador PDF (Gastos Compartidos)
 └── pages/
     ├── DashboardPage.tsx       # Inicio / resumen del mes
-    ├── AddExpensePage.tsx      # Agregar gasto manual (solo formulario completo; incluye ResponsableSelect)
+    ├── AddExpensePage.tsx      # Agregar gasto manual + importar archivo (incluye QuienPaga)
     ├── ExpensesListPage.tsx    # Mis gastos (historial + filtros)
     ├── UploadPDFPage.tsx       # Importar PDF de TC
     ├── UploadSantanderPage.tsx # Importar Excel Santander
@@ -102,8 +105,11 @@ src/
   tags?: string[]            // Etiquetas opcionales
   notes?: string
   cardLast4?: string         // Últimos 4 dígitos de tarjeta
-  cardholder?: string        // Titular de tarjeta
-  source?: "manual" | "pdf" | "excel" | "shared"
+  cardholder?: string        // Titular de tarjeta (solo informativo)
+  responsable?: string       // De quién es el gasto; vacío = dueño ("Yo"). Ver docs/quien-paga.md
+  sharedWith?: { responsable: string; amount: number }[] // partes de otras personas
+  resumen?: string           // 'yyyy-MM' del vencimiento del resumen en que se cobra
+  source?: "manual" | "pdf" | "santander"
   createdAt: Date
   updatedAt: Date
 }
@@ -117,6 +123,9 @@ src/
 |---|---|
 | Gastos | Firestore — colección `expenses` |
 | Eventos compartidos | Firestore — colección `sharedGroups` |
+| Responsables (con alias) | Firestore — colección `responsables` |
+| Cobros ("X me pagó") | Firestore — colección `cobros` |
+| Reglas "Siempre" | Firestore — colección `reglasPago` |
 | Categorías y Etiquetas | `localStorage` (Zustand persist — `expense-storage`) |
 | Aprendizaje del clasificador | `localStorage` (`expense-learned-categories`) |
 | Aprendizaje de etiquetas | `localStorage` (`expense-learned-tags`) |
@@ -224,7 +233,7 @@ Todos los docs están en `docs/` (mismo nivel que este archivo).
 
 ## Autenticación
 
-La app usa **Firebase Auth con Google**. El acceso está restringido en `App.tsx`: si el email del usuario autenticado no coincide con `VITE_ALLOWED_EMAIL`, se hace `signOut` automáticamente y se muestra un error. Si la variable está vacía, cualquier cuenta puede acceder.
+La app usa **Firebase Auth con email y contraseña** (`signInWithEmailAndPassword`). `App.tsx` cierra la sesión si el email no coincide con `VITE_ALLOWED_EMAIL`, pero eso es solo UI: la protección real está en `firestore.rules`, que exige `request.auth.token.email == 'antonellipatricio@gmail.com'` para todo salvo `sharedGroups`.
 
 ---
 

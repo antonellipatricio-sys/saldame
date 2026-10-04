@@ -39,12 +39,10 @@ Email: user@email.com
 
 ### 2. Privacidad y Acceso
 
-#### 🔒 PIN de Acceso
-```
-PIN: [••••]
-[Cambiar PIN]  → Abre diálogo: PIN actual / nuevo / confirmar
-```
-**Persistencia**: Encriptado en `localStorage`
+#### 🔒 Acceso
+Login con email y contraseña de Firebase Auth (solo `antonellipatricio@gmail.com`).
+La contraseña se cambia desde la consola de Firebase (Authentication → Users → Reset password).
+La protección real está en `firestore.rules`.
 
 ---
 
