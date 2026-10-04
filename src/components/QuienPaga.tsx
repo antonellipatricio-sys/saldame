@@ -13,7 +13,7 @@
  * Es controlado: devuelve `{ responsable, sharedWith }` por onChange y el
  * caller decide si persiste (Firestore) o guarda en estado local (importación).
  */
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { MoreHorizontal, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useExpenseStore } from '@/store/useExpenseStore';
@@ -57,6 +57,20 @@ export function QuienPaga({ amount, currency, responsable, sharedWith, onChange,
   const [custom, setCustom] = useState(false);
   const [pregunta, setPregunta] = useState<Pregunta | null>(null);
   const [guardando, setGuardando] = useState(false);
+
+  // "½" se guarda como monto fijo: si el total cambia después (formularios),
+  // recalcular la mitad para que no quede la de un monto viejo (o $0).
+  const montoAnterior = useRef(amount);
+  useEffect(() => {
+    const anterior = montoAnterior.current;
+    montoAnterior.current = amount;
+    if (anterior === amount) return;
+    const parte = sharedWith?.length === 1 ? sharedWith[0] : undefined;
+    const esMitad = parte?.responsable && Math.abs(parte.amount - anterior / 2) < 0.01;
+    if (esMitad && (!responsable || responsable === owner)) {
+      onChange(asignar({ tipo: 'mitad', persona: parte.responsable }, amount, responsables));
+    }
+  }, [amount, sharedWith, responsable, owner, responsables, onChange]);
   const mostrarCustom = custom || modo.tipo === 'custom';
 
   const elegir = (m: ModoSimple) => {
