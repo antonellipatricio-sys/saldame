@@ -450,34 +450,36 @@ export function SharedExpensesPage({ groupId }: { groupId?: string | null }) {
     }
 
     return (
-        <div className="space-y-6">
-            <div className="mb-6 md:max-w-3xl md:mx-auto">
+        <div className="space-y-4 md:space-y-6">
+            <div className="md:mb-6 md:max-w-3xl md:mx-auto">
                 <div className="relative w-full rounded-2xl overflow-hidden shadow-sm border border-slate-200 bg-brand-primary/5">
                     <img
                         src="/banner-gastos.png?v=2"
                         alt="Gastos Compartidos"
                         className="w-full h-auto block"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex items-end p-4 sm:p-6 opacity-0 hover:opacity-100 transition-opacity">
+                    <div className="hidden md:flex absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent items-end p-4 sm:p-6 opacity-0 hover:opacity-100 transition-opacity">
                         <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white drop-shadow-lg flex items-center gap-2">
                             {eventName}
                         </h1>
                     </div>
                 </div>
+                {/* En mobile el nombre del evento va debajo del banner (el de arriba solo aparece con el mouse) */}
+                <h1 className="md:hidden mt-3 text-2xl font-bold text-slate-800">{eventName}</h1>
                 <div className="mt-3">
                     <a
                         href="/gastos"
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-xl text-sm font-bold shadow-sm hover:bg-slate-50 hover:border-slate-300 transition-all w-fit"
+                        className="inline-flex items-center gap-2 px-4 py-2 min-h-[44px] md:min-h-0 bg-white border border-slate-200 text-slate-600 rounded-xl text-sm font-bold shadow-sm hover:bg-slate-50 hover:border-slate-300 transition-all w-fit"
                     >
                         &larr; Volver a Mis Juntadas
                     </a>
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
                 {/* Columna Izquierda: Personas e Ingreso */}
-                <div className="lg:col-span-1 space-y-6">
-                    <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                <div className="lg:col-span-1 space-y-4 md:space-y-6">
+                    <div className="bg-white p-4 md:p-6 rounded-xl border border-slate-200 shadow-sm">
                         <h2 className="font-bold text-brand-primary mb-4 flex items-center gap-2">
                             <Users className="w-5 h-5 text-brand-text" />
                             Participantes
@@ -493,8 +495,9 @@ export function SharedExpensesPage({ groupId }: { groupId?: string | null }) {
                             />
                             <button
                                 type="submit"
-                                className="bg-brand-primary text-white p-3 rounded-xl hover:opacity-90 transition shadow-sm"
+                                className="bg-brand-primary text-white p-3 rounded-xl hover:opacity-90 transition shadow-sm disabled:opacity-50"
                                 disabled={!newParticipantName.trim()}
+                                aria-label="Agregar participante"
                             >
                                 <Plus className="w-6 h-6" />
                             </button>
@@ -516,8 +519,8 @@ export function SharedExpensesPage({ groupId }: { groupId?: string | null }) {
                                                 onChange={(e) => setEditParticipantName(e.target.value)}
                                                 autoFocus
                                             />
-                                            <button type="submit" className="text-brand-success ml-1">
-                                                <Check className="w-3 h-3" />
+                                            <button type="submit" className="text-brand-success ml-1 w-8 h-8 -my-2 -mr-2 md:w-auto md:h-auto md:my-0 md:mr-0 flex items-center justify-center" aria-label="Guardar nombre">
+                                                <Check className="w-4 h-4 md:w-3 md:h-3" />
                                             </button>
                                         </form>
                                     ) : (
@@ -525,18 +528,20 @@ export function SharedExpensesPage({ groupId }: { groupId?: string | null }) {
                                             <span className="text-xs font-bold text-brand-primary">{index + 1}</span>
                                             <span className="text-xs text-slate-400 mx-0.5">·</span>
                                             <span className="text-sm font-medium text-slate-700">{p.name}</span>
-                                            <div className="flex gap-0.5 ml-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <div className="flex gap-0.5 ml-1 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 transition-opacity">
                                                 <button
                                                     onClick={() => { setEditingParticipantId(p.id); setEditParticipantName(p.name); }}
-                                                    className="text-slate-400 hover:text-brand-primary p-0.5 rounded-full transition-all"
+                                                    className="text-slate-400 hover:text-brand-primary w-8 h-8 -my-2 md:w-auto md:h-auto md:my-0 md:p-0.5 flex items-center justify-center rounded-full transition-all"
+                                                    aria-label={`Editar ${p.name}`}
                                                 >
-                                                    <Pencil className="w-3 h-3" />
+                                                    <Pencil className="w-3.5 h-3.5 md:w-3 md:h-3" />
                                                 </button>
                                                 <button
                                                     onClick={() => removeParticipant(p.id)}
-                                                    className="text-slate-400 hover:text-brand-alert p-0.5 rounded-full transition-all"
+                                                    className="text-slate-400 hover:text-brand-alert w-8 h-8 -my-2 -mr-2 md:w-auto md:h-auto md:my-0 md:mr-0 md:p-0.5 flex items-center justify-center rounded-full transition-all"
+                                                    aria-label={`Quitar a ${p.name}`}
                                                 >
-                                                    <Trash2 className="w-3 h-3" />
+                                                    <Trash2 className="w-3.5 h-3.5 md:w-3 md:h-3" />
                                                 </button>
                                             </div>
                                         </div>
@@ -550,11 +555,11 @@ export function SharedExpensesPage({ groupId }: { groupId?: string | null }) {
                     </div>
 
                     {/* Formulario de Gasto */}
-                    <div className={`bg-white p-6 rounded-xl border shadow-sm transition-colors ${editingExpenseId ? 'border-brand-primary/50 ring-2 ring-brand-primary/10' : 'border-slate-200'}`}>
+                    <div className={`bg-white p-4 md:p-6 rounded-xl border shadow-sm transition-colors ${editingExpenseId ? 'border-brand-primary/50 ring-2 ring-brand-primary/10' : 'border-slate-200'}`}>
                         <h2 className="font-bold text-brand-primary mb-4 flex items-center justify-between">
                             {editingExpenseId ? 'Editar Gasto' : 'Agregar Gasto'}
                             {editingExpenseId && (
-                                <button type="button" onClick={cancelEdit} className="text-sm text-slate-500 hover:text-slate-800 font-normal">
+                                <button type="button" onClick={cancelEdit} className="-my-2 px-2 min-h-[44px] md:min-h-0 md:my-0 md:px-0 text-sm text-slate-500 hover:text-slate-800 font-normal">
                                     Cancelar
                                 </button>
                             )}
@@ -577,6 +582,7 @@ export function SharedExpensesPage({ groupId }: { groupId?: string | null }) {
                                     <label className="block text-sm font-bold text-slate-700 mb-1">Monto ($)</label>
                                     <input
                                         type="number"
+                                        inputMode="decimal"
                                         min="0.01"
                                         step="any"
                                         placeholder="0.00"
@@ -639,24 +645,25 @@ export function SharedExpensesPage({ groupId }: { groupId?: string | null }) {
                 </div>
 
                 {/* Columna Central: Lista de Gastos */}
-                <div className="lg:col-span-1 bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                <div className="lg:col-span-1 bg-white p-4 md:p-6 rounded-xl border border-slate-200 shadow-sm">
                     <h2 className="font-bold text-slate-800 mb-4">Gastos ({expenses.length})</h2>
 
-                    <div className="space-y-3 max-h-[600px] overflow-y-auto pr-1">
+                    <div className="space-y-3 lg:max-h-[600px] lg:overflow-y-auto lg:pr-1">
                         {expenses.map(e => (
                             <div key={e.id} className="p-3 border border-slate-100 bg-slate-50 rounded-lg relative group">
-                                <div className="flex justify-between items-start mb-2">
-                                    <div>
+                                <div className="flex justify-between items-start gap-2 mb-2">
+                                    <div className="min-w-0">
                                         <h3 className="font-semibold text-slate-900 text-sm">{e.description}</h3>
                                         <p className="text-sm text-slate-600 mt-1">
                                             Pagó <span className="font-bold text-brand-primary bg-brand-primary/5 px-2 py-0.5 rounded-lg">{getName(e.payerId)}</span>: <span className="font-black text-slate-900 ml-1">${e.amount.toLocaleString('es-AR', { minimumFractionDigits: 2 })}</span>
                                         </p>
                                     </div>
-                                    <div className="flex gap-1">
+                                    <div className="flex gap-1 shrink-0 -mr-1 -mt-1">
                                         <button
                                             onClick={() => editExpense(e)}
                                             className="text-slate-400 hover:text-brand-primary hover:bg-brand-primary/10 p-2 rounded-xl transition-all"
                                             title="Editar gasto"
+                                            aria-label="Editar gasto"
                                         >
                                             <Pencil className="w-5 h-5" />
                                         </button>
@@ -664,6 +671,7 @@ export function SharedExpensesPage({ groupId }: { groupId?: string | null }) {
                                             onClick={() => removeExpense(e.id)}
                                             className="text-brand-alert/50 hover:text-brand-alert hover:bg-brand-alert/10 p-2 rounded-xl transition-all"
                                             title="Eliminar gasto"
+                                            aria-label="Eliminar gasto"
                                         >
                                             <Trash2 className="w-5 h-5" />
                                         </button>
@@ -690,7 +698,7 @@ export function SharedExpensesPage({ groupId }: { groupId?: string | null }) {
                 </div>
 
                 {/* Columna Derecha: Pagos y Saldos */}
-                <div className="lg:col-span-1 bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                <div className="lg:col-span-1 bg-white p-4 md:p-6 rounded-xl border border-slate-200 shadow-sm">
                     <h2 className="font-bold text-brand-primary mb-4 flex items-center gap-2">
                         <Check className="w-5 h-5 text-brand-success" />
                         Quién le paga a quién
@@ -699,7 +707,7 @@ export function SharedExpensesPage({ groupId }: { groupId?: string | null }) {
                     {/* Resumen por persona */}
                     {perPersonSummary && perPersonSummary.rows.length > 0 && (
                         <div className="mb-5 p-4 bg-slate-50 border border-slate-200 rounded-xl">
-                            <div className="flex items-center justify-between mb-3">
+                            <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 mb-3">
                                 <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Resumen por persona</span>
                                 <span className="text-xs text-slate-400">
                                     Total: <span className="font-black text-slate-700">${perPersonSummary.grandTotal.toLocaleString('es-AR', { minimumFractionDigits: 2 })}</span>
@@ -710,8 +718,8 @@ export function SharedExpensesPage({ groupId }: { groupId?: string | null }) {
                             </div>
                             <div className="space-y-1.5">
                                 {perPersonSummary.rows.map(row => (
-                                    <div key={row.id} className="flex items-center justify-between text-xs">
-                                        <span className="font-semibold text-slate-700 truncate max-w-[80px]">{row.name}</span>
+                                    <div key={row.id} className="flex items-center justify-between gap-2 text-xs">
+                                        <span className="font-semibold text-slate-700 truncate min-w-0">{row.name}</span>
                                         <div className="flex items-center gap-2">
                                             <span className="text-slate-400">Pagó <span className="font-bold text-slate-600">${row.paid.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span></span>
                                             <span className={`font-black px-2 py-0.5 rounded-full text-[11px] ${row.balance > 0.01 ? 'bg-green-100 text-green-700' : row.balance < -0.01 ? 'bg-red-100 text-red-600' : 'bg-slate-100 text-slate-500'}`}>
@@ -732,7 +740,7 @@ export function SharedExpensesPage({ groupId }: { groupId?: string | null }) {
                                 </span>
                                 <button
                                     onClick={() => setShuffleSeed(s => s + 1)}
-                                    className="flex items-center gap-1.5 text-xs font-bold text-brand-primary hover:bg-brand-primary/10 px-3 py-1.5 rounded-lg transition-all active:scale-95"
+                                    className="flex items-center gap-1.5 text-xs font-bold text-brand-primary hover:bg-brand-primary/10 px-3 py-1.5 min-h-[40px] md:min-h-0 rounded-lg transition-all active:scale-95"
                                     title="Ver otra forma de saldar las deudas"
                                 >
                                     <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -746,16 +754,16 @@ export function SharedExpensesPage({ groupId }: { groupId?: string | null }) {
                             transfers.map((t, idx) => (
                                 <div key={idx} className="flex flex-col gap-1 p-3 bg-green-50/50 border border-green-100 rounded-lg group relative">
                                     <div className="flex justify-between items-center text-sm">
-                                        <span className="font-semibold text-slate-900">{getName(t.from)}</span>
-                                        <ArrowRight className="w-4 h-4 text-slate-400 mx-2" />
-                                        <span className="font-semibold text-slate-900">{getName(t.to)}</span>
+                                        <span className="font-semibold text-slate-900 truncate min-w-0">{getName(t.from)}</span>
+                                        <ArrowRight className="w-4 h-4 text-slate-400 mx-2 shrink-0" />
+                                        <span className="font-semibold text-slate-900 truncate min-w-0 text-right">{getName(t.to)}</span>
                                     </div>
                                     <div className="text-center font-bold text-brand-success text-lg">
                                         ${t.amount.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                     </div>
                                     <button
                                         onClick={() => setShowPaymentForm({ from: t.from, to: t.to, amount: t.amount })}
-                                        className="mt-2 flex items-center justify-center gap-2 py-2 px-4 bg-brand-success text-white text-xs font-bold rounded-lg hover:bg-brand-success/90 transition-all shadow-sm active:scale-95"
+                                        className="mt-2 flex items-center justify-center gap-2 py-2 px-4 min-h-[44px] md:min-h-0 bg-brand-success text-white text-sm md:text-xs font-bold rounded-lg hover:bg-brand-success/90 transition-all shadow-sm active:scale-95"
                                     >
                                         <Check className="w-3.5 h-3.5" />
                                         Marcar como pagado
@@ -794,8 +802,9 @@ export function SharedExpensesPage({ groupId }: { groupId?: string | null }) {
                                             </div>
                                             <button
                                                 onClick={() => removePayment(p.id)}
-                                                className="text-slate-300 hover:text-brand-alert p-2 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                                                className="text-slate-400 md:text-slate-300 hover:text-brand-alert p-2 -mr-1 rounded-lg transition-colors md:opacity-0 md:group-hover:opacity-100 focus-visible:opacity-100"
                                                 title="Eliminar este pago"
+                                                aria-label="Eliminar este pago"
                                             >
                                                 <Trash2 className="w-4 h-4" />
                                             </button>
@@ -838,7 +847,7 @@ export function SharedExpensesPage({ groupId }: { groupId?: string | null }) {
                                         saveToFirebase(participants, [], []);
                                     }
                                 }}
-                                className="w-full mt-6 py-2 border border-slate-200 text-brand-primary font-medium text-sm rounded-lg hover:bg-brand-primary/5 transition flex items-center justify-center gap-2"
+                                className="w-full mt-6 py-2 min-h-[44px] md:min-h-0 border border-slate-200 text-brand-primary font-medium text-sm rounded-lg hover:bg-brand-primary/5 transition flex items-center justify-center gap-2"
                             >
                                 <RotateCcw className="w-4 h-4" />
                                 Reiniciar Todo
@@ -851,11 +860,11 @@ export function SharedExpensesPage({ groupId }: { groupId?: string | null }) {
 
             {/* Modal de Pago */}
             {showPaymentForm && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 space-y-4 border border-slate-200 animate-in zoom-in-95 duration-200">
+                <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center md:p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div role="dialog" aria-modal="true" aria-label="Registrar pago" className="bg-white rounded-t-2xl md:rounded-2xl shadow-xl w-full md:max-w-sm p-5 md:p-6 pb-[max(1.25rem,env(safe-area-inset-bottom))] md:pb-6 space-y-4 border border-slate-200 motion-safe:max-md:animate-sheet-up animate-in zoom-in-95 duration-200">
                         <div className="flex justify-between items-center border-b border-slate-100 pb-4">
                             <h3 className="font-bold text-slate-800 text-lg">Registrar Pago</h3>
-                            <button onClick={() => setShowPaymentForm(null)} className="text-slate-400 hover:text-slate-600 p-1">&times;</button>
+                            <button onClick={() => setShowPaymentForm(null)} aria-label="Cerrar" className="-mr-2 w-11 h-11 flex items-center justify-center rounded-full text-2xl leading-none text-slate-400 hover:text-slate-600 hover:bg-slate-100">&times;</button>
                         </div>
 
                         <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
