@@ -20,6 +20,7 @@ function EditModal({ expense, onClose }: { expense: Expense; onClose: () => void
   const [category, setCategory] = useState(expense.category);
   const [date, setDate] = useState(format(new Date(expense.date), 'yyyy-MM-dd'));
   const [notes, setNotes] = useState(expense.notes ?? '');
+  const [resumen, setResumen] = useState(expense.resumen ?? '');
   const [selectedTags, setSelectedTags] = useState<string[]>(expense.tags ?? []);
   const [responsable, setResponsable] = useState<string | undefined>(expense.responsable);
   const [sharedWith, setSharedWith] = useState<SharedParticipant[] | undefined>(expense.sharedWith);
@@ -32,6 +33,7 @@ function EditModal({ expense, onClose }: { expense: Expense; onClose: () => void
       category,
       date: new Date(date + 'T12:00:00'),
       notes: notes || undefined,
+      resumen: resumen || undefined,
       tags: selectedTags.length > 0 ? selectedTags : undefined,
       responsable: responsable || undefined,
       sharedWith: sharedWith && sharedWith.length > 0 ? sharedWith : undefined,
@@ -86,6 +88,13 @@ function EditModal({ expense, onClose }: { expense: Expense; onClose: () => void
           <div>
             <label className="text-sm font-medium text-slate-700">Fecha</label>
             <input type="date" value={date} onChange={e => setDate(e.target.value)}
+              className="w-full mt-1 px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          </div>
+          <div>
+            <label className="text-sm font-medium text-slate-700">
+              Resumen <span className="text-slate-400 font-normal">(mes en que se paga; vacío = mes de la fecha)</span>
+            </label>
+            <input type="month" value={resumen} onChange={e => setResumen(e.target.value)}
               className="w-full mt-1 px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500" />
           </div>
           <div>
@@ -230,7 +239,7 @@ export function ExpensesListPage() {
             <option value="">Todos los meses</option>
             {availableMonths.map(m => (
               <option key={m} value={m}>
-                {format(new Date(m + '-01'), 'MMMM yyyy', { locale: es })}
+                {format(new Date(m + '-01T12:00:00'), 'MMMM yyyy', { locale: es })}
               </option>
             ))}
           </select>

@@ -6,6 +6,7 @@ import { CreditCard, DollarSign, Filter, TrendingDown, Wallet, Trash2, Loader2, 
 import { cn } from '@/lib/utils';
 import { exportExpensesToExcel } from '@/lib/exportExcel';
 import { DebtDashboard } from '@/components/DebtDashboard';
+import { mesResumen } from '@/lib/resumen';
 import { QuienPaga } from '@/components/QuienPaga';
 import { useAplicarReglaAGuardados } from '@/hooks/useAplicarRegla';
 
@@ -28,14 +29,14 @@ export function AccountPage() {
 
     // Meses disponibles
     const availableMonths = useMemo(() => {
-        const months = new Set(expenses.map(exp => format(new Date(exp.date), 'yyyy-MM')));
+        const months = new Set(expenses.map(mesResumen));
         return Array.from(months).sort().reverse();
     }, [expenses]);
 
     // Filtrar por mes si se elige uno
     const filtered = useMemo(() => {
         if (!filterMonth) return expenses;
-        return expenses.filter(exp => format(new Date(exp.date), 'yyyy-MM') === filterMonth);
+        return expenses.filter(exp => mesResumen(exp) === filterMonth);
     }, [expenses, filterMonth]);
 
     // Agrupar por tarjeta
@@ -119,7 +120,7 @@ export function AccountPage() {
                         <option value="">Todos los meses</option>
                         {availableMonths.map(m => (
                             <option key={m} value={m}>
-                                {format(new Date(m + '-01'), 'MMMM yyyy', { locale: es })}
+                                Resumen {format(new Date(m + '-01T12:00:00'), 'MMMM yyyy', { locale: es })}
                             </option>
                         ))}
                     </select>

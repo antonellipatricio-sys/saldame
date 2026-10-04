@@ -194,3 +194,22 @@ Botón y micrófono para dictar preguntas.
 - [ ] Exportar resultado a PDF
 - [ ] Compartir consulta (gen link)
 - [ ] Fine-tuning de modelo con datos históricos del usuario
+
+## Resumen (mes en que se paga)
+
+Cada gasto importado guarda `resumen` = `'yyyy-MM'` del **vencimiento** del resumen de tarjeta
+([`src/lib/resumen.ts`](../../../src/lib/resumen.ts)). El filtro de Estado de Cuenta y "Quién te debe"
+usan ese mes, así la cuota 8/9 de una compra de enero aparece en el resumen en que se cobra.
+
+- **PDF Santander**: se toma del encabezado (vencimiento actual).
+- **Excel Santander / otros PDF**: por defecto el mes siguiente al último consumo.
+- En la revisión de importación se puede cambiar ("Resumen de [mes]").
+- Gastos sin `resumen` (cargados antes) usan el mes de la fecha; se puede fijar desde Mis Gastos → Editar.
+
+## Importar PDF de Santander
+
+[`src/lib/santanderPdfParser.ts`](../../../src/lib/santanderPdfParser.ts), detectado automáticamente en
+Agregar Gasto. Lee cierre/vencimiento, los movimientos por tarjeta ("Movimientos de X" +
+"terminada en XXXX") y la sección de impuestos/intereses (cargada en la tarjeta del titular).
+Ignora "Pago anterior y devoluciones". Los montos se emparejan por coordenada Y (el orden
+crudo del texto del PDF no coincide con las filas).

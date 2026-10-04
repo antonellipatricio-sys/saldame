@@ -12,6 +12,7 @@ import { Check, ChevronDown, ChevronUp, MessageCircle, Undo2, Users } from 'luci
 import { useExpenseStore } from '@/store/useExpenseStore';
 import { useCobrosStore, type Cobro } from '@/store/useCobrosStore';
 import { ownerName, reparto } from '@/lib/quienPaga';
+import { mesResumen } from '@/lib/resumen';
 import { cn } from '@/lib/utils';
 import type { Expense } from '@/types';
 
@@ -82,13 +83,13 @@ export function DebtDashboard({ filterMonth }: Props) {
 
   const periodo = filterMonth ?? 'todos';
   const periodoLabel = filterMonth
-    ? `de ${format(new Date(filterMonth + '-01T12:00:00'), 'MMMM yyyy', { locale: es })}`
+    ? `del resumen de ${format(new Date(filterMonth + '-01T12:00:00'), 'MMMM yyyy', { locale: es })}`
     : 'pendientes';
 
   const deudas = useMemo<Deuda[]>(() => {
     const owner = ownerName(responsables);
     const filtered = filterMonth
-      ? expenses.filter(e => format(new Date(e.date), 'yyyy-MM') === filterMonth)
+      ? expenses.filter(e => mesResumen(e) === filterMonth)
       : expenses;
 
     const porPersona = new Map<string, Item[]>();

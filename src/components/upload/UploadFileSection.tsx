@@ -3,6 +3,8 @@ import { useExpenseStore } from '@/store/useExpenseStore';
 import { extractTextFromPDF, parseTransactions } from '@/lib/pdfParser';
 import { isMercadoPago, parseMercadoPagoTransactions, extractMPCardInfo, type MPCardInfo } from '@/lib/mercadoPagoParser';
 import { parseSantanderExcel, type SantanderTransaction } from '@/lib/santanderParser';
+import { isSantanderPdf, parseSantanderPdfText } from '@/lib/santanderPdfParser';
+import { resumenPorDefecto } from '@/lib/resumen';
 import { classifyLocal, learnCategory, classifyTags, learnTags } from '@/lib/classifier';
 import { TagSelector } from '@/components/tags/TagSelector';
 import { CategorySelect } from '@/components/upload/CategorySelect';
@@ -113,6 +115,8 @@ export function UploadFileSection() {
   const [rawText, setRawText] = useState<string | null>(null);
   const [detectedFormat, setDetectedFormat] = useState<DetectedFormat>(null);
   const [mpCardInfo, setMpCardInfo] = useState<MPCardInfo | null>(null);
+  const [resumen, setResumen] = useState('');
+  const [santanderEsPdf, setSantanderEsPdf] = useState(false);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const masterCheckboxRef = useRef<HTMLInputElement>(null);
@@ -182,10 +186,23 @@ export function UploadFileSection() {
           return;
         }
         setDetectedFormat('santander');
+        setSantanderEsPdf(false);
+        setResumen(resumenPorDefecto(transactions.map(t => t.date)));
         setRows(conReglas(transactions.map(rowFromExcel)));
       } else {
         const text = await extractTextFromPDF(file);
-        if (isMercadoPago(text)) {
+        if (isSantanderPdf(text)) {
+          const parsed = parseSantanderPdfText(text, responsables);
+          if (parsed.transactions.length === 0) {
+            setRawText(text.slice(0, 800));
+            setError('No se encontraron movimientos en el PDF de Santander.');
+            return;
+          }
+          setDetectedFormat('santander');
+          setSantanderEsPdf(true);
+          setResumen(resumenPorDefecto(parsed.transactions.map(t => t.date), parsed.vencimiento));
+          setRows(conReglas(parsed.transactions.map(rowFromExcel)));
+        } else if (isMercadoPago(text)) {
           const cardInfo = extractMPCardInfo(text);
           setMpCardInfo(cardInfo);
           setDetectedFormat('mercadopago');
@@ -196,6 +213,7 @@ export function UploadFileSection() {
             return;
           }
           const responsable = cardInfo?.cardholder ? resolveCardholder(cardInfo.cardholder, responsables) : undefined;
+          setResumen(resumenPorDefecto(transactions.map(t => t.date)));
           setRows(conReglas(transactions.map(t => ({ ...rowFromPDF(t), responsable }))));
         } else {
           setDetectedFormat('banco-nacion');
@@ -205,6 +223,7 @@ export function UploadFileSection() {
             setError('No se encontraron transacciones. Revisá el texto extraído abajo.');
             return;
           }
+          setResumen(resumenPorDefecto(transactions.map(t => t.date)));
           setRows(conReglas(transactions.map(rowFromPDF)));
         }
       }
@@ -238,7 +257,8 @@ export function UploadFileSection() {
           cardholder: row.cardholder,
           responsable: row.responsable,
           sharedWith: row.sharedWith,
-          source: 'santander',
+          resumen: resumen || undefined,
+          source: santanderEsPdf ? 'pdf' : 'santander',
         });
       } else {
         await addExpense({
@@ -252,6 +272,7 @@ export function UploadFileSection() {
           cardholder: mpCardInfo?.cardholder || undefined,
           responsable: row.responsable,
           sharedWith: row.sharedWith,
+          resumen: resumen || undefined,
           source: 'pdf',
         });
       }
@@ -278,13 +299,19 @@ export function UploadFileSection() {
             <div className="flex items-center gap-3">
               <h2 className="text-2xl font-bold text-slate-800">Revisar transacciones — Santander</h2>
               <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700">
-                📊 Excel
+                {santanderEsPdf ? '📄 PDF' : '📊 Excel'}
               </span>
             </div>
             <p className="text-slate-500 text-sm mt-1">
               Se encontraron <strong>{rows.length}</strong> transacciones · <strong>{selectedCount}</strong> seleccionadas
               {porRegla > 0 && <> · <strong>{porRegla}</strong> asignadas por reglas</>}
             </p>
+            <label className="mt-2 flex items-center gap-2 text-sm text-slate-600">
+              Resumen de
+              <input type="month" value={resumen} onChange={e => setResumen(e.target.value)}
+                className="px-2 py-1 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              <span className="text-xs text-slate-400">(mes en que se paga; las cuotas quedan en este mes)</span>
+            </label>
           </div>
           <div className="flex gap-3">
             <button onClick={reset}
@@ -423,6 +450,12 @@ export function UploadFileSection() {
               Se encontraron <strong>{rows.length}</strong> transacciones · <strong>{selectedCount}</strong> seleccionadas
               {porRegla > 0 && <> · <strong>{porRegla}</strong> asignadas por reglas</>}
             </p>
+            <label className="mt-2 flex items-center gap-2 text-sm text-slate-600">
+              Resumen de
+              <input type="month" value={resumen} onChange={e => setResumen(e.target.value)}
+                className="px-2 py-1 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              <span className="text-xs text-slate-400">(mes en que se paga; las cuotas quedan en este mes)</span>
+            </label>
           </div>
           <div className="flex gap-3">
             <button onClick={reset}

@@ -16,6 +16,7 @@ import {
   Timestamp,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { mesResumen } from '@/lib/resumen';
 
 interface ExpenseStore {
   expenses: Expense[];
@@ -115,6 +116,7 @@ export const useExpenseStore = create<ExpenseStore>()(
           if (expense.responsable !== undefined) data.responsable = expense.responsable;
           if (expense.sharedWith !== undefined) data.sharedWith = expense.sharedWith;
           if (expense.source !== undefined) data.source = expense.source;
+          if (expense.resumen !== undefined) data.resumen = expense.resumen;
 
           const docRef = await addDoc(collection(db, 'expenses'), data);
 
@@ -189,11 +191,7 @@ export const useExpenseStore = create<ExpenseStore>()(
         const toDelete = expenses.filter(exp => {
           const expCard = exp.cardLast4 ?? null;
           if (expCard !== cardLast4) return false;
-          if (month) {
-            const d = new Date(exp.date);
-            const expMonth = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-            if (expMonth !== month) return false;
-          }
+          if (month && mesResumen(exp) !== month) return false;
           return true;
         });
 
