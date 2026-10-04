@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useExpenseStore } from '@/store/useExpenseStore';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -70,6 +71,13 @@ export function AccountPage() {
 
     // Gastos de la tarjeta seleccionada
     const [selectedCard, setSelectedCard] = useState<string | null>(null);
+    const detailRef = useRef<HTMLDivElement>(null);
+    // En mobile el detalle queda debajo de todas las tarjetas: al elegir una, se lleva la vista hasta ahí
+    useEffect(() => {
+        if (selectedCard && window.matchMedia('(max-width: 767px)').matches) {
+            detailRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }, [selectedCard]);
     const cardExpenses = useMemo(() => {
         if (!selectedCard) return [];
         return filtered
@@ -100,22 +108,23 @@ export function AccountPage() {
     }
 
     return (
-        <div className="space-y-6">
+        <div className="flex flex-col gap-4 md:gap-6">
             {/* Debt Dashboard */}
             <DebtDashboard filterMonth={filterMonth || undefined} />
 
-            {/* Header */}
-            <div className="flex items-center justify-between flex-wrap gap-3">
-                <div>
+            {/* Header: en mobile va primero, porque el mes también filtra "Quién te debe" */}
+            <div className="order-first md:order-none flex items-center justify-between flex-wrap gap-3">
+                <div className="hidden md:block">
                     <h1 className="text-3xl font-bold text-slate-800">Estado de Cuenta</h1>
                     <p className="text-slate-600 mt-1">Desglose de gastos por tarjeta</p>
                 </div>
-                <div className="flex items-center gap-3">
-                    <Filter className="w-4 h-4 text-slate-400" />
+                <div className="flex items-center gap-3 w-full md:w-auto">
+                    <Filter className="hidden md:block w-4 h-4 text-slate-400" />
                     <select
                         value={filterMonth}
                         onChange={e => { setFilterMonth(e.target.value); setSelectedCard(null); }}
-                        className="px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                        aria-label="Mes del resumen"
+                        className="w-full md:w-auto min-h-[44px] md:min-h-0 px-3 py-2 rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                     >
                         <option value="">Todos los meses</option>
                         {availableMonths.map(m => (
@@ -128,33 +137,33 @@ export function AccountPage() {
             </div>
 
             {/* Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
+                <div className="col-span-2 md:col-span-1 bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:p-5">
                     <div className="flex items-center gap-3 mb-2">
-                        <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                        <div className="hidden md:flex w-10 h-10 bg-green-100 rounded-lg items-center justify-center">
                             <DollarSign className="w-5 h-5 text-green-600" />
                         </div>
-                        <p className="text-sm font-medium text-slate-600">Total en Pesos</p>
+                        <p className="text-xs md:text-sm font-medium text-slate-600">Total en Pesos</p>
                     </div>
-                    <p className="text-2xl font-bold text-slate-800">${totalARS.toLocaleString('es-AR')}</p>
+                    <p className="text-xl md:text-2xl font-bold text-slate-800 tabular-nums break-words">${totalARS.toLocaleString('es-AR')}</p>
                 </div>
-                <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+                <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:p-5 min-w-0">
                     <div className="flex items-center gap-3 mb-2">
-                        <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <div className="hidden md:flex w-10 h-10 bg-blue-100 rounded-lg items-center justify-center">
                             <Wallet className="w-5 h-5 text-blue-600" />
                         </div>
-                        <p className="text-sm font-medium text-slate-600">Total en Dólares</p>
+                        <p className="text-xs md:text-sm font-medium text-slate-600">Total en Dólares</p>
                     </div>
-                    <p className="text-2xl font-bold text-slate-800">US$ {totalUSD.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
+                    <p className="text-xl md:text-2xl font-bold text-slate-800 tabular-nums break-words">US$ {totalUSD.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
                 </div>
-                <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+                <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:p-5 min-w-0">
                     <div className="flex items-center gap-3 mb-2">
-                        <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                        <div className="hidden md:flex w-10 h-10 bg-purple-100 rounded-lg items-center justify-center">
                             <CreditCard className="w-5 h-5 text-purple-600" />
                         </div>
-                        <p className="text-sm font-medium text-slate-600">Tarjetas</p>
+                        <p className="text-xs md:text-sm font-medium text-slate-600">Tarjetas</p>
                     </div>
-                    <p className="text-2xl font-bold text-slate-800">{cardSummaries.filter(c => c.cardLast4).length}</p>
+                    <p className="text-xl md:text-2xl font-bold text-slate-800 tabular-nums break-words">{cardSummaries.filter(c => c.cardLast4).length}</p>
                 </div>
             </div>
 
@@ -170,14 +179,14 @@ export function AccountPage() {
                             tabIndex={0}
                             onKeyDown={e => e.key === 'Enter' && setSelectedCard(isSelected ? null : (card.cardLast4 || 'sin-tarjeta'))}
                             className={cn(
-                                'bg-white rounded-xl shadow-sm border p-5 text-left transition-all hover:shadow-md cursor-pointer',
+                                'bg-white rounded-xl shadow-sm border p-4 md:p-5 text-left transition-all hover:shadow-md cursor-pointer',
                                 isSelected
                                     ? 'border-blue-400 ring-2 ring-blue-200'
                                     : 'border-slate-200 hover:border-slate-300'
                             )}
                         >
-                            <div className="flex items-center justify-between mb-3">
-                                <div className="flex items-center gap-3">
+                            <div className="flex items-center justify-between gap-2 mb-3">
+                                <div className="flex items-center gap-3 min-w-0 flex-1">
                                     <div className={cn(
                                         'w-10 h-10 rounded-lg flex items-center justify-center',
                                         card.cardLast4?.startsWith('MP') ? 'bg-gradient-to-br from-sky-400 to-blue-600' :
@@ -206,7 +215,7 @@ export function AccountPage() {
                                         )}
                                     </div>
                                 </div>
-                                <span className="text-xs bg-slate-100 text-slate-500 px-2 py-1 rounded-full font-medium">
+                                <span className="text-xs bg-slate-100 text-slate-500 px-2 py-1 rounded-full font-medium whitespace-nowrap">
                                     {card.count} gastos
                                 </span>
                                 <button
@@ -218,13 +227,14 @@ export function AccountPage() {
                                             count: card.count,
                                         });
                                     }}
-                                    className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                                    className="-mr-2 md:mr-0 w-10 h-10 md:w-auto md:h-auto md:p-1.5 flex items-center justify-center rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors"
                                     title="Eliminar resumen"
+                                    aria-label="Eliminar resumen"
                                 >
                                     <Trash2 className="w-4 h-4" />
                                 </button>
                             </div>
-                            <div className="flex gap-4">
+                            <div className="flex flex-wrap gap-x-4 gap-y-1">
                                 {card.totalARS > 0 && (
                                     <div>
                                         <p className="text-xs text-slate-500">ARS</p>
@@ -253,8 +263,8 @@ export function AccountPage() {
 
             {/* Detalle de tarjeta seleccionada */}
             {selectedCard && cardExpenses.length > 0 && (
-                <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                    <div className="px-5 py-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
+                <div ref={detailRef} className="scroll-mt-4 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div className="px-4 md:px-5 py-4 border-b border-slate-200 bg-slate-50 flex flex-col md:flex-row md:items-center justify-between gap-3">
                         <div>
                             <h2 className="font-bold text-slate-800">
                                 Detalle {selectedCard === 'sin-tarjeta'
@@ -265,14 +275,14 @@ export function AccountPage() {
                             </h2>
                             <p className="text-xs text-slate-500 mt-0.5">{cardExpenses.length} movimientos</p>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="grid grid-cols-2 md:flex items-center gap-2">
                             <button
                                 onClick={() => {
                                     const label = selectedCard === 'sin-tarjeta' ? 'sin-tarjeta' : selectedCard;
                                     const fname = `gastos_${label}${filterMonth ? '_' + filterMonth : ''}.xlsx`;
                                     exportExpensesToExcel(cardExpenses, fname);
                                 }}
-                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-blue-600 hover:bg-blue-50 border border-blue-200 text-sm font-medium transition-colors"
+                                className="flex items-center justify-center gap-1.5 px-3 py-1.5 min-h-[44px] md:min-h-0 rounded-lg text-blue-600 hover:bg-blue-50 border border-blue-200 bg-white md:bg-transparent text-sm font-medium transition-colors"
                             >
                                 <Download className="w-3.5 h-3.5" /> Exportar Excel
                             </button>
@@ -282,17 +292,22 @@ export function AccountPage() {
                                     label: selectedCard === 'sin-tarjeta' ? 'sin tarjeta' : selectedCard.startsWith('MP') ? 'Mercado Pago' : `•••• ${selectedCard}`,
                                     count: cardExpenses.length,
                                 })}
-                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-red-600 hover:bg-red-50 border border-red-200 text-sm font-medium transition-colors"
+                                className="flex items-center justify-center gap-1.5 px-3 py-1.5 min-h-[44px] md:min-h-0 rounded-lg text-red-600 hover:bg-red-50 border border-red-200 bg-white md:bg-transparent text-sm font-medium transition-colors"
                             >
-                                <Trash2 className="w-3.5 h-3.5" /> Eliminar resumen
+                                <Trash2 className="w-3.5 h-3.5" /> Eliminar<span className="hidden md:inline"> resumen</span>
                             </button>
                         </div>
                     </div>
-                    <div className="divide-y divide-slate-100 max-h-[50vh] overflow-y-auto">
+                    <div className="divide-y divide-slate-100 md:max-h-[50vh] md:overflow-y-auto">
                         {cardExpenses.map(exp => (
-                            <div key={exp.id} className="flex flex-col sm:flex-row sm:items-center justify-between px-5 py-3 hover:bg-slate-50 transition-colors gap-2 sm:gap-3">
+                            <div key={exp.id} className="flex flex-col sm:flex-row sm:items-center justify-between px-4 md:px-5 py-3 hover:bg-slate-50 transition-colors gap-2 sm:gap-3">
                                 <div className="flex-1 min-w-0">
-                                    <p className="font-medium text-slate-800 truncate">{exp.description}</p>
+                                    <div className="flex items-baseline justify-between gap-3">
+                                        <p className="font-medium text-slate-800 truncate">{exp.description}</p>
+                                        <p className="sm:hidden font-bold text-slate-800 whitespace-nowrap tabular-nums">
+                                            {exp.currency === 'ARS' ? '$' : 'US$'} {exp.amount.toLocaleString('es-AR')}
+                                        </p>
+                                    </div>
                                     <div className="flex items-center gap-2 mt-0.5 text-xs text-slate-500 flex-wrap">
                                         <span>{format(new Date(exp.date), 'dd/MM/yyyy', { locale: es })}</span>
                                         <span className="text-slate-300">•</span>
@@ -317,7 +332,7 @@ export function AccountPage() {
                                         descripcion={exp.description}
                                         onReglaCreada={aplicarRegla}
                                     />
-                                    <div className="text-right shrink-0">
+                                    <div className="hidden sm:block text-right shrink-0">
                                         <p className="font-bold text-slate-800">
                                             {exp.currency === 'ARS' ? '$' : 'US$'} {exp.amount.toLocaleString('es-AR')}
                                         </p>
@@ -331,9 +346,9 @@ export function AccountPage() {
             )}
 
             {/* Modal de confirmación de eliminación */}
-            {deleteTarget && (
-                <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 space-y-4">
+            {deleteTarget && createPortal(
+                <div className="fixed inset-0 bg-black/40 flex items-end md:items-center justify-center z-50 md:p-4">
+                    <div role="alertdialog" aria-modal="true" aria-label="Eliminar resumen" className="bg-white rounded-t-2xl md:rounded-2xl shadow-xl max-w-md w-full p-5 md:p-6 pb-[max(1.25rem,env(safe-area-inset-bottom))] md:pb-6 space-y-4 motion-safe:max-md:animate-sheet-up">
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center">
                                 <Trash2 className="w-5 h-5 text-red-600" />
@@ -347,24 +362,25 @@ export function AccountPage() {
                             ¿Eliminar <strong>{deleteTarget.count} gastos</strong> de <strong>{deleteTarget.label}</strong>
                             {filterMonth && <> del período <strong>{filterMonth}</strong></>}?
                         </p>
-                        <div className="flex gap-3 justify-end">
+                        <div className="grid grid-cols-2 md:flex gap-3 justify-end">
                             <button
                                 onClick={() => setDeleteTarget(null)}
                                 disabled={deleting}
-                                className="px-4 py-2 rounded-xl border border-slate-300 text-slate-600 hover:bg-slate-50 font-medium text-sm"
+                                className="px-4 py-2 min-h-[44px] md:min-h-0 rounded-xl border border-slate-300 text-slate-600 hover:bg-slate-50 font-medium text-sm"
                             >
                                 Cancelar
                             </button>
                             <button
                                 onClick={handleDeleteCard}
                                 disabled={deleting}
-                                className="px-4 py-2 rounded-xl bg-red-600 text-white font-semibold hover:bg-red-700 disabled:opacity-50 text-sm flex items-center gap-2"
+                                className="px-4 py-2 min-h-[44px] md:min-h-0 rounded-xl bg-red-600 text-white font-semibold hover:bg-red-700 disabled:opacity-50 text-sm flex items-center justify-center gap-2"
                             >
                                 {deleting ? <><Loader2 className="w-4 h-4 animate-spin" /> Eliminando...</> : <><Trash2 className="w-4 h-4" /> Eliminar {deleteTarget.count} gastos</>}
                             </button>
                         </div>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
         </div>
     );

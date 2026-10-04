@@ -133,7 +133,7 @@ export function DebtDashboard({ filterMonth }: Props) {
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-      <div className="px-5 py-4 bg-slate-50 border-b border-slate-200 flex items-center gap-3">
+      <div className="px-4 md:px-5 py-4 bg-slate-50 border-b border-slate-200 flex items-center gap-3">
         <div className="w-9 h-9 bg-slate-800 rounded-lg flex items-center justify-center">
           <Users className="w-5 h-5 text-white" />
         </div>
@@ -177,10 +177,11 @@ export function DebtDashboard({ filterMonth }: Props) {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-1.5">
+                <div className={cn('grid gap-2 w-full sm:flex sm:w-auto sm:gap-1.5', alDia ? 'grid-cols-2' : 'grid-cols-3')}>
                   <button
+                    aria-expanded={isOpen}
                     onClick={() => setAbierto(isOpen ? null : d.persona)}
-                    className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 text-xs font-medium"
+                    className="flex items-center justify-center gap-1 px-2.5 py-1.5 min-h-[40px] sm:min-h-0 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 text-sm sm:text-xs font-medium"
                   >
                     Ver {isOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
                   </button>
@@ -188,14 +189,14 @@ export function DebtDashboard({ filterMonth }: Props) {
                     href={`https://wa.me/?text=${encodeURIComponent(mensajeWhatsApp(d, periodoLabel))}`}
                     target="_blank"
                     rel="noreferrer"
-                    className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-emerald-200 text-emerald-700 hover:bg-emerald-50 text-xs font-medium"
+                    className="flex items-center justify-center gap-1 px-2.5 py-1.5 min-h-[40px] sm:min-h-0 rounded-lg border border-emerald-200 text-emerald-700 hover:bg-emerald-50 text-sm sm:text-xs font-medium"
                   >
                     <MessageCircle className="w-3.5 h-3.5" /> WhatsApp
                   </a>
                   {!alDia && (
                     <button
                       onClick={() => marcarCobrado(d)}
-                      className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 text-xs font-semibold"
+                      className="flex items-center justify-center gap-1 px-2.5 py-1.5 min-h-[40px] sm:min-h-0 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 text-sm sm:text-xs font-semibold"
                     >
                       <Check className="w-3.5 h-3.5" /> Cobrado
                     </button>
@@ -209,7 +210,7 @@ export function DebtDashboard({ filterMonth }: Props) {
                     .slice()
                     .sort((a, b) => new Date(b.expense.date).getTime() - new Date(a.expense.date).getTime())
                     .map(({ expense: e, amount }, i) => (
-                      <div key={`${e.id}-${i}`} className="flex items-center justify-between px-4 py-2 text-sm gap-3">
+                      <div key={`${e.id}-${i}`} className="flex items-center justify-between px-3 sm:px-4 py-2 text-sm gap-3">
                         <div className="min-w-0 flex-1">
                           <p className="text-slate-700 truncate">{e.description}</p>
                           <p className="text-xs text-slate-400">
@@ -222,15 +223,16 @@ export function DebtDashboard({ filterMonth }: Props) {
                       </div>
                     ))}
                   {d.cobros.map(c => (
-                    <div key={c.id} className="flex items-center justify-between px-4 py-2 text-sm gap-3 bg-emerald-50/50">
+                    <div key={c.id} className="flex items-center justify-between px-3 sm:px-4 py-1 sm:py-2 text-sm gap-3 bg-emerald-50/50">
                       <p className="text-emerald-700 flex-1">
                         Pagó el {format(c.fecha, 'dd/MM/yyyy')}
                       </p>
                       <p className="font-medium text-emerald-700 shrink-0">−{montos(c.ars, c.usd)}</p>
                       <button
                         onClick={() => { if (confirm('¿Deshacer este cobro?')) deleteCobro(c.id); }}
-                        className="p-1 text-slate-400 hover:text-red-500"
-                        title="Deshacer"
+                        className="-mr-2 sm:mr-0 w-10 h-10 sm:w-auto sm:h-auto sm:p-1 flex items-center justify-center text-slate-400 hover:text-red-500"
+                        title="Deshacer cobro"
+                        aria-label="Deshacer cobro"
                       >
                         <Undo2 className="w-3.5 h-3.5" />
                       </button>

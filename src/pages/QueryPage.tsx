@@ -100,9 +100,9 @@ export function QueryPage() {
     };
 
     return (
-        <div className="flex flex-col h-[calc(100vh-120px)] max-w-3xl mx-auto">
+        <div className="flex flex-col h-full md:h-[calc(100vh-120px)] max-w-3xl mx-auto">
             {/* Header */}
-            <div className="mb-4">
+            <div className="hidden md:block mb-4">
                 <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-gradient-to-br from-violet-500 to-fuchsia-600 rounded-xl flex items-center justify-center">
                         <Sparkles className="w-5 h-5 text-white" />
@@ -115,15 +115,15 @@ export function QueryPage() {
             </div>
 
             {/* Messages Area */}
-            <div className="flex-1 overflow-y-auto rounded-2xl bg-white border border-slate-200 shadow-sm">
+            <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain rounded-2xl bg-white border border-slate-200 shadow-sm">
                 {messages.length === 0 ? (
                     // Estado vacío: mostrar preguntas de ejemplo
-                    <div className="flex flex-col items-center justify-center h-full p-8">
-                        <div className="w-16 h-16 bg-gradient-to-br from-violet-100 to-fuchsia-100 rounded-2xl flex items-center justify-center mb-4">
+                    <div className="flex flex-col items-center justify-center min-h-full p-5 md:p-8">
+                        <div className="hidden md:flex w-16 h-16 bg-gradient-to-br from-violet-100 to-fuchsia-100 rounded-2xl items-center justify-center mb-4">
                             <MessageSquare className="w-8 h-8 text-violet-500" />
                         </div>
                         <h2 className="text-xl font-bold text-slate-700 mb-2">¿Qué querés saber?</h2>
-                        <p className="text-sm text-slate-500 mb-6 text-center max-w-md">
+                        <p className="text-sm text-slate-500 mb-4 md:mb-6 text-center max-w-md">
                             Hacé preguntas sobre tus gastos y la IA te responde al instante.
                             Podés preguntar por categoría, tarjeta, período, o lo que necesites.
                         </p>
@@ -132,7 +132,7 @@ export function QueryPage() {
                                 <button
                                     key={i}
                                     onClick={() => handleSubmit(q)}
-                                    className="flex items-center gap-2 text-left px-4 py-3 rounded-xl border border-slate-200 hover:border-violet-300 hover:bg-violet-50 transition-all text-sm text-slate-600 hover:text-violet-700 group"
+                                    className="flex items-center gap-2 text-left px-4 py-3 min-h-[48px] rounded-xl border border-slate-200 hover:border-violet-300 hover:bg-violet-50 transition-all text-sm text-slate-600 hover:text-violet-700 group"
                                 >
                                     <HelpCircle className="w-4 h-4 text-slate-400 group-hover:text-violet-500 shrink-0" />
                                     <span>{q}</span>
@@ -180,7 +180,7 @@ export function QueryPage() {
             </div>
 
             {/* Input Area */}
-            <div className="mt-4">
+            <div className="mt-3 md:mt-4">
                 <div className="flex gap-2">
                     <input
                         ref={inputRef}
@@ -190,12 +190,13 @@ export function QueryPage() {
                         onKeyDown={handleKeyDown}
                         placeholder="Preguntá sobre tus gastos..."
                         disabled={isQuerying}
-                        className="flex-1 px-4 py-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-violet-500 text-sm bg-white disabled:opacity-50"
+                        className="flex-1 min-w-0 px-4 py-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-violet-500 text-sm bg-white disabled:opacity-50"
                         autoComplete="off"
                     />
                     <button
                         onClick={() => handleSubmit()}
                         disabled={!input.trim() || isQuerying}
+                        aria-label="Enviar pregunta"
                         className="px-5 py-3 rounded-xl bg-gradient-to-r from-violet-500 to-fuchsia-600 text-white font-semibold hover:from-violet-600 hover:to-fuchsia-700 disabled:opacity-40 transition-all flex items-center gap-2"
                     >
                         {isQuerying ? (
@@ -205,7 +206,7 @@ export function QueryPage() {
                         )}
                     </button>
                 </div>
-                <p className="text-xs text-slate-400 mt-2 text-center">
+                <p className="hidden md:block text-xs text-slate-400 mt-2 text-center">
                     Powered by Gemini 2.0 Flash · {expenses.length} gastos cargados
                 </p>
             </div>

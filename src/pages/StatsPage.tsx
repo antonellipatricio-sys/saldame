@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useExpenseStore } from '@/store/useExpenseStore';
 import { BarChart3, PieChart, TrendingUp, Calendar, ArrowUpRight, ArrowDownRight, Minus } from 'lucide-react';
 import { format } from 'date-fns';
@@ -15,6 +15,7 @@ export function StatsPage() {
   const today = useMemo(() => new Date(), []);
   const currentMonthKey = format(today, 'yyyy-MM');
   const [filterMonth, setFilterMonth] = useState(currentMonthKey);
+  const topRef = useRef<HTMLDivElement>(null);
 
   // Meses disponibles para el selector
   const availableMonths = useMemo(() => {
@@ -91,19 +92,20 @@ export function StatsPage() {
   }, [expenses]);
 
   return (
-    <div className="space-y-6">
+    <div ref={topRef} className="space-y-4 md:space-y-6 scroll-mt-4">
       {/* Header + Selector de mes */}
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <div>
+        <div className="hidden md:block">
           <h1 className="text-3xl font-bold text-brand-primary">Estadísticas</h1>
           <p className="text-brand-text mt-1">Análisis de tus gastos</p>
         </div>
-        <div className="flex items-center gap-2">
-          <Calendar className="w-4 h-4 text-slate-400" />
+        <div className="flex items-center gap-2 w-full md:w-auto">
+          <Calendar className="hidden md:block w-4 h-4 text-slate-400" />
           <select
             value={filterMonth}
             onChange={e => setFilterMonth(e.target.value)}
-            className="px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-1 focus:ring-brand-primary text-sm"
+            aria-label="Mes"
+            className="w-full md:w-auto min-h-[44px] md:min-h-0 px-3 py-2 rounded-lg border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-brand-primary text-sm"
           >
             <option value="">Todos los meses</option>
             {availableMonths.map(m => (
@@ -116,47 +118,47 @@ export function StatsPage() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
+        <div className="order-2 md:order-none bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:p-6">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 bg-brand-primary/10 rounded-lg flex items-center justify-center">
+            <div className="hidden md:flex w-10 h-10 bg-brand-primary/10 rounded-lg items-center justify-center">
               <BarChart3 className="w-5 h-5 text-brand-primary" />
             </div>
-            <p className="text-sm font-medium text-slate-600">Total Gastos</p>
+            <p className="text-xs md:text-sm font-medium text-slate-600">Total Gastos</p>
           </div>
-          <p className="text-3xl font-bold text-brand-primary">{stats.totalExpenses}</p>
+          <p className="text-2xl md:text-3xl font-bold text-brand-primary">{stats.totalExpenses}</p>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        <div className="order-1 md:order-none col-span-2 md:col-span-1 bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:p-6">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 bg-brand-success/10 rounded-lg flex items-center justify-center">
+            <div className="hidden md:flex w-10 h-10 bg-brand-success/10 rounded-lg items-center justify-center">
               <TrendingUp className="w-5 h-5 text-brand-success" />
             </div>
-            <p className="text-sm font-medium text-slate-600">Total ARS</p>
+            <p className="text-xs md:text-sm font-medium text-slate-600">Total ARS</p>
           </div>
-          <p className="text-3xl font-bold text-brand-success">
+          <p className="text-2xl md:text-3xl font-bold text-brand-success tabular-nums">
             ${stats.totalARS.toLocaleString('es-AR')}
           </p>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        <div className="order-3 md:order-none bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:p-6 min-w-0">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+            <div className="hidden md:flex w-10 h-10 bg-blue-100 rounded-lg items-center justify-center">
               <TrendingUp className="w-5 h-5 text-blue-600" />
             </div>
-            <p className="text-sm font-medium text-slate-600">Total USD</p>
+            <p className="text-xs md:text-sm font-medium text-slate-600">Total USD</p>
           </div>
-          <p className="text-3xl font-bold text-blue-600">
+          <p className="text-xl md:text-3xl font-bold text-blue-600 tabular-nums break-words">
             US$ {stats.totalUSD.toLocaleString('en-US', { minimumFractionDigits: 2 })}
           </p>
         </div>
       </div>
 
       {/* Top Categories */}
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-        <div className="flex items-center gap-3 mb-6">
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:p-6">
+        <div className="flex items-center gap-3 mb-4 md:mb-6">
           <PieChart className="w-6 h-6 text-brand-primary" />
-          <h2 className="text-xl font-bold text-brand-primary">Top 5 Categorías</h2>
+          <h2 className="text-lg md:text-xl font-bold text-brand-primary">Top 5 Categorías</h2>
         </div>
 
         {stats.topCategories.length === 0 ? (
@@ -167,16 +169,16 @@ export function StatsPage() {
               const pct = stats.maxCatAmount > 0 ? (data.amount / stats.maxCatAmount) * 100 : 0;
               return (
                 <div key={category}>
-                  <div className="flex items-center justify-between mb-1">
-                    <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 bg-brand-primary/10 rounded-full flex items-center justify-center text-brand-primary font-bold text-xs">
+                  <div className="flex items-center justify-between gap-3 mb-1">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <div className="w-6 h-6 shrink-0 bg-brand-primary/10 rounded-full flex items-center justify-center text-brand-primary font-bold text-xs">
                         {index + 1}
                       </div>
-                      <span className="font-medium text-slate-800">{category}</span>
+                      <span className="font-medium text-slate-800 truncate">{category}</span>
                     </div>
-                    <div className="text-right">
+                    <div className="text-right shrink-0">
                       <span className="font-bold text-slate-800">${data.amount.toLocaleString('es-AR')}</span>
-                      <span className="text-xs text-slate-400 ml-1">({data.count} gastos)</span>
+                      <span className="block md:inline text-xs text-slate-400 md:ml-1">({data.count} gastos)</span>
                     </div>
                   </div>
                   <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
@@ -193,10 +195,10 @@ export function StatsPage() {
       </div>
 
       {/* Top Tags */}
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-        <div className="flex items-center gap-3 mb-6">
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:p-6">
+        <div className="flex items-center gap-3 mb-4 md:mb-6">
           <PieChart className="w-6 h-6 text-brand-secondary" />
-          <h2 className="text-xl font-bold text-brand-primary">Top 5 Etiquetas</h2>
+          <h2 className="text-lg md:text-xl font-bold text-brand-primary">Top 5 Etiquetas</h2>
         </div>
 
         {stats.topTags.length === 0 ? (
@@ -207,16 +209,16 @@ export function StatsPage() {
               const pct = stats.maxTagAmount > 0 ? (data.amount / stats.maxTagAmount) * 100 : 0;
               return (
                 <div key={tag}>
-                  <div className="flex items-center justify-between mb-1">
-                    <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 bg-brand-secondary/20 rounded-full flex items-center justify-center text-brand-secondary font-bold text-xs">
+                  <div className="flex items-center justify-between gap-3 mb-1">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <div className="w-6 h-6 shrink-0 bg-brand-secondary/20 rounded-full flex items-center justify-center text-brand-secondary font-bold text-xs">
                         {index + 1}
                       </div>
-                      <span className="font-medium text-slate-800">{tag}</span>
+                      <span className="font-medium text-slate-800 truncate">{tag}</span>
                     </div>
-                    <div className="text-right">
+                    <div className="text-right shrink-0">
                       <span className="font-bold text-slate-800">${data.amount.toLocaleString('es-AR')}</span>
-                      <span className="text-xs text-slate-400 ml-1">({data.count} gastos)</span>
+                      <span className="block md:inline text-xs text-slate-400 md:ml-1">({data.count} gastos)</span>
                     </div>
                   </div>
                   <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
@@ -234,12 +236,51 @@ export function StatsPage() {
 
       {/* Historial mes a mes */}
       {monthlyHistory.length > 0 && (
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-          <div className="flex items-center gap-3 mb-6">
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:p-6">
+          <div className="flex items-center gap-3 mb-4 md:mb-6">
             <Calendar className="w-6 h-6 text-brand-primary" />
-            <h2 className="text-xl font-bold text-brand-primary">Historial Mes a Mes</h2>
+            <h2 className="text-lg md:text-xl font-bold text-brand-primary">Historial Mes a Mes</h2>
           </div>
-          <div className="overflow-x-auto">
+          {/* Mobile: lista de meses */}
+          <ul className="md:hidden -mx-2">
+            {monthlyHistory.map(row => {
+              const isCurrent = row.key === currentMonthKey;
+              return (
+                <li key={row.key}>
+                  <button
+                    onClick={() => { setFilterMonth(row.key); topRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}
+                    aria-pressed={filterMonth === row.key}
+                    className={cn(
+                      'w-full flex items-center justify-between gap-3 px-2 py-3 rounded-lg text-left border-b border-slate-50 last:border-0',
+                      filterMonth === row.key ? 'bg-brand-primary/5' : 'active:bg-slate-50'
+                    )}
+                  >
+                    <span className="min-w-0">
+                      <span className={cn('block capitalize text-slate-800', isCurrent && 'font-semibold')}>
+                        {format(new Date(row.key + '-01T12:00:00'), 'MMMM yyyy', { locale: es })}
+                        {isCurrent && <span className="ml-2 text-[10px] bg-brand-primary/10 text-brand-primary px-1.5 py-0.5 rounded-full font-semibold normal-case">actual</span>}
+                      </span>
+                      <span className="block text-xs text-slate-500">{row.count} gastos</span>
+                    </span>
+                    <span className="text-right shrink-0">
+                      <span className="block font-bold text-slate-800 tabular-nums">${row.totalARS.toLocaleString('es-AR')}</span>
+                      <span className="flex items-center justify-end gap-2 text-xs">
+                        {row.totalUSD > 0 && <span className="text-slate-500">US$ {row.totalUSD.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>}
+                        {row.delta !== null && (
+                          <span className={cn('flex items-center gap-0.5 font-medium', row.delta > 0 ? 'text-red-500' : row.delta < 0 ? 'text-brand-success' : 'text-slate-400')}>
+                            {row.delta > 0 ? <ArrowUpRight className="w-3 h-3" /> : row.delta < 0 ? <ArrowDownRight className="w-3 h-3" /> : <Minus className="w-3 h-3" />}
+                            {row.delta > 0 ? '+' : ''}{row.delta}%
+                          </span>
+                        )}
+                      </span>
+                    </span>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-slate-100">
@@ -298,7 +339,7 @@ export function StatsPage() {
             </table>
           </div>
           {monthlyHistory.length > 0 && (
-            <p className="text-xs text-slate-400 mt-3">Hacé clic en un mes para filtrar las estadísticas de arriba.</p>
+            <p className="text-xs text-slate-400 mt-3"><span className="md:hidden">Tocá</span><span className="hidden md:inline">Hacé clic en</span> un mes para filtrar las estadísticas de arriba.</p>
           )}
         </div>
       )}
