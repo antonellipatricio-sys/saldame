@@ -6,9 +6,10 @@ import { parseSantanderExcel, type SantanderTransaction } from '@/lib/santanderP
 import { classifyLocal, learnCategory, classifyTags, learnTags } from '@/lib/classifier';
 import { TagSelector } from '@/components/tags/TagSelector';
 import { CategorySelect } from '@/components/upload/CategorySelect';
-import { ResponsableSelect } from '@/components/ResponsableSelect';
+import { QuienPaga } from '@/components/QuienPaga';
+import { resolveCardholder } from '@/lib/resolveCardholder';
 import type { ParsedTransaction } from '@/lib/pdfParser';
-import type { Currency } from '@/types';
+import type { Currency, SharedParticipant } from '@/types';
 import { Upload, FileText, FileSpreadsheet, Loader2, Check, Trash2, RotateCcw, Save } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -31,6 +32,7 @@ interface ReviewRow {
   cardholder?: string;
   cardLast4?: string;
   responsable?: string;
+  sharedWith?: SharedParticipant[];
   isAdditional?: boolean;
   isRefund?: boolean;
 }
@@ -71,7 +73,7 @@ function rowFromExcel(t: SantanderTransaction): ReviewRow {
 }
 
 export function UploadFileSection() {
-  const { addExpense } = useExpenseStore();
+  const { addExpense, responsables } = useExpenseStore();
 
   const [file, setFile] = useState<File | null>(null);
   const [parsing, setParsing] = useState(false);
@@ -142,7 +144,7 @@ export function UploadFileSection() {
       const isExcel = file.name.endsWith('.xlsx') || file.name.endsWith('.xls');
 
       if (isExcel) {
-        const transactions = await parseSantanderExcel(file);
+        const transactions = await parseSantanderExcel(file, responsables);
         if (transactions.length === 0) {
           setError(
             'No se encontraron transacciones. Verificá que el archivo sea el resumen Excel de Santander ' +
@@ -164,7 +166,8 @@ export function UploadFileSection() {
             setError('No se encontraron transacciones en el PDF de Mercado Pago.');
             return;
           }
-          setRows(transactions.map(rowFromPDF));
+          const responsable = cardInfo?.cardholder ? resolveCardholder(cardInfo.cardholder, responsables) : undefined;
+          setRows(transactions.map(t => ({ ...rowFromPDF(t), responsable })));
         } else {
           setDetectedFormat('banco-nacion');
           const transactions = parseTransactions(text);
@@ -190,15 +193,6 @@ export function UploadFileSection() {
     setSaving(true);
     let count = 0;
 
-    const responsableFromCardholder = (name: string): string | undefined => {
-      const n = name.toLowerCase();
-      if (n.includes('patricio')) return 'Patricio';
-      if (n.includes('mariana') || n.includes('maru')) return 'Maru';
-      if (n.includes('brenda') || n.includes('bren')) return 'Bren';
-      if (n.includes('micaela') || n.includes('mica')) return 'Mica';
-      return undefined;
-    };
-
     for (const row of selected) {
       learnCategory(row.description, row.category);
       learnTags(row.description, row.tags);
@@ -214,6 +208,7 @@ export function UploadFileSection() {
           cardLast4: row.cardLast4,
           cardholder: row.cardholder,
           responsable: row.responsable,
+          sharedWith: row.sharedWith,
           source: 'santander',
         });
       } else {
@@ -226,7 +221,8 @@ export function UploadFileSection() {
           tags: row.tags.length > 0 ? row.tags : undefined,
           cardLast4: mpCardInfo?.cardLast4 || undefined,
           cardholder: mpCardInfo?.cardholder || undefined,
-          responsable: mpCardInfo?.cardholder ? responsableFromCardholder(mpCardInfo.cardholder) : undefined,
+          responsable: row.responsable,
+          sharedWith: row.sharedWith,
           source: 'pdf',
         });
       }
@@ -275,7 +271,7 @@ export function UploadFileSection() {
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-          <div className="grid grid-cols-[32px_1fr_130px_110px_120px_80px_90px_140px_36px] gap-2 px-4 py-2 bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase">
+          <div className="grid grid-cols-[32px_1fr_130px_190px_120px_80px_90px_140px_36px] gap-2 px-4 py-2 bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase">
             <div className="flex items-center">
               <input ref={masterCheckboxRef} type="checkbox" checked={allSelected}
                 onChange={e => setRows(prev => prev.map(r => ({ ...r, selected: e.target.checked })))}
@@ -283,7 +279,7 @@ export function UploadFileSection() {
             </div>
             <div>Descripción</div>
             <div>Titular</div>
-            <div>Responsable</div>
+            <div>¿De quién es?</div>
             <div>Monto</div>
             <div>Cuotas</div>
             <div>Fecha</div>
@@ -295,7 +291,7 @@ export function UploadFileSection() {
             {rows.map(row => (
               <div key={row.id}
                 className={cn(
-                  'grid grid-cols-[32px_1fr_130px_110px_120px_80px_90px_140px_36px] gap-2 px-4 py-1.5 items-center text-sm transition-colors',
+                  'grid grid-cols-[32px_1fr_130px_190px_120px_80px_90px_140px_36px] gap-2 px-4 py-1.5 items-center text-sm transition-colors',
                   row.isRefund ? 'bg-red-50' : row.selected ? 'bg-white' : 'bg-slate-50 opacity-50'
                 )}>
                 <input type="checkbox" checked={row.selected}
@@ -325,9 +321,12 @@ export function UploadFileSection() {
                   <span className="text-[10px] text-slate-400">···{row.cardLast4}</span>
                 </div>
 
-                <ResponsableSelect
-                  value={row.responsable ?? ''}
-                  onChange={val => updateRow(row.id, { responsable: val })}
+                <QuienPaga
+                  amount={row.amount}
+                  currency={row.currency}
+                  responsable={row.responsable}
+                  sharedWith={row.sharedWith}
+                  onChange={a => updateRow(row.id, a)}
                 />
 
                 <div className="flex flex-col gap-0.5">
@@ -437,7 +436,7 @@ export function UploadFileSection() {
         )}
 
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-          <div className="grid grid-cols-[32px_1fr_70px_120px_90px_140px_36px] gap-2 px-4 py-2 bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase">
+          <div className="grid grid-cols-[32px_1fr_70px_120px_190px_90px_140px_36px] gap-2 px-4 py-2 bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase">
             <div className="flex items-center">
               <input ref={masterCheckboxRef} type="checkbox" checked={allSelected}
                 onChange={e => setRows(prev => prev.map(r => ({ ...r, selected: e.target.checked })))}
@@ -446,6 +445,7 @@ export function UploadFileSection() {
             <div>Descripción / Etiquetas</div>
             <div>Cuotas</div>
             <div>Monto</div>
+            <div>¿De quién es?</div>
             <div>Fecha</div>
             <div>Categoría</div>
             <div />
@@ -454,7 +454,7 @@ export function UploadFileSection() {
           <div className="divide-y divide-slate-100 max-h-[70vh] overflow-y-auto">
             {rows.map(row => (
               <div key={row.id}
-                className={cn('grid grid-cols-[32px_1fr_70px_120px_90px_140px_36px] gap-2 px-4 py-1.5 items-center text-sm transition-colors',
+                className={cn('grid grid-cols-[32px_1fr_70px_120px_190px_90px_140px_36px] gap-2 px-4 py-1.5 items-center text-sm transition-colors',
                   row.selected ? 'bg-white' : 'bg-slate-50 opacity-50')}>
                 <input type="checkbox" checked={row.selected}
                   onChange={e => updateRow(row.id, { selected: e.target.checked })}
@@ -482,6 +482,14 @@ export function UploadFileSection() {
                   </span>
                   <span className="text-xs text-slate-500">{row.currency}</span>
                 </div>
+
+                <QuienPaga
+                  amount={row.amount}
+                  currency={row.currency}
+                  responsable={row.responsable}
+                  sharedWith={row.sharedWith}
+                  onChange={a => updateRow(row.id, a)}
+                />
 
                 <input type="date" value={row.date}
                   onChange={e => updateRow(row.id, { date: e.target.value })}
