@@ -46,15 +46,15 @@ export function TagsPage() {
 
     return (
         <div className="max-w-2xl mx-auto space-y-8">
-            <div className="space-y-6">
+            <div className="space-y-4 md:space-y-6">
                 <div className="flex items-center justify-between">
-                    <div>
+                    <div className="hidden md:block">
                         <h1 className="text-3xl font-bold text-slate-800">Etiquetas</h1>
                         <p className="text-slate-600 mt-1">Agrupá gastos con etiquetas personalizadas</p>
                     </div>
                     <button
                         onClick={() => { setIsCreatingTag(true); setEditingTagId(null); }}
-                        className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold px-4 py-2 rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all"
+                        className="w-full md:w-auto flex items-center justify-center gap-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold px-4 py-2 min-h-[44px] md:min-h-0 rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all"
                     >
                         <Plus className="w-5 h-5" /> Nueva
                     </button>
