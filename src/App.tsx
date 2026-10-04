@@ -87,7 +87,7 @@ function App() {
     }
 
     return (
-      <div className="min-h-screen bg-brand-bg p-4 md:p-8">
+      <div className="min-h-dvh bg-brand-bg p-4 md:p-8 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))]">
         <div className="max-w-7xl mx-auto">
           {isDashboard ? (
             <SharedExpensesDashboard />
