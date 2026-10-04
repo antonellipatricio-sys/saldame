@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import { exportExpensesToExcel } from '@/lib/exportExcel';
 import { DebtDashboard } from '@/components/DebtDashboard';
 import { QuienPaga } from '@/components/QuienPaga';
+import { useAplicarReglaAGuardados } from '@/hooks/useAplicarRegla';
 
 interface CardSummary {
     cardLast4: string;
@@ -21,6 +22,7 @@ export function AccountPage() {
     const [filterMonth, setFilterMonth] = useState('');
     const [deleteTarget, setDeleteTarget] = useState<{ cardLast4: string | null; label: string; count: number } | null>(null);
     const [deleting, setDeleting] = useState(false);
+    const aplicarRegla = useAplicarReglaAGuardados();
 
     useEffect(() => { fetchExpenses(); }, [fetchExpenses]);
 
@@ -311,6 +313,8 @@ export function AccountPage() {
                                         responsable={exp.responsable}
                                         sharedWith={exp.sharedWith}
                                         onChange={a => updateExpense(exp.id, a)}
+                                        descripcion={exp.description}
+                                        onReglaCreada={aplicarRegla}
                                     />
                                     <div className="text-right shrink-0">
                                         <p className="font-bold text-slate-800">

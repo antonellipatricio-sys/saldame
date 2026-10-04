@@ -8,10 +8,12 @@ import type { Currency, Expense, SharedParticipant } from '@/types';
 import { cn } from '@/lib/utils';
 import { TagSelector } from '@/components/tags/TagSelector';
 import { QuienPaga } from '@/components/QuienPaga';
+import { useAplicarReglaAGuardados } from '@/hooks/useAplicarRegla';
 
 // ── Modal de edición ──────────────────────────────────────────────
 function EditModal({ expense, onClose }: { expense: Expense; onClose: () => void }) {
   const { updateExpense, categories, loading } = useExpenseStore();
+  const aplicarRegla = useAplicarReglaAGuardados();
   const [description, setDescription] = useState(expense.description);
   const [amount, setAmount] = useState(String(expense.amount));
   const [currency, setCurrency] = useState<Currency>(expense.currency);
@@ -95,6 +97,8 @@ function EditModal({ expense, onClose }: { expense: Expense; onClose: () => void
               responsable={responsable}
               sharedWith={sharedWith}
               onChange={a => { setResponsable(a.responsable); setSharedWith(a.sharedWith); }}
+              descripcion={description}
+              onReglaCreada={aplicarRegla}
             />
           </div>
           <div>
@@ -130,6 +134,7 @@ function EditModal({ expense, onClose }: { expense: Expense; onClose: () => void
 // ── Página principal ──────────────────────────────────────────────
 export function ExpensesListPage() {
   const { expenses, fetchExpenses, deleteExpense, updateExpense, categories, tags, loading } = useExpenseStore();
+  const aplicarRegla = useAplicarReglaAGuardados();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState('');
@@ -342,6 +347,8 @@ export function ExpensesListPage() {
                         responsable={expense.responsable}
                         sharedWith={expense.sharedWith}
                         onChange={a => updateExpense(expense.id, a)}
+                        descripcion={expense.description}
+                        onReglaCreada={aplicarRegla}
                       />
                     </div>
                   </div>

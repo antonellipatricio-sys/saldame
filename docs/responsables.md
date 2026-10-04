@@ -89,3 +89,19 @@ un número por persona = sus partes en los gastos del período − lo que ya pag
 - **Cobrado**: registra un pago en la colección `cobros` (`persona`, `periodo` = mes del
   filtro o `'todos'`, `ars`, `usd`, `fecha`). Se puede deshacer desde **Ver**.
   Con filtro de mes solo se descuentan los cobros de ese mes; sin filtro, todos.
+
+## Reglas "Siempre"
+
+Al elegir una persona o ½ en un gasto, el selector pregunta
+**«¿Siempre que venga `merpago*fravega` → Maru?»** (el texto se puede editar).
+
+- **Sí** guarda la regla en la colección `reglasPago` (`patron`, `tipo` = `todo` | `mitad`,
+  `persona`) y la aplica a los gastos ya cargados que coinciden y siguen en "Yo"
+  (no pisa lo asignado a mano). En la revisión de importación, la aplica a las otras filas.
+- **Al importar** (Excel Santander o PDF), cada fila que coincide con una regla llega ya asignada.
+- **Volver a "Yo"** en un gasto con regla ofrece borrarla.
+- Las reglas se ven y se borran al final de la página **Responsables**.
+
+Coincidencia (`claveDescripcion` / `reglaPara` en `lib/quienPaga.ts`): la descripción se pasa a
+minúsculas sin marcas de cuota (`C.04/06`, `3 de 12`, `cuota 02/03`); la regla aplica si su patrón
+está contenido en esa clave. Si varias aplican, gana el patrón más largo.

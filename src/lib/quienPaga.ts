@@ -108,3 +108,46 @@ export function personasAsignables(responsables: Responsable[]): Responsable[] {
   const owner = ownerName(responsables);
   return responsables.filter(r => r.name !== owner && canonicalName(r.name, responsables) === r.name);
 }
+
+// ── Reglas "Siempre" ─────────────────────────────────────────────────────────
+
+/**
+ * Clave estable de una descripción: sin cuotas ni números de cuota, para que
+ * "MERPAGO*FRAVEGA C.04/06" y "MERPAGO*FRAVEGA C.05/06" den lo mismo.
+ */
+export function claveDescripcion(description: string): string {
+  return description
+    .toLowerCase()
+    .replace(/\bc\.\s?\d{1,2}\/\d{1,2}\b/g, ' ')      // C.04/06
+    .replace(/\bcuota\s*\d{1,2}\s*\/\s*\d{1,2}\b/g, ' ') // cuota 4/6
+    .replace(/\b\d{1,2}\s*de\s*\d{1,2}\b/g, ' ')       // 4 de 6
+    .replace(/\b\d{1,2}\/\d{1,2}\b/g, ' ')             // 04/06
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+interface ReglaLike {
+  patron: string;
+  tipo: 'todo' | 'mitad';
+  persona: string;
+}
+
+/** La regla que aplica a una descripción (el patrón más largo gana). */
+export function reglaPara<R extends ReglaLike>(description: string, reglas: R[]): R | undefined {
+  const clave = claveDescripcion(description);
+  if (!clave) return undefined;
+  return reglas
+    .filter(r => r.patron && clave.includes(r.patron))
+    .sort((a, b) => b.patron.length - a.patron.length)[0];
+}
+
+/** Asignación que corresponde a un gasto según las reglas, o undefined si ninguna aplica. */
+export function asignacionPorRegla(
+  e: { description: string; amount: number },
+  reglas: ReglaLike[],
+  responsables: Responsable[],
+): Asignacion | undefined {
+  const r = reglaPara(e.description, reglas);
+  if (!r) return undefined;
+  return asignar({ tipo: r.tipo, persona: r.persona }, e.amount, responsables);
+}

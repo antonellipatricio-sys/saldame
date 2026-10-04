@@ -8,6 +8,8 @@ import { TagSelector } from '@/components/tags/TagSelector';
 import { CategorySelect } from '@/components/upload/CategorySelect';
 import { QuienPaga } from '@/components/QuienPaga';
 import { resolveCardholder } from '@/lib/resolveCardholder';
+import { asignacionPorRegla, modoDe } from '@/lib/quienPaga';
+import { useReglasStore, type ReglaPago } from '@/store/useReglasStore';
 import type { ParsedTransaction } from '@/lib/pdfParser';
 import type { Currency, SharedParticipant } from '@/types';
 import { Upload, FileText, FileSpreadsheet, Loader2, Check, Trash2, RotateCcw, Save } from 'lucide-react';
@@ -74,6 +76,33 @@ function rowFromExcel(t: SantanderTransaction): ReviewRow {
 
 export function UploadFileSection() {
   const { addExpense, responsables } = useExpenseStore();
+  const { reglas } = useReglasStore();
+  const [porRegla, setPorRegla] = useState(0);
+
+  /** Aplica las reglas "Siempre" a las filas recién leídas. */
+  const conReglas = (nuevas: ReviewRow[]): ReviewRow[] => {
+    let n = 0;
+    const out = nuevas.map(r => {
+      const a = asignacionPorRegla(r, reglas, responsables);
+      if (!a) return r;
+      n++;
+      return { ...r, ...a };
+    });
+    setPorRegla(n);
+    return out;
+  };
+
+  /** Regla creada durante la revisión: aplicarla a las otras filas que siguen en "Yo". */
+  const aplicarReglaAFilas = (regla: ReglaPago) => {
+    const cambios = new Map<string, ReturnType<typeof asignacionPorRegla>>();
+    for (const r of rows) {
+      if (modoDe(r, responsables).tipo !== 'yo') continue;
+      const a = asignacionPorRegla(r, [regla], responsables);
+      if (a) cambios.set(r.id, a);
+    }
+    setRows(prev => prev.map(r => (cambios.has(r.id) ? { ...r, ...cambios.get(r.id) } : r)));
+    return cambios.size;
+  };
 
   const [file, setFile] = useState<File | null>(null);
   const [parsing, setParsing] = useState(false);
@@ -153,7 +182,7 @@ export function UploadFileSection() {
           return;
         }
         setDetectedFormat('santander');
-        setRows(transactions.map(rowFromExcel));
+        setRows(conReglas(transactions.map(rowFromExcel)));
       } else {
         const text = await extractTextFromPDF(file);
         if (isMercadoPago(text)) {
@@ -167,7 +196,7 @@ export function UploadFileSection() {
             return;
           }
           const responsable = cardInfo?.cardholder ? resolveCardholder(cardInfo.cardholder, responsables) : undefined;
-          setRows(transactions.map(t => ({ ...rowFromPDF(t), responsable })));
+          setRows(conReglas(transactions.map(t => ({ ...rowFromPDF(t), responsable }))));
         } else {
           setDetectedFormat('banco-nacion');
           const transactions = parseTransactions(text);
@@ -176,7 +205,7 @@ export function UploadFileSection() {
             setError('No se encontraron transacciones. Revisá el texto extraído abajo.');
             return;
           }
-          setRows(transactions.map(rowFromPDF));
+          setRows(conReglas(transactions.map(rowFromPDF)));
         }
       }
     } catch (err) {
@@ -254,6 +283,7 @@ export function UploadFileSection() {
             </div>
             <p className="text-slate-500 text-sm mt-1">
               Se encontraron <strong>{rows.length}</strong> transacciones · <strong>{selectedCount}</strong> seleccionadas
+              {porRegla > 0 && <> · <strong>{porRegla}</strong> asignadas por reglas</>}
             </p>
           </div>
           <div className="flex gap-3">
@@ -327,6 +357,8 @@ export function UploadFileSection() {
                   responsable={row.responsable}
                   sharedWith={row.sharedWith}
                   onChange={a => updateRow(row.id, a)}
+                  descripcion={row.description}
+                  onReglaCreada={aplicarReglaAFilas}
                 />
 
                 <div className="flex flex-col gap-0.5">
@@ -389,6 +421,7 @@ export function UploadFileSection() {
             </div>
             <p className="text-slate-500 text-sm mt-1">
               Se encontraron <strong>{rows.length}</strong> transacciones · <strong>{selectedCount}</strong> seleccionadas
+              {porRegla > 0 && <> · <strong>{porRegla}</strong> asignadas por reglas</>}
             </p>
           </div>
           <div className="flex gap-3">
@@ -489,6 +522,8 @@ export function UploadFileSection() {
                   responsable={row.responsable}
                   sharedWith={row.sharedWith}
                   onChange={a => updateRow(row.id, a)}
+                  descripcion={row.description}
+                  onReglaCreada={aplicarReglaAFilas}
                 />
 
                 <input type="date" value={row.date}

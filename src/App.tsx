@@ -6,6 +6,7 @@ import {
   type User,
 } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
+import { useReglasStore } from '@/store/useReglasStore';
 import { useExpenseStore } from '@/store/useExpenseStore';
 import { ExpenseLayout } from './components/layout/ExpenseLayout';
 import { DashboardPage } from './pages/DashboardPage';
@@ -51,6 +52,7 @@ function App() {
         fetchCategories();
         fetchTags();
         fetchResponsables();
+        useReglasStore.getState().fetchReglas();
       }
     });
     return unsubscribe;
