@@ -295,7 +295,7 @@ Copiar portapapeles → Pegar en WhatsApp
 
 ## Seguridad
 
-**IMPORTANTE**: Esta es la única ruta pública de la app sin PIN requiero.
+**IMPORTANTE**: Esta es la única ruta pública de la app sin login.
 
 **Acceso**:
 - URLs `/gastos/*` son públicas

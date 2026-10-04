@@ -33,7 +33,7 @@ Los layouts determinan la estructura externa fundamental y la navegación a trav
 
 ## 3. Coordinación Principal (Enrutador Simple)
 - **Archivo Fuente:** [`src/App.tsx`](../src/App.tsx)
-- **Propósito:** Punto de anclaje principal que determina el layout activo. Gestiona estado de autenticación (PIN) y el enrutamiento entre la app privada y la ruta pública `/gastos`.
+- **Propósito:** Punto de anclaje principal que determina el layout activo. Gestiona estado de autenticación (login email + contraseña de Firebase) y el enrutamiento entre la app privada y la ruta pública `/gastos`.
 - **Pantalla de Login:** Reemplaza el ícono genérico de candado por el logo del pato (`w-24`), con título en `brand-primary` y botón "Ingresar" en `brand-success`.
 
 ## 4. Identidad Visual (Design Tokens)

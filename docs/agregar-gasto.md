@@ -48,15 +48,16 @@ Componente unificado en `src/components/upload/UploadFileSection.tsx` que acepta
 
 | Extensión | Parser | Formato detectado |
 |-----------|--------|-------------------|
-| `.pdf` | `pdfParser.ts` / `mercadoPagoParser.ts` | Banco Nación/VISA o Mercado Pago (auto) |
+| `.pdf` | `santanderPdfParser.ts` / `mercadoPagoParser.ts` / `pdfParser.ts` | Santander, Mercado Pago o Banco Nación/VISA (auto, en ese orden) |
 | `.xlsx` / `.xls` | `santanderParser.ts` | Santander (columnas fijas) |
 
 ### Flujo de importación
 1. Usuario arrastra o selecciona un archivo
 2. Presiona "Procesar" → el componente detecta el formato por extensión
 3. Se muestra tabla de revisión adaptada al formato:
-   - **PDF**: columnas Descripción/Tags, Cuotas, Monto, Fecha, Categoría
-   - **Excel**: columnas Descripción/Tags, Titular, Responsable, Monto, Cuotas, Fecha, Categoría
+   - **PDF**: columnas Descripción/Tags, Cuotas, Monto, ¿De quién es?, Fecha, Categoría
+   - **Excel / PDF Santander**: columnas Descripción/Tags, Titular, ¿De quién es?, Monto, Cuotas, Fecha, Categoría
+   - Arriba: "Resumen de [mes]" (mes en que se paga) y cuántas filas asignaron las reglas
 4. Usuario revisa, edita y guarda las transacciones seleccionadas
 
 ### Auto-asignación de Responsable

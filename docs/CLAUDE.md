@@ -26,7 +26,7 @@ Funcionalidades:
 Herramienta para dividir gastos en grupo **sin login**.
 
 - **URL**: `/gastos` y `/gastos/[id]`
-- **Acceso**: público (sin PIN)
+- **Acceso**: público (sin login)
 - **Equivalente a**: Splitwise sin autenticación
 - **Docs**: [`gastos-compartidos-indice.md`](./gastos-compartidos-indice.md)
 
@@ -72,10 +72,13 @@ src/
 │   ├── pdfParser.ts           # Parser PDFs Banco Nación/VISA/MC
 │   ├── mercadoPagoParser.ts   # Parser PDFs Mercado Pago
 │   ├── santanderParser.ts     # Parser Excel Santander (.xlsx)
+│   ├── santanderPdfParser.ts  # Parser PDF resumen Visa Santander
+│   ├── quienPaga.ts           # ¿De quién es cada gasto? reparto, alias, reglas
+│   ├── resumen.ts             # Mes de resumen (vencimiento) de cada gasto
 │   └── pdfGenerator.ts        # Generador PDF (Gastos Compartidos)
 └── pages/
     ├── DashboardPage.tsx       # Inicio / resumen del mes
-    ├── AddExpensePage.tsx      # Agregar gasto manual (solo formulario completo; incluye ResponsableSelect)
+    ├── AddExpensePage.tsx      # Agregar gasto manual + importar archivo (incluye QuienPaga)
     ├── ExpensesListPage.tsx    # Mis gastos (historial + filtros)
     ├── UploadPDFPage.tsx       # Importar PDF de TC
     ├── UploadSantanderPage.tsx # Importar Excel Santander
@@ -102,8 +105,11 @@ src/
   tags?: string[]            // Etiquetas opcionales
   notes?: string
   cardLast4?: string         // Últimos 4 dígitos de tarjeta
-  cardholder?: string        // Titular de tarjeta
-  source?: "manual" | "pdf" | "excel" | "shared"
+  cardholder?: string        // Titular de tarjeta (solo informativo)
+  responsable?: string       // De quién es el gasto; vacío = dueño ("Yo"). Ver docs/quien-paga.md
+  sharedWith?: { responsable: string; amount: number }[] // partes de otras personas
+  resumen?: string           // 'yyyy-MM' del vencimiento del resumen en que se cobra
+  source?: "manual" | "pdf" | "santander"
   createdAt: Date
   updatedAt: Date
 }
@@ -117,6 +123,9 @@ src/
 |---|---|
 | Gastos | Firestore — colección `expenses` |
 | Eventos compartidos | Firestore — colección `sharedGroups` |
+| Responsables (con alias) | Firestore — colección `responsables` |
+| Cobros ("X me pagó") | Firestore — colección `cobros` |
+| Reglas "Siempre" | Firestore — colección `reglasPago` |
 | Categorías y Etiquetas | `localStorage` (Zustand persist — `expense-storage`) |
 | Aprendizaje del clasificador | `localStorage` (`expense-learned-categories`) |
 | Aprendizaje de etiquetas | `localStorage` (`expense-learned-tags`) |
