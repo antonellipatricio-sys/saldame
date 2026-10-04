@@ -75,7 +75,7 @@ export function CategorySelect({ value, onChange, className }: CategorySelectPro
       <button
         type="button"
         onClick={() => { setOpen(o => !o); setCreating(false); }}
-        className="flex items-center gap-1 px-2 py-1 rounded-lg border border-transparent hover:border-slate-300 focus:outline-none text-xs bg-transparent w-full text-left"
+        className="flex items-center gap-1 px-2 py-1.5 md:py-1 rounded-lg border border-slate-200 md:border-transparent hover:border-slate-300 focus:outline-none text-xs bg-transparent w-full text-left"
       >
         <span className="shrink-0">{selected?.icon ?? '❓'}</span>
         <span className="truncate flex-1">{value || 'Sin categoría'}</span>
@@ -84,7 +84,7 @@ export function CategorySelect({ value, onChange, className }: CategorySelectPro
 
       {/* Dropdown */}
       {open && (
-        <div className="absolute top-full left-0 mt-1 z-50 bg-white border border-slate-200 rounded-xl shadow-lg min-w-[180px] max-h-72 overflow-y-auto">
+        <div className="absolute top-full right-0 md:right-auto md:left-0 mt-1 z-50 bg-white border border-slate-200 rounded-xl shadow-lg min-w-[180px] max-h-72 overflow-y-auto">
           {/* Lista de categorías existentes */}
           {categories.map(cat => (
             <button

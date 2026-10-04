@@ -293,11 +293,11 @@ export function UploadFileSection() {
   // ── Vista de revisión — Excel Santander ─────────────────────────────────────
   if (rows.length > 0 && detectedFormat === 'santander') {
     return (
-      <div className="space-y-5">
+      <div className="space-y-4 md:space-y-5">
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div>
             <div className="flex items-center gap-3">
-              <h2 className="text-2xl font-bold text-slate-800">Revisar transacciones — Santander</h2>
+              <h2 className="text-xl md:text-2xl font-bold text-slate-800">Revisar transacciones<span className="hidden md:inline"> — Santander</span></h2>
               <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700">
                 {santanderEsPdf ? '📄 PDF' : '📊 Excel'}
               </span>
@@ -306,14 +306,14 @@ export function UploadFileSection() {
               Se encontraron <strong>{rows.length}</strong> transacciones · <strong>{selectedCount}</strong> seleccionadas
               {porRegla > 0 && <> · <strong>{porRegla}</strong> asignadas por reglas</>}
             </p>
-            <label className="mt-2 flex items-center gap-2 text-sm text-slate-600">
+            <label className="mt-2 flex flex-wrap items-center gap-2 text-sm text-slate-600">
               Resumen de
               <input type="month" value={resumen} onChange={e => setResumen(e.target.value)}
-                className="px-2 py-1 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                className="px-2 py-1 min-h-[40px] md:min-h-0 rounded-lg border border-slate-300 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500" />
               <span className="text-xs text-slate-400">(mes en que se paga; las cuotas quedan en este mes)</span>
             </label>
           </div>
-          <div className="flex gap-3">
+          <div className="hidden md:flex gap-3">
             <button onClick={reset}
               className="flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-300 text-slate-600 hover:bg-slate-50 font-medium">
               <RotateCcw className="w-4 h-4" /> Subir otro
@@ -328,7 +328,7 @@ export function UploadFileSection() {
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-          <div className="grid grid-cols-[32px_1fr_130px_190px_120px_80px_90px_140px_36px] gap-2 px-4 py-2 bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase">
+          <div className="hidden md:grid grid-cols-[32px_1fr_130px_190px_120px_80px_90px_140px_36px] gap-2 px-4 py-2 bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase">
             <div className="flex items-center">
               <input ref={masterCheckboxRef} type="checkbox" checked={allSelected}
                 onChange={e => setRows(prev => prev.map(r => ({ ...r, selected: e.target.checked })))}
@@ -344,22 +344,23 @@ export function UploadFileSection() {
             <div />
           </div>
 
-          <div className="divide-y divide-slate-100 max-h-[70vh] overflow-y-auto">
+          <div className="divide-y divide-slate-100 md:max-h-[70vh] md:overflow-y-auto">
             {rows.map(row => (
               <div key={row.id}
                 className={cn(
-                  'grid grid-cols-[32px_1fr_130px_190px_120px_80px_90px_140px_36px] gap-2 px-4 py-1.5 items-center text-sm transition-colors',
+                  'grid grid-cols-[28px_minmax(0,1.15fr)_minmax(0,1fr)_40px] gap-x-2 gap-y-2 px-3 py-3 md:gap-2 md:px-4 md:py-1.5 md:grid-cols-[32px_1fr_130px_190px_120px_80px_90px_140px_36px] items-center text-sm transition-colors',
                   row.isRefund ? 'bg-red-50' : row.selected ? 'bg-white' : 'bg-slate-50 opacity-50'
                 )}>
                 <input type="checkbox" checked={row.selected}
                   onChange={e => updateRow(row.id, { selected: e.target.checked })}
-                  className="w-4 h-4 rounded accent-blue-600" />
+                  aria-label="Incluir esta transacción"
+                  className="max-md:order-1 max-md:self-start max-md:mt-2 w-5 h-5 md:w-4 md:h-4 rounded accent-blue-600" />
 
-                <div className="flex flex-col gap-0.5">
+                <div className="max-md:order-2 max-md:col-span-2 min-w-0 flex flex-col gap-0.5">
                   <input value={row.description ?? ''}
                     onChange={e => updateRow(row.id, { description: e.target.value })}
                     className={cn(
-                      'w-full px-2 py-0.5 rounded-lg border border-transparent hover:border-slate-300 focus:border-blue-400 focus:outline-none text-sm bg-transparent',
+                      'w-full px-2 py-1.5 md:py-0.5 rounded-lg border border-slate-200 md:border-transparent hover:border-slate-300 focus:border-blue-400 focus:outline-none text-sm bg-transparent',
                       row.isRefund && 'text-red-600 font-medium'
                     )} />
                   {row.comprobante && (
@@ -368,7 +369,7 @@ export function UploadFileSection() {
                   <TagSelector selected={row.tags} onChange={tags => updateRow(row.id, { tags })} />
                 </div>
 
-                <div className="flex flex-col gap-0.5">
+                <div className="max-md:order-5 max-md:col-start-2 max-md:col-span-3 flex max-md:flex-row max-md:items-center max-md:gap-2 md:flex-col gap-0.5 min-w-0">
                   <span className="text-xs text-slate-600 truncate" title={row.cardholder}>
                     {row.cardholder?.split(' ').slice(0, 2).join(' ')}
                   </span>
@@ -379,6 +380,7 @@ export function UploadFileSection() {
                 </div>
 
                 <QuienPaga
+                  className="max-md:order-8 max-md:col-start-2 max-md:col-span-3"
                   amount={row.amount}
                   currency={row.currency}
                   responsable={row.responsable}
@@ -388,29 +390,32 @@ export function UploadFileSection() {
                   onReglaCreada={aplicarReglaAFilas}
                 />
 
-                <div className="flex flex-col gap-0.5">
+                <div className="max-md:order-4 max-md:col-start-2 max-md:col-span-3 flex max-md:flex-row max-md:items-center max-md:gap-2 md:flex-col gap-0.5">
                   <div className="flex gap-1 items-center">
                     {row.isRefund && <span className="text-red-500 font-bold text-xs">-</span>}
                     <span className={cn('text-sm font-medium tabular-nums', row.isRefund ? 'text-red-600' : 'text-slate-800')}>
                       {row.amount.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </span>
                     <span className="text-xs text-slate-500">{row.currency}</span>
+                    {row.cuotas && <span className="md:hidden text-xs text-slate-400 ml-1">cuota {row.cuotas}</span>}
                   </div>
                   {row.isRefund && (
                     <span className="text-[10px] bg-red-100 text-red-600 rounded px-1 w-fit">Devolución</span>
                   )}
                 </div>
 
-                <span className="text-xs text-slate-400 text-center">{row.cuotas || '—'}</span>
+                <span className="hidden md:block text-xs text-slate-400 text-center">{row.cuotas || '—'}</span>
 
                 <input type="date" value={row.date}
                   onChange={e => updateRow(row.id, { date: e.target.value })}
-                  className="px-2 py-1 rounded-lg border border-transparent hover:border-slate-300 focus:border-blue-400 focus:outline-none text-xs bg-transparent" />
+                  aria-label="Fecha"
+                  className="max-md:order-6 max-md:col-start-2 min-w-0 w-full px-1.5 md:px-2 py-1.5 md:py-1 rounded-lg border border-slate-200 md:border-transparent hover:border-slate-300 focus:border-blue-400 focus:outline-none text-xs bg-transparent" />
 
-                <CategorySelect value={row.category} onChange={category => updateRow(row.id, { category })} />
+                <CategorySelect className="max-md:order-7 max-md:col-span-2 min-w-0" value={row.category} onChange={category => updateRow(row.id, { category })} />
 
                 <button onClick={() => setRows(prev => prev.filter(r => r.id !== row.id))}
-                  className="p-1 text-slate-400 hover:text-red-500 rounded transition-colors">
+                  aria-label="Quitar de la lista"
+                  className="max-md:order-3 max-md:self-start max-md:justify-self-end w-10 h-10 md:w-auto md:h-auto md:p-1 flex items-center justify-center text-slate-400 hover:text-red-500 rounded transition-colors">
                   <Trash2 className="w-4 h-4" />
                 </button>
               </div>
@@ -418,12 +423,26 @@ export function UploadFileSection() {
           </div>
         </div>
 
-        <div className="flex gap-3 text-sm">
+        <div className="flex items-center gap-3 text-sm">
           <button onClick={() => setRows(prev => prev.map(r => ({ ...r, selected: true })))}
-            className="text-blue-600 hover:underline">Seleccionar todas</button>
+            className="min-h-[44px] md:min-h-0 text-blue-600 hover:underline">Seleccionar todas</button>
           <span className="text-slate-300">|</span>
           <button onClick={() => setRows(prev => prev.map(r => ({ ...r, selected: false })))}
-            className="text-slate-500 hover:underline">Deseleccionar todas</button>
+            className="min-h-[44px] md:min-h-0 text-slate-500 hover:underline">Deseleccionar todas</button>
+        </div>
+
+        {/* Mobile: acciones fijas al pie mientras se revisa la lista */}
+        <div className="md:hidden sticky bottom-0 -mx-4 -mb-4 px-4 py-3 bg-white/95 backdrop-blur border-t border-slate-200 grid grid-cols-[auto_1fr] gap-3">
+          <button onClick={reset}
+            className="flex items-center justify-center gap-2 px-3 min-h-[44px] rounded-xl border border-slate-300 text-slate-600 font-medium whitespace-nowrap">
+            <RotateCcw className="w-4 h-4" /> Subir otro
+          </button>
+          <button onClick={handleSaveAll} disabled={saving || selectedCount === 0}
+            className="flex items-center justify-center gap-2 px-3 min-h-[44px] rounded-xl bg-blue-600 text-white font-semibold whitespace-nowrap disabled:opacity-40">
+            {saving
+              ? <><Loader2 className="w-4 h-4 animate-spin" /> Guardando...</>
+              : <><Save className="w-4 h-4" /> Guardar {selectedCount} gastos</>}
+          </button>
         </div>
       </div>
     );
@@ -432,11 +451,11 @@ export function UploadFileSection() {
   // ── Vista de revisión — PDF (Banco Nación / Mercado Pago) ───────────────────
   if (rows.length > 0) {
     return (
-      <div className="space-y-5">
+      <div className="space-y-4 md:space-y-5">
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div>
             <div className="flex items-center gap-3">
-              <h2 className="text-2xl font-bold text-slate-800">Revisar transacciones</h2>
+              <h2 className="text-xl md:text-2xl font-bold text-slate-800">Revisar transacciones</h2>
               <span className={cn(
                 'text-xs font-semibold px-2.5 py-1 rounded-full',
                 detectedFormat === 'mercadopago'
@@ -450,14 +469,14 @@ export function UploadFileSection() {
               Se encontraron <strong>{rows.length}</strong> transacciones · <strong>{selectedCount}</strong> seleccionadas
               {porRegla > 0 && <> · <strong>{porRegla}</strong> asignadas por reglas</>}
             </p>
-            <label className="mt-2 flex items-center gap-2 text-sm text-slate-600">
+            <label className="mt-2 flex flex-wrap items-center gap-2 text-sm text-slate-600">
               Resumen de
               <input type="month" value={resumen} onChange={e => setResumen(e.target.value)}
-                className="px-2 py-1 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                className="px-2 py-1 min-h-[40px] md:min-h-0 rounded-lg border border-slate-300 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500" />
               <span className="text-xs text-slate-400">(mes en que se paga; las cuotas quedan en este mes)</span>
             </label>
           </div>
-          <div className="flex gap-3">
+          <div className="hidden md:flex gap-3">
             <button onClick={reset}
               className="flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-300 text-slate-600 hover:bg-slate-50 font-medium">
               <RotateCcw className="w-4 h-4" /> Subir otro
@@ -481,13 +500,13 @@ export function UploadFileSection() {
                 <label className="text-xs text-sky-600 font-medium">Titular</label>
                 <input value={mpCardInfo.cardholder}
                   onChange={e => setMpCardInfo({ ...mpCardInfo, cardholder: e.target.value })}
-                  className="block w-full px-2 py-1 rounded-lg border border-sky-200 focus:outline-none focus:ring-1 focus:ring-sky-400 text-sm bg-white" />
+                  className="block w-full px-2 py-1.5 md:py-1 rounded-lg border border-sky-200 focus:outline-none focus:ring-1 focus:ring-sky-400 text-sm bg-white" />
               </div>
               <div>
                 <label className="text-xs text-sky-600 font-medium">ID Tarjeta</label>
                 <input value={mpCardInfo.cardLast4}
                   onChange={e => setMpCardInfo({ ...mpCardInfo, cardLast4: e.target.value })}
-                  className="block w-24 px-2 py-1 rounded-lg border border-sky-200 focus:outline-none focus:ring-1 focus:ring-sky-400 text-sm bg-white font-mono"
+                  className="block w-24 px-2 py-1.5 md:py-1 rounded-lg border border-sky-200 focus:outline-none focus:ring-1 focus:ring-sky-400 text-sm bg-white font-mono"
                   maxLength={4} />
               </div>
               <div>
@@ -502,7 +521,7 @@ export function UploadFileSection() {
         )}
 
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-          <div className="grid grid-cols-[32px_1fr_70px_120px_190px_90px_140px_36px] gap-2 px-4 py-2 bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase">
+          <div className="hidden md:grid grid-cols-[32px_1fr_70px_120px_190px_90px_140px_36px] gap-2 px-4 py-2 bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase">
             <div className="flex items-center">
               <input ref={masterCheckboxRef} type="checkbox" checked={allSelected}
                 onChange={e => setRows(prev => prev.map(r => ({ ...r, selected: e.target.checked })))}
@@ -517,19 +536,20 @@ export function UploadFileSection() {
             <div />
           </div>
 
-          <div className="divide-y divide-slate-100 max-h-[70vh] overflow-y-auto">
+          <div className="divide-y divide-slate-100 md:max-h-[70vh] md:overflow-y-auto">
             {rows.map(row => (
               <div key={row.id}
-                className={cn('grid grid-cols-[32px_1fr_70px_120px_190px_90px_140px_36px] gap-2 px-4 py-1.5 items-center text-sm transition-colors',
+                className={cn('grid grid-cols-[28px_minmax(0,1.15fr)_minmax(0,1fr)_40px] gap-x-2 gap-y-2 px-3 py-3 md:gap-2 md:px-4 md:py-1.5 md:grid-cols-[32px_1fr_70px_120px_190px_90px_140px_36px] items-center text-sm transition-colors',
                   row.selected ? 'bg-white' : 'bg-slate-50 opacity-50')}>
                 <input type="checkbox" checked={row.selected}
                   onChange={e => updateRow(row.id, { selected: e.target.checked })}
-                  className="w-4 h-4 rounded accent-blue-600" />
+                  aria-label="Incluir esta transacción"
+                  className="max-md:order-1 max-md:self-start max-md:mt-2 w-5 h-5 md:w-4 md:h-4 rounded accent-blue-600" />
 
-                <div className="flex flex-col gap-1">
+                <div className="max-md:order-2 max-md:col-span-2 min-w-0 flex flex-col gap-1">
                   <input value={row.description}
                     onChange={e => updateRow(row.id, { description: e.target.value })}
-                    className="w-full px-2 py-1 rounded-lg border border-transparent hover:border-slate-300 focus:border-blue-400 focus:outline-none text-sm bg-transparent" />
+                    className="w-full px-2 py-1.5 md:py-1 rounded-lg border border-slate-200 md:border-transparent hover:border-slate-300 focus:border-blue-400 focus:outline-none text-sm bg-transparent" />
                   {row.operacion && (
                     <div className="px-2">
                       <span className="text-[10px] text-slate-400 leading-none font-mono">#{row.operacion}</span>
@@ -538,18 +558,20 @@ export function UploadFileSection() {
                   <TagSelector selected={row.tags} onChange={tags => updateRow(row.id, { tags })} />
                 </div>
 
-                <div className="text-xs text-slate-500 text-center">
+                <div className="hidden md:block text-xs text-slate-500 text-center">
                   {row.cuotas ?? <span className="text-slate-300">—</span>}
                 </div>
 
-                <div className="flex items-center gap-1">
+                <div className="max-md:order-4 max-md:col-start-2 max-md:col-span-3 flex items-center gap-1">
                   <span className="text-sm font-medium tabular-nums text-slate-800">
                     {row.amount.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
                   <span className="text-xs text-slate-500">{row.currency}</span>
+                  {row.cuotas && <span className="md:hidden text-xs text-slate-400 ml-1">cuota {row.cuotas}</span>}
                 </div>
 
                 <QuienPaga
+                  className="max-md:order-8 max-md:col-start-2 max-md:col-span-3"
                   amount={row.amount}
                   currency={row.currency}
                   responsable={row.responsable}
@@ -561,12 +583,14 @@ export function UploadFileSection() {
 
                 <input type="date" value={row.date}
                   onChange={e => updateRow(row.id, { date: e.target.value })}
-                  className="px-2 py-1 rounded-lg border border-transparent hover:border-slate-300 focus:border-blue-400 focus:outline-none text-xs bg-transparent" />
+                  aria-label="Fecha"
+                  className="max-md:order-6 max-md:col-start-2 min-w-0 w-full px-1.5 md:px-2 py-1.5 md:py-1 rounded-lg border border-slate-200 md:border-transparent hover:border-slate-300 focus:border-blue-400 focus:outline-none text-xs bg-transparent" />
 
-                <CategorySelect value={row.category} onChange={category => updateRow(row.id, { category })} />
+                <CategorySelect className="max-md:order-7 max-md:col-span-2 min-w-0" value={row.category} onChange={category => updateRow(row.id, { category })} />
 
                 <button onClick={() => setRows(prev => prev.filter(r => r.id !== row.id))}
-                  className="p-1 text-slate-400 hover:text-red-500 rounded transition-colors">
+                  aria-label="Quitar de la lista"
+                  className="max-md:order-3 max-md:self-start max-md:justify-self-end w-10 h-10 md:w-auto md:h-auto md:p-1 flex items-center justify-center text-slate-400 hover:text-red-500 rounded transition-colors">
                   <Trash2 className="w-4 h-4" />
                 </button>
               </div>
@@ -574,12 +598,26 @@ export function UploadFileSection() {
           </div>
         </div>
 
-        <div className="flex gap-3 text-sm">
+        <div className="flex items-center gap-3 text-sm">
           <button onClick={() => setRows(prev => prev.map(r => ({ ...r, selected: true })))}
-            className="text-blue-600 hover:underline">Seleccionar todas</button>
+            className="min-h-[44px] md:min-h-0 text-blue-600 hover:underline">Seleccionar todas</button>
           <span className="text-slate-300">|</span>
           <button onClick={() => setRows(prev => prev.map(r => ({ ...r, selected: false })))}
-            className="text-slate-500 hover:underline">Deseleccionar todas</button>
+            className="min-h-[44px] md:min-h-0 text-slate-500 hover:underline">Deseleccionar todas</button>
+        </div>
+
+        {/* Mobile: acciones fijas al pie mientras se revisa la lista */}
+        <div className="md:hidden sticky bottom-0 -mx-4 -mb-4 px-4 py-3 bg-white/95 backdrop-blur border-t border-slate-200 grid grid-cols-[auto_1fr] gap-3">
+          <button onClick={reset}
+            className="flex items-center justify-center gap-2 px-3 min-h-[44px] rounded-xl border border-slate-300 text-slate-600 font-medium whitespace-nowrap">
+            <RotateCcw className="w-4 h-4" /> Subir otro
+          </button>
+          <button onClick={handleSaveAll} disabled={saving || selectedCount === 0}
+            className="flex items-center justify-center gap-2 px-3 min-h-[44px] rounded-xl bg-blue-600 text-white font-semibold whitespace-nowrap disabled:opacity-40">
+            {saving
+              ? <><Loader2 className="w-4 h-4 animate-spin" /> Guardando...</>
+              : <><Save className="w-4 h-4" /> Guardar {selectedCount} gastos</>}
+          </button>
         </div>
       </div>
     );
@@ -597,12 +635,12 @@ export function UploadFileSection() {
         </div>
       )}
 
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-5">
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 md:p-6 space-y-4 md:space-y-5">
         {/* Drop zone */}
         <div
           onDrop={handleDrop}
           onDragOver={e => e.preventDefault()}
-          className="border-2 border-dashed border-slate-300 rounded-xl p-10 text-center hover:border-blue-400 transition-colors cursor-pointer"
+          className="border-2 border-dashed border-slate-300 rounded-xl p-6 md:p-10 text-center hover:border-blue-400 transition-colors cursor-pointer"
           onClick={() => inputRef.current?.click()}
         >
           <input
@@ -615,7 +653,7 @@ export function UploadFileSection() {
           {!file ? (
             <>
               <Upload className="w-12 h-12 text-slate-400 mx-auto mb-3" />
-              <p className="font-medium text-slate-700">Click o arrastrá tu archivo aquí</p>
+              <p className="font-medium text-slate-700"><span className="md:hidden">Tocá para elegir el archivo</span><span className="hidden md:inline">Click o arrastrá tu archivo aquí</span></p>
               <p className="text-sm text-slate-400 mt-1">
                 Resúmenes de tarjeta <strong>PDF</strong> (Banco Nación, VISA, Mercado Pago) o <strong>Excel</strong> (Santander .xlsx)
               </p>
@@ -624,13 +662,13 @@ export function UploadFileSection() {
             <>
               <FileSpreadsheet className="w-12 h-12 text-green-500 mx-auto mb-3" />
               <p className="font-semibold text-slate-800">{file.name}</p>
-              <p className="text-sm text-slate-400 mt-1">{(file.size / 1024 / 1024).toFixed(2)} MB · Click para cambiar</p>
+              <p className="text-sm text-slate-400 mt-1">{(file.size / 1024 / 1024).toFixed(2)} MB · <span className="md:hidden">Tocá</span><span className="hidden md:inline">Click</span> para cambiar</p>
             </>
           ) : (
             <>
               <FileText className="w-12 h-12 text-blue-500 mx-auto mb-3" />
               <p className="font-semibold text-slate-800">{file.name}</p>
-              <p className="text-sm text-slate-400 mt-1">{(file.size / 1024 / 1024).toFixed(2)} MB · Click para cambiar</p>
+              <p className="text-sm text-slate-400 mt-1">{(file.size / 1024 / 1024).toFixed(2)} MB · <span className="md:hidden">Tocá</span><span className="hidden md:inline">Click</span> para cambiar</p>
             </>
           )}
         </div>
