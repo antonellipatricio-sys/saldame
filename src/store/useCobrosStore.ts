@@ -10,8 +10,10 @@ import { db } from '@/lib/firebase';
 export interface Cobro {
   id: string;
   persona: string;
-  /** 'yyyy-MM' del filtro en que se registró, o 'todos' */
+  /** 'yyyy-MM' del resumen al que corresponde ('todos' en cobros viejos, sin mes) */
   periodo: string;
+  /** Un "Cobrado" que abarca varios meses se guarda como un cobro por mes con el mismo lote */
+  lote?: string;
   ars: number;
   usd: number;
   fecha: Date;
@@ -38,6 +40,7 @@ export const useCobrosStore = create<CobrosStore>()((set) => ({
           periodo: data.periodo,
           ars: data.ars ?? 0,
           usd: data.usd ?? 0,
+          lote: data.lote,
           fecha: data.fecha instanceof Timestamp ? data.fecha.toDate() : new Date(data.fecha),
         } as Cobro;
       });
@@ -49,7 +52,9 @@ export const useCobrosStore = create<CobrosStore>()((set) => ({
 
   addCobro: async (c) => {
     const fecha = new Date();
-    const ref = await addDoc(collection(db, 'cobros'), { ...c, fecha: Timestamp.fromDate(fecha) });
+    const data: Record<string, unknown> = { persona: c.persona, periodo: c.periodo, ars: c.ars, usd: c.usd, fecha: Timestamp.fromDate(fecha) };
+    if (c.lote) data.lote = c.lote;
+    const ref = await addDoc(collection(db, 'cobros'), data);
     set(state => ({ cobros: [...state.cobros, { ...c, id: ref.id, fecha }] }));
   },
 

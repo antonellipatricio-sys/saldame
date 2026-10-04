@@ -81,10 +81,14 @@ export function UploadFileSection() {
   const { reglas } = useReglasStore();
   const [porRegla, setPorRegla] = useState(0);
 
-  /** Aplica las reglas "Siempre" a las filas recién leídas. */
+  /**
+   * Aplica las reglas "Siempre" a las filas recién leídas que vienen como del dueño.
+   * Las que ya llegan asignadas (ej. tarjeta adicional de Maru) no se tocan.
+   */
   const conReglas = (nuevas: ReviewRow[]): ReviewRow[] => {
     let n = 0;
     const out = nuevas.map(r => {
+      if (modoDe(r, responsables).tipo !== 'yo') return r;
       const a = asignacionPorRegla(r, reglas, responsables);
       if (!a) return r;
       n++;

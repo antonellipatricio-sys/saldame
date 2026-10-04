@@ -12,11 +12,14 @@ import {
   setDoc,
   deleteField,
   query,
+  where,
   orderBy,
   Timestamp,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { mesResumen } from '@/lib/resumen';
+import { useCobrosStore } from '@/store/useCobrosStore';
+import { useReglasStore } from '@/store/useReglasStore';
 
 interface ExpenseStore {
   expenses: Expense[];
@@ -402,6 +405,13 @@ export const useExpenseStore = create<ExpenseStore>()(
             await updateDoc(doc(db, 'expenses', e.id), updates);
           }));
         }
+
+        // Migrar cobros y reglas "Siempre" que referencian el nombre viejo
+        for (const col of ['cobros', 'reglasPago']) {
+          const snap = await getDocs(query(collection(db, col), where('persona', '==', oldName)));
+          await Promise.all(snap.docs.map(d => updateDoc(d.ref, { persona: newName })));
+        }
+        await Promise.all([useCobrosStore.getState().fetchCobros(), useReglasStore.getState().fetchReglas()]);
 
         // Actualizar estado local
         set((state) => ({
