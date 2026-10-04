@@ -78,9 +78,9 @@ export function SharedExpensesDashboard() {
     const now = PAGE_LOAD_TIME;
 
     return (
-        <div className="max-w-3xl mx-auto space-y-8 py-4">
+        <div className="max-w-3xl mx-auto space-y-4 md:space-y-8 md:py-4">
             {/* Banner Header */}
-            <div className="w-full mb-6 md:max-w-xl md:mx-auto relative rounded-2xl overflow-hidden shadow-sm border border-slate-100 bg-brand-primary/5">
+            <div className="w-full md:mb-6 md:max-w-xl md:mx-auto relative rounded-2xl overflow-hidden shadow-sm border border-slate-100 bg-brand-primary/5">
                 <img
                     src="/banner-gastos.png?v=2"
                     alt="Gastos Compartidos"
@@ -88,9 +88,9 @@ export function SharedExpensesDashboard() {
                 />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                 {/* Crear Evento */}
-                <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm h-fit">
+                <div className="bg-white p-4 md:p-6 rounded-2xl border border-slate-100 shadow-sm h-fit">
                     <h2 className="text-lg font-bold text-brand-primary mb-4 flex items-center gap-2">
                         <Plus className="w-5 h-5 text-brand-success" />
                         Nueva Juntada
@@ -119,7 +119,7 @@ export function SharedExpensesDashboard() {
                 </div>
 
                 {/* Historial de Eventos */}
-                <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+                <div className="bg-white p-4 md:p-6 rounded-2xl border border-slate-100 shadow-sm">
                     <h2 className="text-lg font-bold text-brand-primary mb-4 flex items-center gap-2">
                         <Calendar className="w-5 h-5 text-brand-success" />
                         Mis Juntadas Recientes
@@ -135,17 +135,18 @@ export function SharedExpensesDashboard() {
                                 <a
                                     key={ev.id}
                                     href={`/gastos/${ev.id}`}
-                                    className="group flex justify-between items-center p-4 rounded-xl border border-slate-100 bg-slate-50 hover:bg-brand-primary/5 hover:border-brand-primary/20 transition-all cursor-pointer"
+                                    className="group flex justify-between items-center gap-2 p-3 md:p-4 rounded-xl border border-slate-100 bg-slate-50 hover:bg-brand-primary/5 hover:border-brand-primary/20 transition-all cursor-pointer"
                                 >
-                                    <div>
-                                        <h3 className="font-semibold text-brand-primary transition capitalize">{ev.name}</h3>
+                                    <div className="min-w-0">
+                                        <h3 className="font-semibold text-brand-primary transition capitalize truncate">{ev.name}</h3>
                                         <p className="text-xs text-brand-text mt-0.5">Hace {Math.round((now - ev.lastVisited) / (1000 * 60 * 60 * 24))} días</p>
                                     </div>
-                                    <div className="flex items-center gap-3">
+                                    <div className="flex items-center gap-1 md:gap-3 shrink-0">
                                         <button
                                             onClick={(e) => handleRemoveHistory(e, ev.id)}
-                                            className="text-slate-400/50 hover:text-brand-alert transition-all p-2"
+                                            className="text-slate-400 md:text-slate-400/50 hover:text-brand-alert transition-all w-10 h-10 md:w-auto md:h-auto md:p-2 flex items-center justify-center"
                                             title="Borrar juntada (solo se quita de tu historial)"
+                                            aria-label="Quitar de mis juntadas"
                                         >
                                             <Trash2 className="w-4 h-4" />
                                         </button>
