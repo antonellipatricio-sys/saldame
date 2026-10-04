@@ -90,20 +90,20 @@ export function AddExpensePage() {
     <div className={cn('space-y-3', tab === 'manual' && 'max-w-2xl mx-auto')}>
 
       {/* Header compacto */}
-      <div>
+      <div className="hidden md:block">
         <h1 className="text-2xl font-bold text-slate-800">Agregar Gasto</h1>
         <p className="text-slate-400 text-xs mt-0.5">Clasificación automática instantánea</p>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 bg-slate-100 rounded-xl p-1 w-fit">
+      <div className="flex gap-1 bg-slate-200/60 md:bg-slate-100 rounded-xl p-1 md:w-fit">
         {([
           { id: 'manual', label: 'Manual', icon: <PenLine className="w-4 h-4" /> },
           { id: 'importar', label: 'Importar archivo', icon: <FolderUp className="w-4 h-4" /> },
         ] as { id: Tab; label: string; icon: React.ReactNode }[]).map(t => (
           <button key={t.id} type="button" onClick={() => setTab(t.id)}
             className={cn(
-              'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all',
+              'flex-1 md:flex-none flex items-center justify-center gap-1.5 px-3 py-1.5 min-h-[40px] md:min-h-0 rounded-lg text-sm font-medium transition-all',
               tab === t.id
                 ? 'bg-white text-slate-800 shadow-sm'
                 : 'text-slate-500 hover:text-slate-700'
@@ -154,7 +154,7 @@ export function AddExpensePage() {
                   <strong>{suggestion.category}</strong>
                   {suggestion.confidence !== 'high' && '?'}
                 </span>
-                <button type="button" onClick={applySuggestion} className="text-xs font-semibold text-blue-600 hover:text-blue-700">
+                <button type="button" onClick={applySuggestion} className="-my-1.5 -mr-2 px-2 min-h-[36px] text-xs font-semibold text-blue-600 hover:text-blue-700">
                   Aplicar
                 </button>
               </div>
@@ -169,7 +169,7 @@ export function AddExpensePage() {
                 >
                   {categoryObj.icon} {categoryObj.name}
                 </span>
-                <button type="button" onClick={() => setCategory('')} className="text-slate-400 hover:text-slate-600" title="Cambiar">
+                <button type="button" onClick={() => setCategory('')} className="w-9 h-9 -m-2 md:w-auto md:h-auto md:m-0 flex items-center justify-center text-slate-400 hover:text-slate-600" title="Cambiar categoría" aria-label="Cambiar categoría">
                   <RotateCcw className="w-3.5 h-3.5" />
                 </button>
               </div>
@@ -182,6 +182,7 @@ export function AddExpensePage() {
               <label className="block text-xs font-medium text-slate-700 mb-1">Monto *</label>
               <input
                 type="number"
+                inputMode="decimal"
                 step="0.01"
                 min="0"
                 value={amount}
@@ -200,7 +201,7 @@ export function AddExpensePage() {
                     type="button"
                     onClick={() => setCurrency(cur)}
                     className={cn(
-                      'flex-1 py-2 rounded-xl font-semibold text-sm transition-all border',
+                      'flex-1 py-2 min-h-[44px] md:min-h-0 rounded-xl font-semibold text-sm transition-all border',
                       currency === cur
                         ? 'bg-blue-600 text-white border-blue-600'
                         : 'bg-white text-slate-600 border-slate-300 hover:border-blue-400'
@@ -219,16 +220,16 @@ export function AddExpensePage() {
               <label className="block text-xs font-medium text-slate-700 mb-1">
                 Categoría * <span className="text-slate-400">(elegí una)</span>
               </label>
-              <div className="grid grid-cols-5 gap-1">
+              <div className="grid grid-cols-4 sm:grid-cols-5 gap-1.5 md:gap-1">
                 {categories.map(cat => (
                   <button
                     key={cat.id}
                     type="button"
                     onClick={() => setCategory(cat.name)}
-                    className="flex flex-col items-center gap-0.5 p-1.5 rounded-lg border border-slate-200 hover:border-blue-400 hover:bg-blue-50 transition-all"
+                    className="flex flex-col items-center justify-center gap-1 md:gap-0.5 p-1.5 min-h-[60px] md:min-h-0 rounded-lg border border-slate-200 hover:border-blue-400 hover:bg-blue-50 active:bg-blue-50 transition-all"
                   >
-                    <span className="text-base leading-none">{cat.icon}</span>
-                    <span className="text-slate-600 text-center leading-tight text-[10px]">{cat.name.split(' ')[0]}</span>
+                    <span className="text-xl md:text-base leading-none">{cat.icon}</span>
+                    <span className="w-full truncate text-slate-600 text-center leading-tight text-[11px] md:text-[10px]">{cat.name.split(' ')[0]}</span>
                   </button>
                 ))}
               </div>
@@ -296,7 +297,8 @@ export function AddExpensePage() {
             />
           </div>
 
-          {/* Botón guardar */}
+          {/* Botón guardar: en mobile queda fijo al pie mientras se completa el formulario */}
+          <div className="sticky bottom-0 -mx-4 -mb-4 px-4 py-3 bg-white/95 backdrop-blur border-t border-slate-100 rounded-b-2xl md:static md:m-0 md:p-0 md:bg-transparent md:backdrop-blur-none md:border-0">
           <button
             type="submit"
             disabled={loading || !description || !amount || !category}
@@ -316,6 +318,7 @@ export function AddExpensePage() {
               <><Save className="w-5 h-5" /> Guardar Gasto</>
             )}
           </button>
+          </div>
 
         </form>
       </div>

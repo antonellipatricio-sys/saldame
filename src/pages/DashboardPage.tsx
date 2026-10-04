@@ -179,47 +179,53 @@ export function DashboardPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       {/* Header con navegación de mes */}
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <div>
+        <div className="hidden md:block">
           <h1 className="text-3xl font-bold text-brand-primary capitalize">Resumen de {monthName}</h1>
           <p className="text-brand-text mt-1">Tu control financiero del mes</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 w-full md:w-auto">
           {isCurrentMonth && (
-            <span className="text-xs font-semibold bg-brand-primary/10 text-brand-primary px-2.5 py-1 rounded-full">
+            <span className="hidden md:inline text-xs font-semibold bg-brand-primary/10 text-brand-primary px-2.5 py-1 rounded-full">
               Mes actual
             </span>
           )}
-          <div className="flex items-center gap-1">
+          <div className="flex items-center justify-between gap-1 w-full md:w-auto">
             <button
               onClick={() => navigateMonth(-1)}
-              className="p-2 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-600 transition-colors"
+              className="w-11 h-11 md:w-auto md:h-auto md:p-2 flex items-center justify-center rounded-lg border border-slate-200 bg-white md:bg-transparent hover:bg-slate-100 text-slate-600 transition-colors"
               title="Mes anterior"
+              aria-label="Mes anterior"
             >
-              <ChevronLeft className="w-4 h-4" />
+              <ChevronLeft className="w-5 h-5 md:w-4 md:h-4" />
             </button>
+            <div className="md:hidden text-center">
+              <p className="text-lg font-bold text-brand-primary capitalize leading-tight">{monthName}</p>
+              {isCurrentMonth && <p className="text-xs text-slate-500">Mes actual</p>}
+            </div>
             <button
               onClick={() => navigateMonth(1)}
               disabled={isCurrentMonth}
-              className="p-2 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-600 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              className="w-11 h-11 md:w-auto md:h-auto md:p-2 flex items-center justify-center rounded-lg border border-slate-200 bg-white md:bg-transparent hover:bg-slate-100 text-slate-600 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               title="Mes siguiente"
+              aria-label="Mes siguiente"
             >
-              <ChevronRight className="w-4 h-4" />
+              <ChevronRight className="w-5 h-5 md:w-4 md:h-4" />
             </button>
           </div>
         </div>
       </div>
 
       {/* Summary Cards — 4 cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
         {/* Total ARS */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5 col-span-2 lg:col-span-1">
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:p-5 col-span-2 lg:col-span-1">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-slate-600 font-medium">Total en Pesos</p>
-              <p className="text-2xl font-bold text-brand-success mt-1">
+              <p className="text-xs md:text-sm text-slate-600 font-medium">Total en Pesos</p>
+              <p className="text-xl md:text-2xl font-bold text-brand-success mt-1 tabular-nums break-words">
                 ${summary.totalARS.toLocaleString('es-AR')}
               </p>
               {arsPct !== null && (
@@ -238,61 +244,61 @@ export function DashboardPage() {
                 </p>
               )}
             </div>
-            <div className="w-10 h-10 bg-brand-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
+            <div className="hidden md:flex w-10 h-10 bg-brand-primary/10 rounded-full items-center justify-center flex-shrink-0">
               <DollarSign className="w-5 h-5 text-brand-primary" />
             </div>
           </div>
         </div>
 
         {/* Total USD */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:p-5 min-w-0">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-slate-600 font-medium">Total en Dólares</p>
-              <p className="text-2xl font-bold text-brand-success mt-1">
+              <p className="text-xs md:text-sm text-slate-600 font-medium">Total en Dólares</p>
+              <p className="text-xl md:text-2xl font-bold text-brand-success mt-1 tabular-nums break-words">
                 US$ {summary.totalUSD.toLocaleString('en-US', { minimumFractionDigits: 2 })}
               </p>
             </div>
-            <div className="w-10 h-10 bg-brand-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
+            <div className="hidden md:flex w-10 h-10 bg-brand-primary/10 rounded-full items-center justify-center flex-shrink-0">
               <Wallet className="w-5 h-5 text-brand-primary" />
             </div>
           </div>
         </div>
 
         {/* Gastos del Mes */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:p-5 min-w-0">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-slate-600 font-medium">Gastos del Mes</p>
-              <p className="text-2xl font-bold text-brand-success mt-1">
+              <p className="text-xs md:text-sm text-slate-600 font-medium">Gastos del Mes</p>
+              <p className="text-xl md:text-2xl font-bold text-brand-success mt-1 tabular-nums break-words">
                 {monthExpenseCount}
               </p>
             </div>
-            <div className="w-10 h-10 bg-brand-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
+            <div className="hidden md:flex w-10 h-10 bg-brand-primary/10 rounded-full items-center justify-center flex-shrink-0">
               <TrendingUp className="w-5 h-5 text-brand-primary" />
             </div>
           </div>
         </div>
 
         {/* Dólar Blue */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:p-5 min-w-0 col-span-2 lg:col-span-1">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-slate-600 font-medium">Dólar Blue</p>
+              <p className="text-xs md:text-sm text-slate-600 font-medium">Dólar Blue</p>
               {dollar.loading ? (
                 <p className="text-lg font-semibold text-slate-400 mt-1">Cargando…</p>
               ) : dollar.error ? (
                 <p className="text-sm text-slate-400 mt-1">No disponible</p>
               ) : (
                 <>
-                  <p className="text-2xl font-bold text-brand-primary mt-1">
+                  <p className="text-xl md:text-2xl font-bold text-brand-primary mt-1 tabular-nums">
                     ${dollar.sell.toLocaleString('es-AR')}
                   </p>
                   <p className="text-xs text-slate-400">compra ${dollar.buy.toLocaleString('es-AR')}</p>
                 </>
               )}
             </div>
-            <div className="w-10 h-10 bg-blue-50 rounded-full flex items-center justify-center flex-shrink-0">
+            <div className="hidden md:flex w-10 h-10 bg-blue-50 rounded-full items-center justify-center flex-shrink-0">
               <span className="text-blue-600 font-bold text-sm">$</span>
             </div>
           </div>
@@ -304,7 +310,7 @@ export function DashboardPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
           {/* Gastos Fijos vs Variables */}
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:p-5">
             <div className="flex items-center gap-2 mb-4">
               <Zap className="w-5 h-5 text-brand-primary" />
               <h2 className="text-base font-bold text-brand-primary">Fijos vs Variables</h2>
@@ -339,7 +345,7 @@ export function DashboardPage() {
           </div>
 
           {/* Top 5 Gastos Individuales */}
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:p-5">
             <div className="flex items-center gap-2 mb-4">
               <BarChart2 className="w-5 h-5 text-brand-primary" />
               <h2 className="text-base font-bold text-brand-primary">Top Gastos del Mes</h2>
@@ -368,8 +374,8 @@ export function DashboardPage() {
 
       {/* Presupuestos por categoría (solo si hay alguno configurado) */}
       {Object.keys(budgets).length > 0 && sortedCategories.length > 0 && (
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-          <h2 className="text-xl font-bold text-brand-primary mb-5">Presupuestos</h2>
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:p-6">
+          <h2 className="text-lg md:text-xl font-bold text-brand-primary mb-5">Presupuestos</h2>
           <div className="space-y-4">
             {sortedCategories
               .filter(([cat]) => budgets[cat] !== undefined)
@@ -380,7 +386,7 @@ export function DashboardPage() {
                 const catObj = categories.find(c => c.name === cat);
                 return (
                   <div key={cat}>
-                    <div className="flex items-center justify-between mb-1">
+                    <div className="flex flex-wrap items-center justify-between gap-x-3 mb-1">
                       <span className="text-sm font-semibold text-slate-800 flex items-center gap-1.5">
                         {catObj?.icon} {cat}
                       </span>
@@ -405,10 +411,10 @@ export function DashboardPage() {
 
       {/* Gráfico de barras por categoría (clickeable para drill-down) */}
       {sortedCategories.length > 0 && (
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-          <div className="flex items-center justify-between mb-5">
-            <h2 className="text-xl font-bold text-brand-primary">Gastos por Categoría</h2>
-            <span className="text-xs text-slate-400">Hacé clic para ver detalle</span>
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:p-6">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-0.5 mb-4 md:mb-5">
+            <h2 className="text-lg md:text-xl font-bold text-brand-primary">Gastos por Categoría</h2>
+            <span className="text-xs text-slate-400"><span className="md:hidden">Tocá</span><span className="hidden md:inline">Hacé clic</span> para ver detalle</span>
           </div>
           <div className="space-y-3">
             {sortedCategories.map(([cat, amount]) => {
@@ -426,7 +432,7 @@ export function DashboardPage() {
                     )}
                   >
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm font-semibold text-slate-900 flex items-center gap-1.5">
+                      <span className="text-sm font-semibold text-slate-900 flex items-center gap-1.5 min-w-0 truncate">
                         {catObj?.icon && <span>{catObj.icon}</span>}
                         {cat}
                       </span>
@@ -447,10 +453,10 @@ export function DashboardPage() {
 
                   {/* Drill-down de categoría */}
                   {isSelected && (
-                    <div className="mt-2 mb-1 border border-slate-100 rounded-xl bg-slate-50 p-4">
+                    <div className="mt-2 mb-1 border border-slate-100 rounded-xl bg-slate-50 p-3 md:p-4">
                       <div className="flex items-center justify-between mb-3">
                         <p className="text-sm font-bold text-slate-700">{catObj?.icon} {cat} — {format(selectedDate, 'MMMM yyyy', { locale: es })}</p>
-                        <button onClick={() => setSelectedCategory(null)} className="text-slate-400 hover:text-slate-600">
+                        <button onClick={() => setSelectedCategory(null)} aria-label="Cerrar detalle" className="w-9 h-9 -m-2 flex items-center justify-center text-slate-400 hover:text-slate-600">
                           <X className="w-4 h-4" />
                         </button>
                       </div>
@@ -483,8 +489,8 @@ export function DashboardPage() {
 
       {/* Comparativa mes a mes */}
       {comparison.length > 0 && (
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-          <h2 className="text-xl font-bold text-brand-primary mb-1">Comparativa Mensual</h2>
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:p-6">
+          <h2 className="text-lg md:text-xl font-bold text-brand-primary mb-1">Comparativa Mensual</h2>
           <p className="text-sm text-brand-text mb-5 capitalize">{monthName} vs {prevMonthName}</p>
           <div className="space-y-3">
             {comparison.map(c => (
@@ -517,8 +523,8 @@ export function DashboardPage() {
       )}
 
       {/* Últimos Gastos del mes */}
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-        <h2 className="text-xl font-bold text-brand-primary mb-4">Últimos Gastos del Mes</h2>
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:p-6">
+        <h2 className="text-lg md:text-xl font-bold text-brand-primary mb-4">Últimos Gastos del Mes</h2>
 
         {recentExpenses.length === 0 ? (
           <div className="text-center py-12">
@@ -531,10 +537,10 @@ export function DashboardPage() {
             {recentExpenses.map((expense) => (
               <div
                 key={expense.id}
-                className="flex items-center justify-between p-4 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors"
+                className="flex items-center justify-between gap-3 p-3 md:p-4 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors"
               >
-                <div className="flex-1">
-                  <p className="font-semibold text-slate-900">{expense.description}</p>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-slate-900 truncate">{expense.description}</p>
                   <div className="flex items-center gap-2 mt-1">
                     <span className="text-xs text-slate-500">
                       {format(new Date(expense.date), 'dd/MM/yyyy', { locale: es })}
@@ -543,8 +549,8 @@ export function DashboardPage() {
                     <span className="text-xs text-slate-500">{expense.category}</span>
                   </div>
                 </div>
-                <div className="text-right">
-                  <p className="font-bold text-slate-900">
+                <div className="text-right shrink-0">
+                  <p className="font-bold text-slate-900 whitespace-nowrap">
                     {expense.currency === 'ARS' ? '$' : 'US$'} {expense.amount.toLocaleString()}
                   </p>
                 </div>
